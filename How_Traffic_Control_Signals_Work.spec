@@ -5,7 +5,7 @@ Summary:        Explain traffic control signals
 
 License:        GPLv3+
 URL:            https://github.com/JohnSauter/How_Traffic_Control_Signals_Work
-Source0:        https://github.com/JohnSauter/How_Traffic_Control_Signals_Work/blob/master/traffic_control_signals-%{version}.tar.gz
+Source0:        https://github.com/JohnSauter/How_Traffic_Control_Signals_Work/blob/master/How_Traffic_Control_Signals_Work-%{version}.tar.gz
                 
 BuildArch: noarch
 
