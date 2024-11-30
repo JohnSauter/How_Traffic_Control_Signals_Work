@@ -11,8 +11,9 @@ BuildArch: noarch
 
 BuildRequires:  gcc
 BuildRequires:  make
-BuildRequires:  python3 >= 3.5
+BuildRequires:  python3 >= 3.10
 BuildRequires:  git
+BuildRequires: graphviz
 BuildRequires: texlive-scheme-full
 BuildRequires: sil-andika-fonts
 BuildRequires: sil-charis-fonts
