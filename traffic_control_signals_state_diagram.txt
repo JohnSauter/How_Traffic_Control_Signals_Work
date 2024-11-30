@@ -1,0 +1,95 @@
+# File: traffic_control_signals_state_diagram.txt, author: John Sauter,
+# date: November 3, 2024.
+
+strict digraph Traffic_Control_Signals {
+fontname="Helvetica,Arial,sans-serif"
+fontsize=24
+node [fontname="Helvetica,Arial,sans-serif", shape=box,
+     style="rounded,filled", fontsize=18,
+     penwidth=2.0, pencolor=black]
+edge [fontname="Helvetica,Arial,sans-serif"]
+
+layout=dot
+size="3.75,3.75"
+center=true
+#concentrate=true
+pennwidth=2.0
+pencolor=black
+overlap=false
+
+subgraph Cluster_Red {
+style=filled; fillcolor=coral;
+label="Red State";
+node [color=red, label="Waiting for\nClearance"] "Red\nWaiting for\nClearance";
+node [label="Travel Path\nis Clear"] "Red\nTravel Path\nis Clear";
+node [label="Going Green 1"] "Red\nGoing Green 1";
+node [label="Going Green 2"] "Red\nGoing Green 2";
+#node [label="Flashing"] "Red\nFlashing";
+}
+
+subgraph Cluster_Green {
+style=filled; fillcolor=lightgreen;
+label="Green State";
+node [color=green, label="Minimum Green"] "Green\nMinimum Green";
+node [label="Looking for Gap"] "Green\nLooking for Gap";
+node [label="Waiting for\nClearance Request"]
+     "Green\nWaiting for\nClearance Request";
+}
+
+subgraph Cluster_Yellow {
+style=filled; fillcolor=gold;
+label="Yellow State";
+node [color=yellow, label="Going Red"] "Yellow\nGoing Red";
+node [label="Left\nFlashing 1"] "Yellow\nLeft Flashing 1";
+node [label="Left\nFlashing 2"] "Yellow\nLeft Flashing 2";
+node [label="Going Green"] "Yellow\nGoing Green";
+#node [label="Flashing"] "Yellow\nFlashing";
+}
+
+edge [label="clear"]
+     "Red\nWaiting for\nClearance"->"Red\nTravel Path\nis Clear";
+edge [label="traffic\npresent"]
+     "Red\nTravel Path\nis Clear"->"Red\nGoing Green 1";
+#edge [label="flash\nyellow"]
+#     "Red\nTravel Path\nis Clear"->"Yellow\nFlashing";
+edge [label="permission\ngranted"] "Red\nGoing Green 1"->"Red\nGoing Green 2";
+edge [label="permissive\nleft turn"]
+     "Red\nGoing Green 2"->"Yellow\nLeft Flashing 1";
+edge [label="conflicting\npaths clear"]
+     	"Red\nGoing Green 2"->"Green\nMinimum Green";
+#edge [label="stop\nflashing"] "Red\nFlashing"->"Red\nWaiting for\nClearance";
+#edge [label="flash\nyellow"] "Red\nFlashing"->"Yellow\nFlashing";
+
+#edge [label="quick\nred"] "Green\nMinimum Green"->"Yellow\nGoing Red";
+edge [label="long\nenough"]
+     "Green\nMinimum Green"->"Green\nLooking for Gap";
+edge [label="conflicting\ntraffic\nwaiting"]
+     "Green\nLooking for Gap"->"Yellow\nGoing Red";
+edge [label="no conflicting\ntraffic"] "Green\nLooking for Gap"->
+     "Green\nWaiting for\nClearance Request";
+edge [label="still\nlooking"]
+     "Green\nLooking for Gap"->"Green\nLooking for Gap";
+edge [label="conflicting\ntraffic\nwaiting"]
+     "Green\nWaiting for\nClearance Request"->"Yellow\nGoing Red";
+#edge [label="flash\nyellow"]
+#     "Green\nWaiting for\nClearance Request"->"Yellow\nFlashing";
+
+edge [label="yellow change time\ncompleted"]
+     "Yellow\nGoing Red"->"Red\nWaiting for\nClearance";
+#edge [label="quick\nred"] "Yellow\nLeft Flashing 1"->"Yellow\nGoing Red";
+edge [label="long\nenough"]
+     "Yellow\nLeft Flashing 1"->"Yellow\nLeft Flashing 2";
+#edge [label="quick\nred"] "Yellow\nLeft Flashing 2"->"Yellow\nGoing Red";
+edge [label="long\nwait"] "Yellow\nLeft Flashing 2"->"Yellow\nGoing Green";
+edge [label="no traffic"] "Yellow\nLeft Flashing 2"->"Yellow\nGoing Red";
+edge [label="clear"] "Yellow\nLeft Flashing 2"->"Green\nMinimum Green";
+#edge [label="quick\nred"] "Yellow\nGoing Green"->"Yellow\nGoing Red";
+edge [label="clear"] "Yellow\nGoing Green"->"Green\nMinimum Green";
+#edge [label="stop\nflashing"]
+#     "Yellow\nFlashing"->"Red\nWaiting for\nClearance";
+#edge [label="flash\nred"] "Yellow\nFlashing"->"Red\nFlashing";
+}
+
+# End of file traffic_control_signals_state_diagram.txt
+
+

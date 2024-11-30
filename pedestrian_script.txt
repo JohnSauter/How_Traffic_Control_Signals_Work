@@ -1,0 +1,3 @@
+time,operator,signal face,operand
+200.000,sensor on,ps,Traffic Present
+210.000,sensor off,ps,Traffic Present
