@@ -43,6 +43,13 @@ make check VERBOSE=1
 
 %files
 %defattr(-,root,root)
+%exclude /usr/share/doc/%{name}/AUTHORS
+%exclude /usr/share/doc/%{name}/COPYING
+%exclude /usr/share/doc/%{name}/ChangeLog
+%exclude /usr/share/doc/%{name}/INSTALL
+%exclude /usr/share/doc/%{name}/NEWS
+%exclude /usr/share/doc/%{name}/README
+%exclude /usr/share/doc/%{name}/LICENSE
 %doc traffic_control_signals.pdf
 %doc AUTHORS ChangeLog NEWS README
 %license LICENSE
