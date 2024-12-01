@@ -1,0 +1,37 @@
+# README file for How_Traffic_Control_Signals_Work
+last updated December 1, 2024
+
+I have always been fascinated by traffic control signals.  They seem to be
+very clever at keeping traffic moving safely through an intersection,
+even though they have very limited information about the traffic.
+
+Modern traffic signals, at least, must be controlled by a computer,
+so it should be possible for me to write the computer program for
+a traffic control signal.  I've been looking at them all my life,
+so I have a general idea about how they work, but for more detailed
+information I consulted the Manual on Uniform Traffic Control Devices
+for Streets and Highways, a publication of the US Department of
+Transportation referred to as MUTCD.
+
+I wrote up my description of how the traffic control computer should work,
+based on what I knew about what it did.  In order to be sure my description
+was accurate I also wrote the program and used its output in the document.
+
+My description, and hence my program, probably does not correspond to the
+way any traffic control signal computer works, but it is useful for
+explanatory purposes, and perhaps some manufacturer will decide that
+what I have described would provide a better product than what he has,
+and decide to use it.
+
+To build the PDF file from the tarball, do the usual:
+./configure
+make
+
+If you wish you can install the PDF on your computer for other users to see
+by typing
+
+sudo make install
+
+The writing is licensed under a Creative Commons license, as described
+in the document.  The software is licensed under version 3 of the
+General Public License from the Free Software Foundation.
