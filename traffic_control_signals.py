@@ -53,7 +53,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 1.0 2024-11-30',
+                     version='traffic_control_signals 0.1 2024-12-08',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -906,7 +906,8 @@ for signal_face_name in ("D", "H", "J"):
   timer_full_name = signal_face_name + "/" + "Yellow Change"
   timer_durations[timer_full_name] = decimal.Decimal ("3.000")
 
-signal_faces = list()
+signal_faces_list = list()
+signal_faces_dict = dict()
 
 for signal_face_name in signal_face_names:
   signal_face = dict()
@@ -930,7 +931,8 @@ for signal_face_name in signal_face_names:
       timer["duration"] = timer_durations[timer_full_name]
     timers_list.append(timer)
   signal_face["timers"] = timers_list
-  signal_faces.append(signal_face)
+  signal_faces_list.append(signal_face)
+  signal_faces_dict[signal_face_name] = signal_face
 
 if (do_trace != 0):
   tracefile.write ("Timer durations:\n")
@@ -939,7 +941,7 @@ if (do_trace != 0):
 
 # Construct the conflict and partial conflict tables.
   
-for signal_face in signal_faces:
+for signal_face in signal_faces_list:
   partial_conflict_set = None
   
   match signal_face["name"]:
@@ -976,8 +978,9 @@ for signal_face in signal_faces:
 # state machine and the corresponding values are the names
 # of the lamps on the street.
 
-for signal_face in signal_faces:
+for signal_face in signal_faces_list:
   lamp_names_map = dict()
+  
   match signal_face["name"]:
     case "A" | "E":
       lamp_names_map["Steady Circular Red"] = "Steady Left Arrow Red"
@@ -1020,7 +1023,7 @@ if (do_lamp_map_output != 0):
   lamp_map_file.write ("  Signal Face & Signal Face Output Name & " +
                        "Actual Lamp Name \\endhead\n")
   
-  for signal_face in signal_faces:
+  for signal_face in signal_faces_list:
     if ("lamp names map" in signal_face):
         lamp_names_map = signal_face["lamp names map"]
         for lamp_name in lamp_names_map:
@@ -1037,7 +1040,7 @@ if (do_lamp_map_output != 0):
 # The value of each entry is a tuple of toggles to set.  If a toggle name
 # contains a slash it refers to a different signal face.
 
-for signal_face in signal_faces:
+for signal_face in signal_faces_list:
   sensor_values = dict()
   signal_face ["sensor values"] = sensor_values
 
@@ -1132,7 +1135,7 @@ if (do_sensor_map_output != 0):
   sensor_file.write ("  Signal Face & Sensor & " +
                        "Toggles \\endhead\n")
   
-  for signal_face in signal_faces:
+  for signal_face in signal_faces_list:
     if ("sensor map" in signal_face):
         sensor_map = signal_face["sensor map"]
         for sensor_name in sensor_map:
@@ -1144,14 +1147,14 @@ if (do_sensor_map_output != 0):
               sensor_file.write (",")
             sensor_file.write (" " + toggle_name)
             first_toggle = False
-          sensor_file.write (".\\\\\n")
+          sensor_file.write ("\\\\\n")
 
   sensor_file.write ("\\hline \\end{longtable}\n")
   sensor_file.close()
   
 if (do_trace != 0):
   tracefile.write ("Starting Signal Faces:\n")
-  pprint.pprint (signal_faces, tracefile)
+  pprint.pprint (signal_faces_list, tracefile)
 
 # Read the script file, if one was specified.
 script_set = set()
@@ -1254,7 +1257,7 @@ def green_request_granted():
   # If a signal face is requesting green, place it on the list of
   # signal faces requsting green unless it is already on the list
   # or is on the list of signal faces allowed to turn green.
-  for signal_face in signal_faces:
+  for signal_face in signal_faces_list:
     if ((toggle_value(signal_face, "Request Green")) and
          (signal_face not in requesting_green) and
          (signal_face not in allowed_green)):
@@ -1332,61 +1335,56 @@ def green_request_granted():
   return
 
 def clearance_requested():
-  for signal_face in signal_faces:
+  for signal_face in signal_faces_list:
     if (toggle_value (signal_face, "Request Clearance")):
       conflicting_face_names = signal_face ["conflicts"]
       for conflicting_face_name in conflicting_face_names:
-        for conflicting_face in signal_faces:
-          if (conflicting_face["name"] == conflicting_face_name):
-            if (not toggle_value (conflicting_face, "Cleared")):
-                set_toggle_value (conflicting_face, "Clearance Requested",
-                                  True, "system program Clearance Requested")
+        conflicting_face = signal_faces_dict[conflicting_face_name]
+        if (not toggle_value (conflicting_face, "Cleared")):
+          set_toggle_value (conflicting_face, "Clearance Requested", True,
+                            "system program Clearance Requested")
   return
         
 def partial_clearance_requested():
-  for signal_face in signal_faces:
+  for signal_face in signal_faces_list:
     if (toggle_value (signal_face, "Request Partial Clearance")):
       conflicting_face_names = signal_face ["partial conflicts"]
       for conflicting_face_name in conflicting_face_names:
-        for conflicting_face in signal_faces:
-          if (conflicting_face["name"] == conflicting_face_name):
-            if (not toggle_value (conflicting_face, "Cleared")):
-                set_toggle_value (conflicting_face, "Clearance Requested",
-                                  True,
-                                  "system program Partial Clearance Requested")
+        conflicting_face = signal_faces_dict[conflicting_face_name]
+        if (not toggle_value (conflicting_face, "Cleared")):
+          set_toggle_value (conflicting_face, "Clearance Requested", True,
+                            "system program Partial Clearance Requested")
   return
 
 # Maintain the Conflicting Paths are Clear toggle.  It is false
 # unless the signal face is requesting clearance and all conflicting
 # paths are clear.
 def conflicting_paths_are_clear():
-  for signal_face in signal_faces:
+  for signal_face in signal_faces_list:
     all_paths_clear = False
     if (toggle_value (signal_face, "Request Clearance") or
         toggle_value (signal_face, "Request Partial Clearance")):
       all_paths_clear = True
       conflicting_face_names = signal_face ["conflicts"]
       for conflicting_face_name in conflicting_face_names:
-        for conflicting_face in signal_faces:
-          if (conflicting_face["name"] == conflicting_face_name):
-            if (not toggle_value (conflicting_face, "Cleared")):
-              all_paths_clear = False
+        conflicting_face = signal_faces_dict[conflicting_face_name]
+        if (not toggle_value (conflicting_face, "Cleared")):
+          all_paths_clear = False
     set_toggle_value (signal_face, "Conflicting Paths are Clear",
                       all_paths_clear,
                       "system program Conflicting Paths are Clear")
   return
 
 def partial_conflicting_paths_are_clear():
-  for signal_face in signal_faces:
+  for signal_face in signal_faces_list:
     all_paths_clear = False
     if (toggle_value (signal_face, "Request Partial Clearance")):
       all_paths_clear = True
       conflicting_face_names = signal_face ["partial conflicts"]
       for conflicting_face_name in conflicting_face_names:
-        for conflicting_face in signal_faces:
-          if (conflicting_face["name"] == conflicting_face_name):
-            if (not toggle_value (conflicting_face, "Cleared")):
-              all_paths_clear = False
+        conflicting_face = signal_faces_dict[conflicting_face_name]
+        if (not toggle_value (conflicting_face, "Cleared")):
+          all_paths_clear = False
     set_toggle_value (signal_face, "Partial Conflicting Paths are Clear",
                       all_paths_clear,
                       "system program Partial Conflicting Paths are Clear")
@@ -1434,7 +1432,7 @@ def perform_actions (signal_face, substate):
         full_toggle_name = signal_face_name + "/" + toggle_name
         # Check all of the signal faces to see if any have a sensor
         # which triggers this toggle.
-        for test_signal_face in signal_faces:
+        for test_signal_face in signal_faces_list:
           test_signal_face_name = test_signal_face["name"]
           test_sensor_map = test_signal_face["sensor map"]
           for test_sensor_name in test_sensor_map:
@@ -1555,7 +1553,7 @@ def timer_state (signal_face, timer_name):
 
 # Execute an event from the script.
 def perform_script_event (the_operator, signal_face_name, the_operand):
-  for signal_face in signal_faces:
+  for signal_face in signal_faces_list:
     if ((signal_face["name"] == signal_face_name) or
         (signal_face_name == "all")):
       match the_operator:
@@ -1673,7 +1671,7 @@ while ((current_time < end_time) and (error_counter == 0)):
     print (format_time(current_time) + " top of simulation loop.")
 
   # Run the state machines.
-  for signal_face in signal_faces:
+  for signal_face in signal_faces_list:
     # If we are starting up enter state Red substate Walting for Clearance.
     if ("state" not in signal_face):
       enter_state (signal_face, "Red", "Waiting for Clearance")
@@ -1746,7 +1744,7 @@ while ((current_time < end_time) and (error_counter == 0)):
     script_set.remove(the_event)
 
   # If there are active sensors, set their corresponding toggles.
-  for signal_face in signal_faces:
+  for signal_face in signal_faces_list:
     sensor_values = signal_face ["sensor values"]
     for sensor_name in sensor_values:
       sensor = sensor_values[sensor_name]
@@ -1773,22 +1771,21 @@ while ((current_time < end_time) and (error_counter == 0)):
             toggle_signal_face_name = exploded_toggle_name[0]
             root_toggle_name = exploded_toggle_name[2]
 
-          for toggle_signal_face in signal_faces:
-            if (toggle_signal_face["name"] == toggle_signal_face_name):
-              if (not toggle_value (toggle_signal_face, root_toggle_name)):
-                if (verbosity_level > 3):
-                  print (format_time(current_time) + " Sensor " +
-                         signal_face ["name"] + "/" + sensor ["name"] +
-                         " is True.")
-                if ((logging_level > 3) and (current_time > log_start_time)):
-                  logfile.write ("\\hline " + format_time(current_time) +
-                                 " & " + signal_face["name"] +
-                                 " &  Sensor " + sensor["name"] +
-                                 " is True. \\\\\n")
-                set_toggle_value (toggle_signal_face, root_toggle_name, True,
-                                  "sensor " + signal_face["name"] + "/" +
-                                  sensor["name"] )
-                no_activity = False          
+          toggle_signal_face = signal_faces_dict[toggle_signal_face_name]
+          if (not toggle_value (toggle_signal_face, root_toggle_name)):
+            if (verbosity_level > 3):
+              print (format_time(current_time) + " Sensor " +
+                     signal_face ["name"] + "/" + sensor ["name"] +
+                     " is True.")
+            if ((logging_level > 3) and (current_time > log_start_time)):
+              logfile.write ("\\hline " + format_time(current_time) +
+                             " & " + signal_face["name"] +
+                             " &  Sensor " + sensor["name"] +
+                             " is True. \\\\\n")
+            set_toggle_value (toggle_signal_face, root_toggle_name, True,
+                              "sensor " + signal_face["name"] + "/" +
+                              sensor["name"] )
+            no_activity = False          
         
 
   # Update the timers.
@@ -1821,7 +1818,7 @@ while ((current_time < end_time) and (error_counter == 0)):
 
 if (do_trace != 0):
   tracefile.write ("Ending Signal Faces:\n")
-  pprint.pprint (signal_faces, tracefile)
+  pprint.pprint (signal_faces_list, tracefile)
 
 if (do_logging == 1):
   logfile.write ("\\hline \\end{longtable}\n")
