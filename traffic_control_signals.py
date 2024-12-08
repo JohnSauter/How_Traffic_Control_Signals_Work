@@ -1036,22 +1036,22 @@ if (do_lamp_map_output != 0):
 
 # Set up the mapping from the vehicle sensors to the toggles they set.
 
-# The sensor map is a dictionary whose indexes are sensor names.
-# The value of each entry is a tuple of toggles to set.  If a toggle name
-# contains a slash it refers to a different signal face.
+# Signal_face["sensors"]is a dictionary whose indexes are sensor names.
+# The value of each entry is a sensor, which is a dictionary
+# with entries name, toggles, and value  Toggles is a tuple of toggle
+# names.  If a toggle name contains a slash it refers to a different
+# signal face.  Value is True or False.
 
 for signal_face in signal_faces_list:
-  sensor_values = dict()
-  signal_face ["sensor values"] = sensor_values
 
   sensor_map = dict()
 
-  # Traffic sensors
+  # Default traffic sensors
+  sensor_map["Traffic Approaching"] = ("Traffic Approaching",)
+  sensor_map["Traffic Present"] = ("Traffic Present",)
+
+  # Non-default traffic sensors
   match signal_face["name"]:
-    case "A" | "E":
-      sensor_map["Traffic Approaching"] = ("Traffic Approaching",)
-      sensor_map["Traffic Present"] = ("Traffic Present",)
-      
     case "B":
       sensor_map["Traffic Approaching"] = ("Traffic Approaching",
                                            "C/Traffic Approaching")
@@ -1062,8 +1062,7 @@ for signal_face in signal_faces_list:
       sensor_map["Traffic Present"] = ("Traffic Present", "B/Traffic Present")
       
     case "D" | "H" | "J":
-      sensor_map["Traffic Approaching"] = ("Traffic Present",
-                                           "Traffic Approaching")
+      sensor_map["Traffic Approaching"] = ()
       sensor_map["Traffic Present"] = ("Traffic Present",
                                        "Traffic Approaching")
     case "F":
@@ -1122,8 +1121,17 @@ for signal_face in signal_faces_list:
   # Manual command
   sensor_map["Manual Red"] = ("Manual Red",)
   sensor_map["Manual Green"] = ("Manual Green",)
-  
-  signal_face["sensor map"] = sensor_map
+
+  sensors = dict()
+  for sensor_name in sensor_map:
+    sensor = dict()
+    sensor["name"] = sensor_name
+    sensor["toggles"] = sensor_map[sensor_name]
+    sensor["value"] = False
+    sensors [sensor_name] = sensor
+    
+  signal_face ["sensors"] = sensors
+
           
 if (do_sensor_map_output != 0):
   sensor_file = open (sensor_map_file_name, 'w')
@@ -1136,18 +1144,19 @@ if (do_sensor_map_output != 0):
                        "Toggles \\endhead\n")
   
   for signal_face in signal_faces_list:
-    if ("sensor map" in signal_face):
-        sensor_map = signal_face["sensor map"]
-        for sensor_name in sensor_map:
-          sensor_file.write("   \\hline " + signal_face["name"] + " & " +
-                            sensor_name + " &")
-          first_toggle = True
-          for toggle_name in sensor_map[sensor_name]:
-            if (not first_toggle):
-              sensor_file.write (",")
-            sensor_file.write (" " + toggle_name)
-            first_toggle = False
-          sensor_file.write ("\\\\\n")
+    sensors = signal_face["sensors"]
+    for sensor_name in sensors:
+      sensor = sensors[sensor_name]
+      sensor_file.write("   \\hline " + signal_face["name"] + " & " +
+                        sensor_name + " &")
+      toggles = sensor["toggles"]
+      first_toggle = True
+      for toggle_name in toggles:
+        if (not first_toggle):
+          sensor_file.write (",")
+        sensor_file.write (" " + toggle_name)
+        first_toggle = False
+      sensor_file.write ("\\\\\n")
 
   sensor_file.write ("\\hline \\end{longtable}\n")
   sensor_file.close()
@@ -1171,7 +1180,7 @@ if (do_script_input == 1):
 
   if (do_trace > 0):
     tracefile.write ("Script:\n")
-    pprint.pprint (script_list, tracefile)
+    pprint.pprint (script_set, tracefile)
     tracefile.write ("\n")
   
 # System Programs
@@ -1434,11 +1443,12 @@ def perform_actions (signal_face, substate):
         # which triggers this toggle.
         for test_signal_face in signal_faces_list:
           test_signal_face_name = test_signal_face["name"]
-          test_sensor_map = test_signal_face["sensor map"]
-          for test_sensor_name in test_sensor_map:
+          test_sensors = test_signal_face["sensors"]
+          for test_sensor_name in test_sensors:
             full_test_sensor_name = (test_signal_face_name + "/" +
                                      test_sensor_name)
-            test_toggle_names = test_sensor_map[test_sensor_name]
+            test_sensor = test_sensors[test_sensor_name]
+            test_toggle_names = test_sensor["toggles"]
             for test_toggle_name in test_toggle_names:
               exploded_test_toggle_name = test_toggle_name.partition("/")
               if (exploded_test_toggle_name[1] == ""):
@@ -1451,11 +1461,8 @@ def perform_actions (signal_face, substate):
                                              "/" + referenced_toggle_name_root)
               if (full_referenced_toggle_name == full_toggle_name):
                 # This sensor triggers the toggle we are trying to clear.
-                # Ff it is active we cannot clear this toggle.
-                test_sensor_values = test_signal_face["sensor values"]
-                if (test_sensor_name in test_sensor_values):
-                  test_sensor = test_sensor_values[test_sensor_name]
-                  if (test_sensor["value"]):
+                # If it is active we cannot clear this toggle.
+                if (test_sensor["value"]):
                     new_toggle_value = True
                     if (verbosity_level > 1):
                       print (format_time(current_time) + " signal face " +
@@ -1562,13 +1569,8 @@ def perform_script_event (the_operator, signal_face_name, the_operand):
           return
         case "sensor on" | "sensor off":
           sensor_name = the_operand
-          sensor_values = signal_face["sensor values"]
-          if (sensor_name not in sensor_values):
-            sensor = dict()
-            sensor["name"] = sensor_name
-            sensor["value"] = False
-            sensor_values [sensor_name] = sensor
-          sensor = sensor_values[sensor_name]
+          sensors = signal_face["sensors"]
+          sensor = sensors[sensor_name]
           if (the_operator == "sensor on"):
             sensor ["value"] = True
           else:
@@ -1745,23 +1747,16 @@ while ((current_time < end_time) and (error_counter == 0)):
 
   # If there are active sensors, set their corresponding toggles.
   for signal_face in signal_faces_list:
-    sensor_values = signal_face ["sensor values"]
-    for sensor_name in sensor_values:
-      sensor = sensor_values[sensor_name]
+    sensors = signal_face ["sensors"]
+    for sensor_name in sensors:
+      sensor = sensors[sensor_name]
       if (sensor ["value"]):
         if (verbosity_level > 2):
           print (format_time(current_time) + " sensor " +
                  signal_face ["name"] + "/" + sensor ["name"] +
                  " remains True.")
-        sensor_map = signal_face ["sensor map"]
 
-        # If the sensor is not mapped it triggers the toggle of the same name
-        # in the same signal face.
-        if (sensor_name in sensor_map):
-          toggle_names = sensor_map[sensor_name]
-        else:
-          toggle_names = (sensor_name,)
-          
+        toggle_names = sensor["toggles"]
         for toggle_name in toggle_names:
           exploded_toggle_name = toggle_name.partition("/")
           if (exploded_toggle_name[1] == ""):
@@ -1775,16 +1770,14 @@ while ((current_time < end_time) and (error_counter == 0)):
           if (not toggle_value (toggle_signal_face, root_toggle_name)):
             if (verbosity_level > 3):
               print (format_time(current_time) + " Sensor " +
-                     signal_face ["name"] + "/" + sensor ["name"] +
-                     " is True.")
+                     signal_face ["name"] + "/" + sensor_name + " is True.")
             if ((logging_level > 3) and (current_time > log_start_time)):
               logfile.write ("\\hline " + format_time(current_time) +
                              " & " + signal_face["name"] +
-                             " &  Sensor " + sensor["name"] +
-                             " is True. \\\\\n")
+                             " &  Sensor " + sensor_name + " is True. \\\\\n")
             set_toggle_value (toggle_signal_face, root_toggle_name, True,
                               "sensor " + signal_face["name"] + "/" +
-                              sensor["name"] )
+                              sensor_name)
             no_activity = False          
         
 
