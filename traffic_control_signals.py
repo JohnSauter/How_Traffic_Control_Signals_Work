@@ -53,7 +53,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.1 2024-12-08',
+                     version='traffic_control_signals 0.1 2024-12-15',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -848,12 +848,6 @@ timer_names = ( "Left Flashing Yellow Waiting", "Red Limit",
 
 timer_durations = dict()
 
-for signal_face_name in ("A", "E"):
-  timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Waiting"
-  timer_durations[timer_full_name] = decimal.Decimal ("10.000")
-  timer_full_name = signal_face_name + "/" + "Minimum Left Flashing Yellow"
-  timer_durations[timer_full_name] = decimal.Decimal ("5.000")
-
 for signal_face_name in ("A", "ps", "D", "E", "pn", "H", "J"):
   timer_full_name = signal_face_name + "/" + "Red Limit"
   timer_durations[timer_full_name] = decimal.Decimal ("inf")
@@ -864,47 +858,75 @@ for signal_face_name in ("B", "C", "F", "G"):
   timer_full_name = signal_face_name + "/" + "Maximum Green"
   timer_durations[timer_full_name] = decimal.Decimal ("60.000")
   timer_full_name = signal_face_name + "/" + "Minimum Green"
-  timer_durations[timer_full_name] = decimal.Decimal ("10.000")
+  timer_durations[timer_full_name] = decimal.Decimal ("12.000")
   timer_full_name = signal_face_name + "/" + "Passage"
-  timer_durations[timer_full_name] = decimal.Decimal ("2.600")
+  timer_durations[timer_full_name] = decimal.Decimal ("3.500")
   timer_full_name = signal_face_name + "/" + "Red Clearance"
-  timer_durations[timer_full_name] = decimal.Decimal ("0.400")
+  timer_durations[timer_full_name] = decimal.Decimal ("1.000")
   timer_full_name = signal_face_name + "/" + "Green Limit"
   timer_durations[timer_full_name] = decimal.Decimal ("inf")
+  timer_full_name = signal_face_name + "/" + "Yellow Change"
+  timer_durations[timer_full_name] = decimal.Decimal ("5.000")
 
-for signal_face_name in ("A", "D", "E", "H", "J"):
+for signal_face_name in ("A", "E"):
+  timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Waiting"
+  timer_durations[timer_full_name] = decimal.Decimal ("10.000")
+  timer_full_name = signal_face_name + "/" + "Minimum Left Flashing Yellow"
+  timer_durations[timer_full_name] = decimal.Decimal ("5.000")
   timer_full_name = signal_face_name + "/" + "Maximum Green"
-  timer_durations[timer_full_name] = decimal.Decimal ("30.000")
+  timer_durations[timer_full_name] = decimal.Decimal ("20.000")
   timer_full_name = signal_face_name + "/" + "Minimum Green"
   timer_durations[timer_full_name] = decimal.Decimal ("5.000")
   timer_full_name = signal_face_name + "/" + "Passage"
-  timer_durations[timer_full_name] = decimal.Decimal ("2.300")
+  timer_durations[timer_full_name] = decimal.Decimal ("1.900")
+  timer_full_name = signal_face_name + "/" + "Red Clearance"
+  timer_durations[timer_full_name] = decimal.Decimal ("1.000")
+  timer_full_name = signal_face_name + "/" + "Green Limit"
+  timer_durations[timer_full_name] = decimal.Decimal ("60.000")
+  timer_full_name = signal_face_name + "/" + "Yellow Change"
+  timer_durations[timer_full_name] = decimal.Decimal ("3.500")
+
+for signal_face_name in ("D", "H"):
+  timer_full_name = signal_face_name + "/" + "Maximum Green"
+  timer_durations[timer_full_name] = decimal.Decimal ("30.000")
+  timer_full_name = signal_face_name + "/" + "Minimum Green"
+  timer_durations[timer_full_name] = decimal.Decimal ("7.000")
+  timer_full_name = signal_face_name + "/" + "Passage"
+  timer_durations[timer_full_name] = decimal.Decimal ("1.900")
   timer_full_name = signal_face_name + "/" + "Red Clearance"
   timer_durations[timer_full_name] = decimal.Decimal ("1.500")
   timer_full_name = signal_face_name + "/" + "Green Limit"
   timer_durations[timer_full_name] = decimal.Decimal ("60.000")
+  timer_full_name = signal_face_name + "/" + "Yellow Change"
+  timer_durations[timer_full_name] = decimal.Decimal ("3.000")
 
-for signal_face_name in ("ps", "pn"):
+for signal_face_name in ("J"):
   timer_full_name = signal_face_name + "/" + "Maximum Green"
-  timer_durations[timer_full_name] = decimal.Decimal ("7.000")
+  timer_durations[timer_full_name] = decimal.Decimal ("30.000")
   timer_full_name = signal_face_name + "/" + "Minimum Green"
   timer_durations[timer_full_name] = decimal.Decimal ("7.000")
   timer_full_name = signal_face_name + "/" + "Passage"
-  timer_durations[timer_full_name] = decimal.Decimal ("0.000")
+  timer_durations[timer_full_name] = decimal.Decimal ("1.900")
   timer_full_name = signal_face_name + "/" + "Red Clearance"
-  timer_durations[timer_full_name] = decimal.Decimal ("0.400")
+  timer_durations[timer_full_name] = decimal.Decimal ("1.000")
   timer_full_name = signal_face_name + "/" + "Green Limit"
   timer_durations[timer_full_name] = decimal.Decimal ("60.000")
   timer_full_name = signal_face_name + "/" + "Yellow Change"
-  timer_durations[timer_full_name] = decimal.Decimal ("15.000")
-
-for signal_face_name in ("A", "B", "C", "E", "F", "G"):
-  timer_full_name = signal_face_name + "/" + "Yellow Change"
-  timer_durations[timer_full_name] = decimal.Decimal ("4.300")
-
-for signal_face_name in ("D", "H", "J"):
-  timer_full_name = signal_face_name + "/" + "Yellow Change"
   timer_durations[timer_full_name] = decimal.Decimal ("3.000")
+
+for signal_face_name in ("ps", "pn"):
+  timer_full_name = signal_face_name + "/" + "Maximum Green"
+  timer_durations[timer_full_name] = decimal.Decimal ("10.000")
+  timer_full_name = signal_face_name + "/" + "Minimum Green"
+  timer_durations[timer_full_name] = decimal.Decimal ("6.000")
+  timer_full_name = signal_face_name + "/" + "Passage"
+  timer_durations[timer_full_name] = decimal.Decimal ("1.000")
+  timer_full_name = signal_face_name + "/" + "Red Clearance"
+  timer_durations[timer_full_name] = decimal.Decimal ("3.000")
+  timer_full_name = signal_face_name + "/" + "Green Limit"
+  timer_durations[timer_full_name] = decimal.Decimal ("60.000")
+  timer_full_name = signal_face_name + "/" + "Yellow Change"
+  timer_durations[timer_full_name] = decimal.Decimal ("19.000")
 
 signal_faces_list = list()
 signal_faces_dict = dict()

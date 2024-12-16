@@ -1,5 +1,5 @@
 % File: traffic_control_signals.tex, author: John Sauter,
-% date: December 8, 2024.
+% date: December 15, 2024.
 
 % Copyright © 2024 by John Sauter.
 % Licensed under the Creative Commons Attribution-ShareAlike 4.0 International
@@ -197,12 +197,12 @@
   pdfcontacturl={https://www.systemeyescomputerstore.com},
   pdfcopyright={Copyright {\copyright} 2024 by John Sauter},
   pdfurl={https://www.systemeyescomputerstore.com/traffic\%5Fsignals/traffic\%5Fsignals.pdf},
-  pdfdate={2024-12-08},
+  pdfdate={2024-12-15},
   pdflicenseurl={https://creativecommons.org/licenses/by-sa/4.0},
   pdfmetalang={en-US}
 }
 
-\date{2024-12-08}
+\date{2024-12-15}
 \maketitle
 \begin{abstract}
   Traffic control signals allow vehicles and pedestrians to move through
@@ -1316,100 +1316,7 @@ chosen direction.
 The central controller will be able to see all of the sensors of all
 of the intersections it controls.
 
-\section{Implementation}
-
-Computers today are very fast, and the real-time requirements of a traffic
-signal are modest, so we can write the software in Python.
-
-\subsection{Data Structures}
-
-\subsubsection{Finite State Machine}
-
-The finite state machine is represented as a dictionary with three entries,
-one for each state: Red, Green and Yellow.
-Each state is in turn a list of substates.
-A substate is a dictionary containing three elements: name, actions and exits.
-\begin{itemize}
-\item{Name is the name of the substate.}
-\item{Actions is a list of actions to take.
-  Each element is a tuple of length 2.}
-  \begin{itemize}
-    \item{The first element is the name of the action: set lamp, set toggle,
-      clear toggle, or start timer.}
-      \item{The second element is the object of the action: either
-        the color of the lamp, the name of a toggle or the name of a timer.}
-  \end{itemize}
-
-\item{The Exits element is a list of exit conditions and destinations.
-  The first exit condition to become true causes a transition to
-  the specified state and substate.
-  Each exit is a list of three elements:}
-  \begin{itemize}
-  \item{The first element is a list of conditional tests.
-    Each conditional test is a tuple of two elements:}
-    \begin{itemize}
-    \item{The first is the condition: toggle is true, toggle is false, 
-      timer is completed, or timer is not completed.}
-    \item{The second is the name of the toggle or timer.}
-    \end{itemize}
-  \item{The second element of the exit is the name of the state
-    to which we transition if the tests are all true.}
-  \item{The third element is the name of the substate.}
-  \end{itemize}
-\end{itemize}
-
-\subsubsection{Signal Faces}
-
-Each signal face is a dictionary with seven entries: name, state, substate,
-toggles, timers, conflicts, and partial conflicts.
-\begin{itemize}
-\item{Name is the name of the signal face.  Signal faces are named for
-  the lane they control.  In our example these are
-  A, B, C, D, E, F, G, H, and J.}
-\item{The values of state and substate are the names of the current state
-  and substate of the signal face.}
-\item{Toggles is a dictionary of toggles indexed by toggle name.
-  Each toggle is a dictionary with two entries, name and value:}
-  \begin{itemize}
-  \item{Name: the name of the toggle.}
-  \item{Value: the current value of the toggle, either true or false.}
-  \end{itemize}
-\item{Timers is a dictonary of timers.  Each timer is a dictionary with
-  four entries, name, state, duration, and time left:}
-  \begin{itemize}
-    \item{Name is the name of the timer.}
-    \item{State is either Off, Running, Stopped, or Completed.}
-    \item{Duration is an integer containing the number of milliseconds
-      this timer will run when it is started.}
-    \item{Time left is an integer that holds the number of milliseconds
-      left in a running timer before it becomes completed.}
-  \end{itemize}
-
-\item{The Conflict and Partial Conflict entries are sets of signal faces
-    that conflict or partially conflict with this one.  Conflicting
-    signal faces are those that must be red for this signal face to be green.
-    Partially conflicting signal faces are the same, except that for left
-    turning signal faces the oncoming traffic is not stopped.}
-\end{itemize}
-
-\subsubsection{Other Sets, Lists and Dictionaries}
-
-\begin{itemize}
-\item{There is a dictionary of all signal faces, indexed by their names.}
-
-\item{There is a set of running timers.  It starts empty but when a timer
-it started, if its duration is not infinite, it is appended to the
-list of running timers.  When it completes it is removed from the list.
-A timer is represented as a tuple of length 2: the name of the
-signal face and the name of the timer.}
-
-\item{There is a list of signal faces that are requesting to turn green,
-and a set of signal faces that have been granted permission
-to turn green.  Both start empty.}
-
-\end{itemize}
-
-\subsection{Traffic Simulation}
+\section{Traffic Simulation}
 
 In order to test the code before we go to the expense of installing
 it in a traffic signal, we will need a simulator to activate the
@@ -1424,12 +1331,13 @@ traffic is proceeding through the intersection, so we can see how
 traffic flows.  For context, the signal faces also print information
 about the color of each signal face when it changes.
 
-\subsubsection{Data Structures}
+\subsection{Data Structures}
 
 \begin{itemize}
 \item{Each traffic element is represented by a dictionary, created when it is
 introduced into the simulation.  It has entries name, type, entrance lane,
-exit lane, current lane, distance to next milestone, and desired speed.}
+exit lane, current lane, list of milestones, current position in the list
+of milestones, distance to next milestone, and desired speed.}
 
 \begin{itemize}
 
@@ -1450,6 +1358,9 @@ exit lane, current lane, distance to next milestone, and desired speed.}
   intersection.  For traffic elements that have reached the intersection this
   is intersection.  For pedestrians waiting for a green signal
   this is the entrance lane.}
+\item[List of Milestones]This is a reference to the list provided by
+  the travel path.
+\item[Current Position in the List of Milestones]This starts at 0.
 \item{Distance to next milestone is the distance the traffic element
   must travel
   to reach the next place it is supposed to be.  For vehicles in lanes
@@ -1457,12 +1368,16 @@ exit lane, current lane, distance to next milestone, and desired speed.}
   For pedestrians not in the intersection this is 0.
   For vehicles in the intersection this is the distance to their exit
   lane.  For vehicles in lanes 1, 2, 3, 4, 5, or 6 this is the distance
-  to the edge of the diagram.  When this value goes to zero a traffic element
+  to the limit of the simulation.
+  When this value goes to zero a traffic element
   in lane A, ps, B, C, D, E, pn, F, G, H, or J enters the intersection
   unless it is facing a red light,
   a vehicle
   in the intersection enters its exit lane, a pedestrian in the intersection
-  and a vehicle in lanes 1, 2, 3, 4, 5, or 6 vanishes from the simulation.}
+  and a vehicle in lanes 1, 2, 3, 4, 5, or 6 vanishes from the simulation.
+  This is implemented by increasing Current Position in the List of Milestones
+  by 1 and fetching the next milestone.  If there is none the traffic
+  element vanishes.}
 \item{Desired speed is the speed at which the traffic element will travel if
   it is unconstrained.}
 \item{Current speed is the speed the traffic elememt is actually moving towards
@@ -1487,26 +1402,39 @@ A traffic element is entered into the traffic elements dictionary
 when it appears in the simulation and removed when it leaves.}
 \end{itemize}
 
-\subsection{Code}
+\subsection{Dimensions}
 
-The code starts by initializing the data structures.  It then loops
-doing these tasks:
-
-\begin{itemize}
-
-\item{Run each of the signal faces to see if it has any transitions.}
-  
-\item{Run each of the system programs.}
-
-\item{Check each traffic sensor, setting its corresponding toggle if
-  it is active.}
-
-\item{Run the traffic simulator.}
-
-\item{Advance the clock by one millisecond.  If the clock has not reached
-  the time limit we continue running the loop.}
-  
-\end{itemize}
+A realistic simulation must be based on the sizes and speeds of real objects.
+\begin{description}
+\item[Travel Lane Width]{The travel lanes are 12 feet wide.  Note that lanes
+  A and E have a 5.5-foot margin separating them from lanes B and F,
+  respectively, so that the left turn lanes do not interfere with each other.}
+\item[Travel Lane Length]{Travel lanes A and E are 450 feet in length.
+  This is 363 feet to stop from 45 miles per hour in a comfortable 11 seconds,
+  plus space for five cars or two trucks waiting for the light to change.
+  The other travel lanes extend beyond the simulation.}
+\item[Car size]{Cars are 15 feet in length.}
+\item[Truck Size]{Trucks are 40 feet in length.}
+\item[Intersection]{The example intersection is 36 feet from north to south
+  and 65.5 feet from east to west.}
+\item[Traffic Approaching Sensors]{The Traffic Approaching sensors are placed
+  365 feet behind the stop line to give the vehicle operator time to stop
+  if the light turns yellow just as the vehicle reaches that point.}
+\item[Minimum Green]{The minomum green interval for lanes B, C, F, and G
+  is 12 seconds; for lanes D, H, and J 7 seconds; for lanes A and E 5 seconds;
+  for lanes ps and pn 6 seconds.}
+\item[Passage Time]{The passage time for lanes B, C, F, and G is 3.5
+  seconds; for lanes A, D, E, H, and J is 1.9 seconds;
+  for lanes ps and pn is 1 second.}
+\item[Maximum Green]{The maximum green interval for lanes B, C, F, and G
+  is 60 seconds; for lanes D, H, and J 40 seconds; for lanes A and E
+  20 seconds; for lanes ps and pn 10 seconds.}
+\item[Yellow Change]{The yellow change interval is 5 seconds on lanes
+  B, C, F and G; 4 seconds on A and E; 3.5 seconds on lanes D, H and J;
+  19 seconds on lanes pn and ps.}
+\item[Red Clearance]{The red clearance interval is 1 second on lanes A, B, C,
+  E, F, G and J; 1.5 seconds on lanes D, and G; 3 seconds on lanes ps and pn.}
+\end{description}
 
 \section{dummy}
 \citep{Stephenson20160404}
@@ -1566,7 +1494,7 @@ freedoms as long as you follow the license terms.
 \section{Revision History}
 
 \begin{description}
-  \item[0.01 2024-09-02]Initial draft.
+  \item[0.01 2024-09-02]Begin work.
 \end{description}
 
 \bibliography{references}
