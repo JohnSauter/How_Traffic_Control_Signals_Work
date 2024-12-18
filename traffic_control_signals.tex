@@ -1,5 +1,5 @@
 % File: traffic_control_signals.tex, author: John Sauter,
-% date: December 15, 2024.
+% date: December 17, 2024.
 
 % Copyright © 2024 by John Sauter.
 % Licensed under the Creative Commons Attribution-ShareAlike 4.0 International
@@ -197,12 +197,12 @@
   pdfcontacturl={https://www.systemeyescomputerstore.com},
   pdfcopyright={Copyright {\copyright} 2024 by John Sauter},
   pdfurl={https://www.systemeyescomputerstore.com/traffic\%5Fsignals/traffic\%5Fsignals.pdf},
-  pdfdate={2024-12-15},
+  pdfdate={2024-12-17},
   pdflicenseurl={https://creativecommons.org/licenses/by-sa/4.0},
   pdfmetalang={en-US}
 }
 
-\date{2024-12-15}
+\date{2024-12-17}
 \maketitle
 \begin{abstract}
   Traffic control signals allow vehicles and pedestrians to move through
@@ -1335,9 +1335,7 @@ about the color of each signal face when it changes.
 
 \begin{itemize}
 \item{Each traffic element is represented by a dictionary, created when it is
-introduced into the simulation.  It has entries name, type, entrance lane,
-exit lane, current lane, list of milestones, current position in the list
-of milestones, distance to next milestone, and desired speed.}
+introduced into the simulation.  It has the following entries:}
 
 \begin{itemize}
 
@@ -1358,9 +1356,9 @@ of milestones, distance to next milestone, and desired speed.}
   intersection.  For traffic elements that have reached the intersection this
   is intersection.  For pedestrians waiting for a green signal
   this is the entrance lane.}
-\item[List of Milestones]This is a reference to the list provided by
-  the travel path.
-\item[Current Position in the List of Milestones]This starts at 0.
+\item{List of Milestones is a reference to the list provided by
+  the travel path.}
+\item{Current Position in the List of Milestones starts at 0.}
 \item{Distance to next milestone is the distance the traffic element
   must travel
   to reach the next place it is supposed to be.  For vehicles in lanes
@@ -1386,13 +1384,18 @@ of milestones, distance to next milestone, and desired speed.}
   \begin{itemize}
   \item{The speed limit of the road.  Lanes 1, 2, B, C, 4, 5, F, and G are
     limited to 45 miles per hour.  Lanes A, 3, D, E, 6, H, and J are limited
-    to 25 miles per hour.  Pedestrian crossings are limited to walking speed.}
+    to 25 miles per hour.  Pedestrian crossings are limited to walking speed:
+    3.5 feet per second.}
   \item{If there is a vehicle just ahead of this one, this vehicle
     is limited to the speed of that vehicle.}
   \item{If this traffic element is 0 distance from the intersection on lanes
     A, ps, B, C, D, E, pn, F, G, H, or J and the corresponding signal face
     is red, the speed of this traffic element is 0.}
   \end{itemize}
+\item{Length is the length of the vehicle.  If any part of the vehicle
+  overlaps any part of a sensor, the sensor is triggered.  Advance sensors
+  are 6 feet long; stop-line sensors are 20 feet long.  Sensors have
+  positions and lengths.}
 \end{itemize}
 
 \item{There is a dictionary named traffic elements whose entries
@@ -1400,11 +1403,19 @@ are the names of the traffic elements and whose values are the dictionaries
 that represent the traffic elements, described above.
 A traffic element is entered into the traffic elements dictionary
 when it appears in the simulation and removed when it leaves.}
+
+\item{There is a dictionary named travel paths.  Its entries are the
+  names of the travel paths and its values are tuples.  Each tuple
+  is a list of milestones.  A milestone is a tuple with two elements:
+  the name of the lane and the distance from the stop line.
+  For example, a1 is ((``B'', 528), (``B'', 450), (``A'', 450), (``A'', 0),
+  (``intersection'', 12), (``intersecton'', 0), (``1'', 0), (``1'', 528)).}
 \end{itemize}
 
 \subsection{Dimensions}
 
 A realistic simulation must be based on the sizes and speeds of real objects.
+
 \begin{description}
 \item[Travel Lane Width]{The travel lanes are 12 feet wide.  Note that lanes
   A and E have a 5.5-foot margin separating them from lanes B and F,
