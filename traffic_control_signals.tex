@@ -1,5 +1,5 @@
 % File: traffic_control_signals.tex, author: John Sauter,
-% date: December 17, 2024.
+% date: December 21, 2024.
 
 % Copyright © 2024 by John Sauter.
 % Licensed under the Creative Commons Attribution-ShareAlike 4.0 International
@@ -197,12 +197,12 @@
   pdfcontacturl={https://www.systemeyescomputerstore.com},
   pdfcopyright={Copyright {\copyright} 2024 by John Sauter},
   pdfurl={https://www.systemeyescomputerstore.com/traffic\%5Fsignals/traffic\%5Fsignals.pdf},
-  pdfdate={2024-12-17},
+  pdfdate={2024-12-21},
   pdflicenseurl={https://creativecommons.org/licenses/by-sa/4.0},
   pdfmetalang={en-US}
 }
 
-\date{2024-12-17}
+\date{2024-12-21}
 \maketitle
 \begin{abstract}
   Traffic control signals allow vehicles and pedestrians to move through
@@ -834,9 +834,11 @@ To prevent two signal faces from bouncing green time between each other,
 locking out a third signal face, this system program makes sure that
 traffic never has to wait too long for a green light.
 
-There is a persistent list of signal faces that are requesting green
-and a set of signal faces that are allowed to turn green.
-These both start empty.
+There is a persistent list of signal faces that are requesting green,
+a list of signal faces that are allowed to turn green and a list of signal
+faces that have turned green since the currently waiting signal face
+has had its chance.
+All of these start empty.
 
 Go through all of the signal faces looking for those with toggle Request
 Green true.  Add each such signal face to the list of
@@ -845,7 +847,9 @@ the list or in the set of signal faces allowed to turn green.
 
 If the set of signal faces allowed to turn green is empty, move the
 oldest signal face on the list of signal faces that are requesting
-green to the set of signal faces allowed to turn green.
+green to the set of signal faces allowed to turn green and empty the list
+of signal faces that have turned green since the currently waiting
+signal face has had its chance.
 
 Although we wish to allow the signal face that has been on the
 signal faces requesting to turn green list the longest to turn green
@@ -853,18 +857,38 @@ as soon as possible, we can let other signal faces turn green
 at the same time or sooner if they will not delay this signal face
 from turning green.
 
+If the oldest signal face on the list of signal faces that are
+requesting to turn green does not conflict with any of the signal
+faces that are already allowed to turn green, move it from the
+list of signal faces that are requesting to turn green to the set
+of signal faces that are allowed to turn green and empty the set
+of signal faces that have turned green since the currently waiting
+signal face has had its chance.
+
+Keep doing the above until the list is empty or the oldest signal
+face on the list cannot move because of a conflict.
+
+Now we try to let some signal faces turn green out of order, being
+careful not to allow a signal face to be starved out of any
+opportunity to turn green.
+
 Go through the list of signal faces that are requesting to turn green
 starting with the oldest.  For each such signal face that does not
 conflict with any of the signal faces already in the set of signal
-faces allow to turn green, or with the oldest signal face on the list
-of signal faces that are requesting to turn green, move that signal face
-to the set of signal faces allowed to turn green.
+faces allowed to turn green, and is not in the set of signal faces
+that have turned green since the currently waiting signal face has
+had its chance, move that signal face to the set of signal faces
+allowed to turn green and add it to the set of signal faces that have
+turned green since the currently waiting signal face has had its
+chance.
 
 Go through the set of signal faces allowed to turn green.  For any
-for which toggle Traffic Flowing is true, remove them from the set.
+for which toggle Traffic Flowing is true, remove them from the set
+since they have now turned green.
 
 Go through the set of signal faces allowed to turn green.  For each
-such signal face, set its Green Request Granted toggle.
+such signal face, set its Green Request Granted toggle, telling it
+that it can now turn green.
 
 \subsubsection{Clearance Requested}
 
@@ -1160,45 +1184,33 @@ F and G are allowing traffic to flow.
 Signal face ps now receives permission to turn green.  It asks
 signal faces A, B, C, F, and G to turn red.
 While signal face ps is waiting for signal faces A, B, C, F, and G to clear,
-signal faces D, E, pn, H, and J request permission to turn green, but
-signal face D conflicts with ps and all the rest conflict
-with D, so they all must wait.
+signal faces D, E, pn, H, and J request permission to turn green.
+Signal face D conflicts with ps, but E does not so it is allowed to
+turn left flashing yellow out of order and immediately does so
+since it does not conflict with A or ps.  Signal face H conflicts
+with pn and signal face J conflicts with ps, so they have permission
+to turn green but cannot do so immediately.
 
-When signal faces F and G are clear, signal face A changes from flashing
+When signal faces F and G are clear, signal faces A and E change from flashing
 left arrow yellow to steady left arrow green, since the left turn is now
 protected rather than permissive.
 
-When signal face A becomes clear signal face ps changes from Don't Walk
-to Walk.  Signal face D now has permission to turn green and so asks
-signal face ps to turn red.
+When signal faces A and E become clear signal faces ps and pn changes from
+Don't Walk to Walk.  Signal faces H and J are now permitted to turn green
+out of order so they ask ps and pn to turn red.
 
-When signal face ps is clear, signal face D turns green.  Signal face E
-now has permission to turn green.  Signal faces pn and H do not since they
-conflict with E, but signal face J does since it does
-not conflict with E.  Signal faces E and J request signal face D to
-turn red.
+When signal faces ps and pn are clear, signal faces H and J turn green
+and signal face D finally gets permission to turn green.  When signal faces
+H and J are clear, signal face D turns green.
 
-When signal face D is clear, signal faces E and J turn green.  This
-gives permission to signal face pn to turn green, and it asks signal face
-E to turn red.
-
-When signal face E is clear, signal face pn changes from Don't Walk to
-Walk.  Signal face H now has permission to turn green and it asks
-signal face pn to turn red.
-
-When signal face pn is clear, signal face H turns red.  This gives
-signal faces B, C, F, and G permission to turn green.  They want to
-turn green even though they have no traffic because they have
-exceeded their Red Limit timers.  They ask signal faces H and J
-to turn red.
-
-When signal faces H and J are clear, signal faces B, C, F, and G
-turn green and we are back to the idle state.
+While signal face D is green, signal faces B, C, F, and G reach their
+Green Limit and are given permisson to turn green.  This causes signal
+face D to turn red, which allows signal faces B, C, F, and G to turn green
+and we are back to the idle state.
 
 To summarize, if traffic arrives in quick succession on signal faces
 A, ps, D, E, pn, H and J, traffic will flow through signal face
-A then through ps, then D, then E and J, then pn and J, and finally H
-and J.
+A and E, then through ps and pn, then H and J, and finally D.
 
 The following is an event log from this scenario, with only the most
 important events shows.

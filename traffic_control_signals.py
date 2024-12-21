@@ -53,7 +53,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.1 2024-12-15',
+                     version='traffic_control_signals 0.3 2024-12-21',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -1210,7 +1210,7 @@ if (do_script_input == 1):
 # The clock is advanced only if this cycle has resulted in no activity.
 no_activity = True              
 
-# Format the clock
+# Format the clock for display
 def format_time(the_time):
   return (f'{the_time:07.3f}')
 
@@ -1276,13 +1276,17 @@ def does_conflict (signal_face, conflicting_signal_face):
 
 # Allow signal faces to turn green in the order they requested, but
 # allow non-conflicting faces to turn green even if they were requested
-# later.
+# later, provided they haven't already turned green while the oldest
+# request is waiting for its turn.
 
 requesting_green = list()
 allowed_green = list()
+had_its_chance = list()
+
 def green_request_granted():
   global requesting_green
   global allowed_green
+  global had_its_chance
   global no_activity
 
   # If a signal face is requesting green, place it on the list of
@@ -1299,39 +1303,68 @@ def green_request_granted():
 
   # If the list of signal faces allowed to turn green is empty,
   # allow the oldest signal face on the list of signal faces
-  # requesting to turn green to turn green.
+  # requesting to turn green to turn green and empty the list
+  # of signal faces that have turned green out of turn.
   if ((len(allowed_green) == 0) and (len(requesting_green) > 0)):
     next_green = requesting_green.pop(0)  
     allowed_green.append(next_green)
+    had_its_chance = list()
     no_activity = False
     if (verbosity_level > 1):
       print (format_time(current_time) + " signal face " + next_green["name"] +
              " is allowed to turn green because no other face is" +
              " allowed to turn green.")
 
-  # Allow a signal face to turn green even if it is not its turn
-  # provided it does not conflict with any signal face already
-  # allowed to turn green or with the next signal face that will
-  # be allowed to turn green.
-  for signal_face in requesting_green:
+  # If the oldest signal face on the list of signal faces requesting
+  # to turn green does not conflict with any of the signal faces already
+  # allowed to turn green, also allow it to turn green.  Keep doing this
+  # until either there are no signal faces requesting to turn green
+  # or the oldest signal face has a conflict.
+  keep_greening = True
+  while (keep_greening):
+    if (len(requesting_green) == 0):
+      keep_greening = False
+      continue
+    signal_face = requesting_green[0]
     no_conflicts = True
+    keep_greening= False
     for conflicting_signal_face in allowed_green:
       if (does_conflict (signal_face, conflicting_signal_face)):
-        no_conflicts = False
-    if (len(requesting_green) > 0):
-      next_green = requesting_green[0]
-      if (does_conflict (signal_face, next_green)):
         no_conflicts = False
     if (no_conflicts):
       requesting_green.remove(signal_face)
       allowed_green.append(signal_face)
+      had_its_chance.append(signal_face)
+      keep_greening = True
       no_activity = False
       if (verbosity_level > 1):
         print (format_time(current_time) + " signal face " +
                signal_face["name"] +
                " is allowed to turn green because it does not conflict" +
-               " with any other face that is already allowed to turn " +
-               " green or with the next signal face to turn green.")
+               " with any signal face that is already allowed to turn " +
+               " green.")
+    
+  # Allow a signal face to turn green even if it is not its turn
+  # provided it does not conflict with any signal face already
+  # allowed to turn green and has not already been allowed to turn
+  # green out of turn.
+  for signal_face in requesting_green:
+    no_conflicts = True
+    for conflicting_signal_face in allowed_green:
+      if (does_conflict (signal_face, conflicting_signal_face)):
+        no_conflicts = False
+    if (no_conflicts and (signal_face not in had_its_chance)):
+      requesting_green.remove(signal_face)
+      allowed_green.append(signal_face)
+      had_its_chance.append(signal_face)
+      no_activity = False
+      if (verbosity_level > 1):
+        print (format_time(current_time) + " signal face " +
+               signal_face["name"] +
+               " is allowed to turn green because it does not conflict" +
+               " with any other face that is already allowed to turn" +
+               " green and has not already turned green while the oldest" +
+               " signal face has been waiting for its turn.")
 
   if (verbosity_level > 2):
     requesting_green_names = ""

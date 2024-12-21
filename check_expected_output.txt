@@ -11,8 +11,8 @@
 000.000 signal face J lamp set to Steady Right Arrow Red.
 060.000 signal face B lamp set to Steady Up Arrow Green.
 060.000 signal face C lamp set to Steady Circular Green.
-060.000 signal face G lamp set to Steady Circular Green.
 060.000 signal face F lamp set to Steady Up Arrow Green.
+060.000 signal face G lamp set to Steady Circular Green.
 200.000 sensor A/Traffic Present set to True.
 200.000 signal face A lamp set to Flashing Left Arrow Yellow (lower).
 200.100 sensor ps/Traffic Present set to True.
@@ -22,6 +22,7 @@
 200.100 signal face G lamp set to Steady Circular Yellow.
 200.200 sensor D/Traffic Present set to True.
 200.300 sensor E/Traffic Present set to True.
+200.300 signal face E lamp set to Flashing Left Arrow Yellow (lower).
 200.400 sensor pn/Traffic Present set to True.
 200.500 sensor H/Traffic Present set to True.
 200.600 sensor J/Traffic Present set to True.
@@ -30,107 +31,123 @@
 205.100 signal face F lamp set to Steady Circular Red.
 205.100 signal face G lamp set to Steady Circular Red.
 206.100 signal face A lamp set to Steady Left Arrow Green.
+206.100 signal face E lamp set to Steady Left Arrow Green.
 226.100 signal face A lamp set to Steady Left Arrow Yellow (upper).
+226.100 signal face E lamp set to Steady Left Arrow Yellow (upper).
 229.600 signal face A lamp set to Steady Left Arrow Red.
+229.600 signal face E lamp set to Steady Left Arrow Red.
 230.600 signal face ps lamp set to Walk.
+230.600 signal face pn lamp set to Walk.
 240.600 signal face ps lamp set to Walk with Countdown.
+240.600 signal face pn lamp set to Walk with Countdown.
 259.600 signal face ps lamp set to Don't Walk.
-262.600 signal face D lamp set to Steady Circular Green.
-292.600 signal face D lamp set to Steady Circular Yellow.
-295.600 signal face D lamp set to Steady Circular Red.
-297.100 signal face E lamp set to Steady Left Arrow Green.
-297.100 signal face J lamp set to Steady Right Arrow Green.
-317.100 signal face E lamp set to Steady Left Arrow Yellow (upper).
-320.600 signal face E lamp set to Steady Left Arrow Red.
-321.600 signal face pn lamp set to Walk.
-327.100 signal face J lamp set to Steady Right Arrow Yellow.
-330.100 signal face J lamp set to Steady Right Arrow Red.
-331.100 signal face ps lamp set to Walk.
-331.600 signal face pn lamp set to Walk with Countdown.
-350.600 signal face pn lamp set to Don't Walk.
-353.600 signal face H lamp set to Steady Left Arrow Green and Steady Circular Green.
-353.600 signal face ps lamp set to Walk with Countdown.
-372.600 signal face ps lamp set to Don't Walk.
-383.600 signal face H lamp set to Steady Circular Yellow.
-386.600 signal face H lamp set to Steady Circular Red.
-388.100 signal face A lamp set to Steady Left Arrow Green.
-388.100 signal face B lamp set to Steady Up Arrow Green.
-388.100 signal face C lamp set to Steady Circular Green.
-408.100 signal face A lamp set to Steady Left Arrow Yellow (upper).
-411.600 signal face A lamp set to Steady Left Arrow Red.
-412.600 signal face F lamp set to Steady Up Arrow Green.
-412.600 signal face G lamp set to Steady Circular Green.
-412.600 signal face B lamp set to Steady Circular Yellow.
-412.600 signal face C lamp set to Steady Circular Yellow.
-417.600 signal face B lamp set to Steady Circular Red.
-417.600 signal face C lamp set to Steady Circular Red.
-428.100 signal face F lamp set to Steady Circular Yellow.
-428.100 signal face G lamp set to Steady Circular Yellow.
-433.100 signal face F lamp set to Steady Circular Red.
-433.100 signal face G lamp set to Steady Circular Red.
-434.100 signal face D lamp set to Steady Circular Green.
-464.100 signal face D lamp set to Steady Circular Yellow.
-467.100 signal face D lamp set to Steady Circular Red.
-468.600 signal face E lamp set to Steady Left Arrow Green.
-468.600 signal face J lamp set to Steady Right Arrow Green.
-488.600 signal face E lamp set to Steady Left Arrow Yellow (upper).
-492.100 signal face E lamp set to Steady Left Arrow Red.
-493.100 signal face pn lamp set to Walk.
-498.600 signal face J lamp set to Steady Right Arrow Yellow.
-501.600 signal face J lamp set to Steady Right Arrow Red.
-502.600 signal face ps lamp set to Walk.
-503.100 signal face pn lamp set to Walk with Countdown.
-522.100 signal face pn lamp set to Don't Walk.
-525.100 signal face H lamp set to Steady Left Arrow Green and Steady Circular Green.
-525.100 signal face ps lamp set to Walk with Countdown.
-544.100 signal face ps lamp set to Don't Walk.
-555.100 signal face H lamp set to Steady Circular Yellow.
-558.100 signal face H lamp set to Steady Circular Red.
-559.600 signal face A lamp set to Steady Left Arrow Green.
-579.600 signal face A lamp set to Steady Left Arrow Yellow (upper).
-583.100 signal face A lamp set to Steady Left Arrow Red.
-584.100 signal face D lamp set to Steady Circular Green.
+259.600 signal face pn lamp set to Don't Walk.
+262.600 signal face H lamp set to Steady Left Arrow Green and Steady Circular Green.
+262.600 signal face J lamp set to Steady Right Arrow Green.
+292.600 signal face J lamp set to Steady Right Arrow Yellow.
+295.600 signal face J lamp set to Steady Right Arrow Red.
+296.600 signal face ps lamp set to Walk.
+296.600 signal face H lamp set to Steady Circular Yellow.
+299.600 signal face H lamp set to Steady Circular Red.
+306.600 signal face ps lamp set to Walk with Countdown.
+325.600 signal face ps lamp set to Don't Walk.
+328.600 signal face D lamp set to Steady Circular Green.
+358.600 signal face D lamp set to Steady Circular Yellow.
+361.600 signal face D lamp set to Steady Circular Red.
+363.100 signal face A lamp set to Steady Left Arrow Green.
+363.100 signal face E lamp set to Steady Left Arrow Green.
+383.100 signal face A lamp set to Steady Left Arrow Yellow (upper).
+383.100 signal face E lamp set to Steady Left Arrow Yellow (upper).
+386.600 signal face A lamp set to Steady Left Arrow Red.
+386.600 signal face E lamp set to Steady Left Arrow Red.
+387.600 signal face B lamp set to Steady Up Arrow Green.
+387.600 signal face C lamp set to Steady Circular Green.
+387.600 signal face F lamp set to Steady Up Arrow Green.
+387.600 signal face G lamp set to Steady Circular Green.
+403.100 signal face B lamp set to Steady Circular Yellow.
+403.100 signal face C lamp set to Steady Circular Yellow.
+403.100 signal face F lamp set to Steady Circular Yellow.
+403.100 signal face G lamp set to Steady Circular Yellow.
+408.100 signal face B lamp set to Steady Circular Red.
+408.100 signal face C lamp set to Steady Circular Red.
+408.100 signal face F lamp set to Steady Circular Red.
+408.100 signal face G lamp set to Steady Circular Red.
+409.100 signal face pn lamp set to Walk.
+409.100 signal face J lamp set to Steady Right Arrow Green.
+419.100 signal face pn lamp set to Walk with Countdown.
+438.100 signal face pn lamp set to Don't Walk.
+439.100 signal face J lamp set to Steady Right Arrow Yellow.
+441.100 signal face H lamp set to Steady Left Arrow Green and Steady Circular Green.
+442.100 signal face J lamp set to Steady Right Arrow Red.
+443.100 signal face ps lamp set to Walk.
+453.100 signal face ps lamp set to Walk with Countdown.
+471.100 signal face H lamp set to Steady Circular Yellow.
+472.100 signal face ps lamp set to Don't Walk.
+474.100 signal face H lamp set to Steady Circular Red.
+475.600 signal face D lamp set to Steady Circular Green.
+505.600 signal face D lamp set to Steady Circular Yellow.
+508.600 signal face D lamp set to Steady Circular Red.
+510.100 signal face A lamp set to Steady Left Arrow Green.
+510.100 signal face E lamp set to Steady Left Arrow Green.
+530.100 signal face A lamp set to Steady Left Arrow Yellow (upper).
+530.100 signal face E lamp set to Steady Left Arrow Yellow (upper).
+533.600 signal face A lamp set to Steady Left Arrow Red.
+533.600 signal face E lamp set to Steady Left Arrow Red.
+534.600 signal face pn lamp set to Walk.
+534.600 signal face J lamp set to Steady Right Arrow Green.
+544.600 signal face pn lamp set to Walk with Countdown.
+563.600 signal face pn lamp set to Don't Walk.
+564.600 signal face J lamp set to Steady Right Arrow Yellow.
+566.600 signal face H lamp set to Steady Left Arrow Green and Steady Circular Green.
+567.600 signal face J lamp set to Steady Right Arrow Red.
+568.600 signal face ps lamp set to Walk.
+578.600 signal face ps lamp set to Walk with Countdown.
+596.600 signal face H lamp set to Steady Circular Yellow.
+597.600 signal face ps lamp set to Don't Walk.
+599.600 signal face H lamp set to Steady Circular Red.
 601.000 sensor A/Traffic Present set to False.
 601.100 sensor ps/Traffic Present set to False.
+601.100 signal face B lamp set to Steady Up Arrow Green.
+601.100 signal face C lamp set to Steady Circular Green.
+601.100 signal face F lamp set to Steady Up Arrow Green.
+601.100 signal face G lamp set to Steady Circular Green.
+601.100 signal face E lamp set to Flashing Left Arrow Yellow (lower).
+601.100 signal face A lamp set to Flashing Left Arrow Yellow (lower).
 601.200 sensor D/Traffic Present set to False.
 601.300 sensor E/Traffic Present set to False.
 601.400 sensor pn/Traffic Present set to False.
 601.500 sensor H/Traffic Present set to False.
 601.600 sensor J/Traffic Present set to False.
-603.100 signal face D lamp set to Steady Circular Yellow.
-606.100 signal face D lamp set to Steady Circular Red.
-607.600 signal face B lamp set to Steady Up Arrow Green.
-607.600 signal face C lamp set to Steady Circular Green.
-607.600 signal face F lamp set to Steady Up Arrow Green.
-607.600 signal face G lamp set to Steady Circular Green.
-607.600 signal face E lamp set to Flashing Left Arrow Yellow (lower).
-623.100 signal face B lamp set to Steady Circular Yellow.
-623.100 signal face C lamp set to Steady Circular Yellow.
-623.100 signal face F lamp set to Steady Circular Yellow.
-623.100 signal face G lamp set to Steady Circular Yellow.
-628.100 signal face B lamp set to Steady Circular Red.
-628.100 signal face C lamp set to Steady Circular Red.
-628.100 signal face F lamp set to Steady Circular Red.
-628.100 signal face G lamp set to Steady Circular Red.
-629.100 signal face E lamp set to Steady Left Arrow Green.
-629.100 signal face J lamp set to Steady Right Arrow Green.
-636.000 signal face E lamp set to Steady Left Arrow Yellow (upper).
-638.000 signal face J lamp set to Steady Right Arrow Yellow.
-639.500 signal face E lamp set to Steady Left Arrow Red.
-640.500 signal face pn lamp set to Walk.
-641.000 signal face J lamp set to Steady Right Arrow Red.
-642.000 signal face ps lamp set to Walk.
-647.500 signal face pn lamp set to Walk with Countdown.
-666.500 signal face pn lamp set to Don't Walk.
-669.500 signal face H lamp set to Steady Left Arrow Green and Steady Circular Green.
-669.500 signal face ps lamp set to Walk with Countdown.
-678.400 signal face H lamp set to Steady Circular Yellow.
-681.400 signal face H lamp set to Steady Circular Red.
-688.500 signal face ps lamp set to Don't Walk.
-691.500 signal face A lamp set to Steady Left Arrow Green.
-691.500 signal face B lamp set to Steady Up Arrow Green.
-691.500 signal face C lamp set to Steady Circular Green.
-698.400 signal face A lamp set to Steady Left Arrow Yellow (upper).
-701.900 signal face A lamp set to Steady Left Arrow Red.
-702.900 signal face F lamp set to Steady Up Arrow Green.
-702.900 signal face G lamp set to Steady Circular Green.
+616.600 signal face B lamp set to Steady Circular Yellow.
+616.600 signal face C lamp set to Steady Circular Yellow.
+616.600 signal face F lamp set to Steady Circular Yellow.
+616.600 signal face G lamp set to Steady Circular Yellow.
+621.600 signal face B lamp set to Steady Circular Red.
+621.600 signal face C lamp set to Steady Circular Red.
+621.600 signal face F lamp set to Steady Circular Red.
+621.600 signal face G lamp set to Steady Circular Red.
+622.600 signal face A lamp set to Steady Left Arrow Green.
+622.600 signal face E lamp set to Steady Left Arrow Green.
+629.500 signal face A lamp set to Steady Left Arrow Yellow (upper).
+629.500 signal face E lamp set to Steady Left Arrow Yellow (upper).
+633.000 signal face A lamp set to Steady Left Arrow Red.
+633.000 signal face E lamp set to Steady Left Arrow Red.
+634.000 signal face pn lamp set to Walk.
+634.000 signal face J lamp set to Steady Right Arrow Green.
+641.000 signal face pn lamp set to Walk with Countdown.
+642.900 signal face J lamp set to Steady Right Arrow Yellow.
+645.900 signal face J lamp set to Steady Right Arrow Red.
+646.900 signal face ps lamp set to Walk.
+660.000 signal face pn lamp set to Don't Walk.
+663.000 signal face H lamp set to Steady Left Arrow Green and Steady Circular Green.
+663.000 signal face ps lamp set to Walk with Countdown.
+671.900 signal face H lamp set to Steady Circular Yellow.
+674.900 signal face H lamp set to Steady Circular Red.
+682.000 signal face ps lamp set to Don't Walk.
+685.000 signal face D lamp set to Steady Circular Green.
+693.900 signal face D lamp set to Steady Circular Yellow.
+696.900 signal face D lamp set to Steady Circular Red.
+698.400 signal face B lamp set to Steady Up Arrow Green.
+698.400 signal face C lamp set to Steady Circular Green.
+698.400 signal face F lamp set to Steady Up Arrow Green.
+698.400 signal face G lamp set to Steady Circular Green.
