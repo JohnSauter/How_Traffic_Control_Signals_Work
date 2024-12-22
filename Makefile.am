@@ -147,12 +147,12 @@ sensor_map.tex : traffic_control_signals.py
 
 # Generate the log files which summarize the finite state machines operation.
 idle_log.tex : traffic_control_signals.py
-	python3 ${srcdir}/traffic_control_signals.py --log-level 3 \
+	python3 ${srcdir}/traffic_control_signals.py --log-level 4 \
 --log-file ${builddir}/idle_log.tex --duration 200  \
 --log-caption "Power On to Idle State"
 
 left_turn_log.tex : traffic_control_signals.py left_turn_script.txt
-	python3 ${srcdir}/traffic_control_signals.py --log-level 3 \
+	python3 ${srcdir}/traffic_control_signals.py --log-level 4 \
 --log-file ${builddir}/left_turn_log.tex --duration 400 --log-start 199 \
 --script ${srcdir}/left_turn_script.txt --log-caption "Left Turn"
 
@@ -163,7 +163,7 @@ pedestrian_log.tex : traffic_control_signals.py pedestrian_script.txt
 
 pedestrian_and_left_turn_log.tex : traffic_control_signals.py \
 pedestrian_and_left_turn_script.txt
-	python3 ${srcdir}/traffic_control_signals.py --log-level 2 \
+	python3 ${srcdir}/traffic_control_signals.py --log-level 3 \
 --log-file ${builddir}/pedestrian_and_left_turn_log.tex --duration 400 \
 --log-start 199 --script ${srcdir}/pedestrian_and_left_turn_script.txt \
 --log-caption "Pedestrian then Left Turn"
@@ -211,7 +211,7 @@ verify_files.sh : verify_files_template.sh check_output.txt
 check_output.txt : traffic_control_signals.py
 	python3 ${srcdir}/traffic_control_signals.py \
 --script ${srcdir}/heavy_script.txt \
---duration 1000 | tee ${builddir}/check_output.txt
+--duration 1000 --verbose 4 | tee ${builddir}/check_output.txt
 
 # When removing files, also remove the followins:
 CLEANFILES = \

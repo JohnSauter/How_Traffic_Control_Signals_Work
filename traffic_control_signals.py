@@ -53,7 +53,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.3 2024-12-21',
+                     version='traffic_control_signals 0.4 2024-12-21',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -83,6 +83,9 @@ parser.add_argument ('--log-caption', metavar='log_caption',
                      help='caption of table created by log file')
 parser.add_argument ('--script-input', metavar='script_input',
                      help='events for the simulator to execute')
+parser.add_argument ('--max-wait', type=int, metavar='max_wait',
+                     help='max wait time before getting preferernce ' +
+                     'for turning green; default 60 seconds.')
 parser.add_argument ('--verbose', type=int, metavar='verbosity_level',
                      help='control the amount of output from the program: ' +
                      '1 is normal, 0 suppresses summary messages')
@@ -102,8 +105,16 @@ log_start_time  = decimal.Decimal ('-1.000')
 log_caption = "no caption"
 do_script_input = 0
 script_input_file = ""
+max_wait_time = 60
 verbosity_level = 1
 error_counter = 0
+
+# Verbosity_level and logging level:
+# 1 only totals and errors
+# 2 add lamp changes and script actions
+# 3 add state changes
+# 4 add toggle and sensor changes
+# 5 add lots of other items
 
 # Parse the command line.
 arguments = parser.parse_args ()
@@ -155,6 +166,9 @@ if (arguments ['script_input'] != None):
   do_script_input = 1
   script_file_name = arguments ['script_input']
   
+if (arguments ['max_wait'] != None):
+  max_wait_time = arguments ['max_wait']
+
 if (arguments ['verbose'] != None):
   verbosity_level = int(arguments ['verbose'])
 
@@ -165,7 +179,7 @@ current_time = fractions.Fraction(start_time)
 # Write the first lines in the log file.
 
 if (do_logging):
-  logfile.write ("\\begin{longtable}{c | P{1.0cm} | p{9.25cm}}\n")
+  logfile.write ("\\begin{longtable}{c | P{1.00cm} | p{9.25cm}}\n")
   logfile.write ("  \\caption{" + log_caption + "} \\\\\n")
   logfile.write ("  Time & Signal Face & Event \\endfirsthead \n")
   logfile.write ("  \\caption{" + log_caption + " continued} \\\\\n")
@@ -1239,20 +1253,46 @@ def set_toggle_value (signal_face, toggle_name, new_value, source):
         else:
           byline = ""
           
-        if (verbosity_level > 1):
-          print (format_time(current_time) + " Signal face " +
+        if (verbosity_level >= 4):
+          print (format_time(current_time) + " signal face " +
                  signal_face["name"] + " " + operator + toggle_name + byline +
                  ".")
             
-        if ((logging_level > 2) and (current_time > log_start_time)):
+        if ((logging_level >= 4) and (current_time > log_start_time)):
           logfile.write ("\\hline " + format_time(current_time) + " & " +
                          signal_face["name"] + "& " + operator + 
                          toggle_name + byline + ". \\\\\n")
         no_activity = False
         the_toggle["value"] = new_value
+
+        # Compute the maximum time a traffic element must wait at this
+        # signal face.  The wait time starts when a sensor triggers a
+        # toggle and ends when traffic is flowing through that signal face.
+        if ((toggle_name == "Traffic Flowing") and ("waiting" in signal_face)):
+          if (signal_face["waiting"]):
+            signal_face["waiting"] = False
+            wait_time = current_time - signal_face["wait start"]
+            if (verbosity_level >= 5):
+              print (format_time(current_time) + " signal face " +
+                     signal_face["name"] + " finishes waiting: " +
+                     format_time(wait_time) + ".")
+            if ((logging_level >= 5) and (current_time > log_start_time)):
+              logfile.write ("\\hline " + format_time(current_time) + " & " +
+                             signal_face ["name"] +
+                             " & finishes waiting for " +
+                             format_time(wait_time) + ".\\\\\n")
+            if ("max wait time" not in signal_face):
+              signal_face ["max wait time"] = wait_time
+              signal_face ["max wait start"] = signal_face["wait start"]
+            else:
+              if (wait_time > signal_face["max wait time"]):
+                signal_face["max wait time"] = wait_time
+                signal_face["max wait start"] = signal_face["wait start"]
+              
+                        
       return
     
-  if (verbosity_level > 0):
+  if (verbosity_level >= 1):
     print (format_time(current_time) + " toggle " + signal_face["name"] + "/" +
            toggle_name + " unknown.")
     error_counter = error_counter + 1
@@ -1263,12 +1303,12 @@ def set_toggle_value (signal_face, toggle_name, new_value, source):
 def does_conflict (signal_face, conflicting_signal_face):
   conflict_set = signal_face["conflicts"]
   if (conflicting_signal_face ["name"] in conflict_set):
-    if (verbosity_level > 2):
+    if (verbosity_level >= 5):
       print (format_time(current_time) + " signal face " +
              signal_face["name"] + " conflicts with " +
              conflicting_signal_face ["name"] + ".")
     return True
-  if (verbosity_level > 2):
+  if (verbosity_level >= 5):
     print (format_time(current_time) + " signal face " + signal_face["name"] +
            " does not conflict with " + conflicting_signal_face ["name"] + ".")
   return False
@@ -1287,19 +1327,34 @@ def green_request_granted():
   global requesting_green
   global allowed_green
   global had_its_chance
+  global max_wait_time
   global no_activity
 
   # If a signal face is requesting green, place it on the list of
-  # signal faces requsting green unless it is already on the list
+  # signal faces requesting green unless it is already on the list
   # or is on the list of signal faces allowed to turn green.
   for signal_face in signal_faces_list:
     if ((toggle_value(signal_face, "Request Green")) and
          (signal_face not in requesting_green) and
          (signal_face not in allowed_green)):
-      if (verbosity_level > 1):
+      if (verbosity_level >= 5):
         print (format_time(current_time) + " signal face " +
                signal_face["name"] + " requesting green.")
       requesting_green.append(signal_face)
+
+      # Start the waiting clock.  It will end when traffic flows
+      # at this signal face.              
+      if ("waiting" not in signal_face):
+        signal_face["waiting"] = False
+      if (not signal_face["waiting"]):
+        signal_face["wait start"] = current_time
+        signal_face["waiting"] = True
+        if (verbosity_level >= 5):
+          print (format_time(current_time) + " signal face " +
+                 signal_face["name"] + " starts waiting.")
+        if ((logging_level >= 5) and (current_time > log_start_time)):
+          logfile.write ("\\hline " + format_time(current_time) + " & " +
+                         signal_face ["name"] + "& starts waiting. \\\\\n")
 
   # If the list of signal faces allowed to turn green is empty,
   # allow the oldest signal face on the list of signal faces
@@ -1310,7 +1365,7 @@ def green_request_granted():
     allowed_green.append(next_green)
     had_its_chance = list()
     no_activity = False
-    if (verbosity_level > 1):
+    if (verbosity_level >= 5):
       print (format_time(current_time) + " signal face " + next_green["name"] +
              " is allowed to turn green because no other face is" +
              " allowed to turn green.")
@@ -1337,7 +1392,7 @@ def green_request_granted():
       had_its_chance.append(signal_face)
       keep_greening = True
       no_activity = False
-      if (verbosity_level > 1):
+      if (verbosity_level >= 5):
         print (format_time(current_time) + " signal face " +
                signal_face["name"] +
                " is allowed to turn green because it does not conflict" +
@@ -1347,26 +1402,37 @@ def green_request_granted():
   # Allow a signal face to turn green even if it is not its turn
   # provided it does not conflict with any signal face already
   # allowed to turn green and has not already been allowed to turn
-  # green out of turn.
-  for signal_face in requesting_green:
-    no_conflicts = True
-    for conflicting_signal_face in allowed_green:
-      if (does_conflict (signal_face, conflicting_signal_face)):
-        no_conflicts = False
-    if (no_conflicts and (signal_face not in had_its_chance)):
-      requesting_green.remove(signal_face)
-      allowed_green.append(signal_face)
-      had_its_chance.append(signal_face)
-      no_activity = False
-      if (verbosity_level > 1):
+  # green out of turn.  However, if the oldest signal face has
+  # been waiting a long time, don't allow any other signal face
+  # to go ahead of it.... TODO
+  if (len(requesting_green) > 0):
+    signal_face = requesting_green[0]
+    waiting_time = current_time - signal_face["wait start"]
+    if (waiting_time > max_wait_time):
+      if (verbosity_level >= 5):
         print (format_time(current_time) + " signal face " +
                signal_face["name"] +
-               " is allowed to turn green because it does not conflict" +
-               " with any other face that is already allowed to turn" +
-               " green and has not already turned green while the oldest" +
-               " signal face has been waiting for its turn.")
+               " is given preference because it has been waiting a long time.")
+    else:
+      for signal_face in requesting_green:
+        no_conflicts = True
+        for conflicting_signal_face in allowed_green:
+          if (does_conflict (signal_face, conflicting_signal_face)):
+            no_conflicts = False
+        if (no_conflicts and (signal_face not in had_its_chance)):
+          requesting_green.remove(signal_face)
+          allowed_green.append(signal_face)
+          had_its_chance.append(signal_face)
+          no_activity = False
+          if (verbosity_level >= 5):
+            print (format_time(current_time) + " signal face " +
+                   signal_face["name"] +
+                   " is allowed to turn green because it does not conflict" +
+                   " with any other face that is already allowed to turn" +
+                   " green and has not already turned green while the oldest" +
+                   " signal face has been waiting for its turn.")
 
-  if (verbosity_level > 2):
+  if (verbosity_level >= 5):
     requesting_green_names = ""
     for signal_face in requesting_green:
       requesting_green_names = (requesting_green_names +
@@ -1463,7 +1529,7 @@ def perform_actions (signal_face, substate):
   global error_counter
   
   for action in substate["actions"]:
-    if (verbosity_level > 1):
+    if (verbosity_level >= 5):
       print (format_time(current_time) + " signal face " +
              signal_face["name"] + " action " + action[0] + " : " + action[1] +
              ".")
@@ -1476,11 +1542,11 @@ def perform_actions (signal_face, substate):
         else:
           external_lamp_name = internal_lamp_name
         signal_face["iluminated lamp name"] = external_lamp_name
-        if (verbosity_level > 0):
+        if (verbosity_level >= 2):
           print (format_time(current_time) + " signal face " +
                  signal_face["name"] + " lamp set to " + external_lamp_name +
                  ".")
-        if ((logging_level > 0) and (current_time > log_start_time)):
+        if ((logging_level >= 2) and (current_time > log_start_time)):
           logfile.write ("\\hline " + format_time(current_time) + " & " +
                          signal_face["name"] +
                          " & Set lamp to " + external_lamp_name + ". \\\\\n")
@@ -1519,13 +1585,13 @@ def perform_actions (signal_face, substate):
                 # If it is active we cannot clear this toggle.
                 if (test_sensor["value"]):
                     new_toggle_value = True
-                    if (verbosity_level > 1):
+                    if (verbosity_level >= 4):
                       print (format_time(current_time) + " signal face " +
                              signal_face_name +
                              " Unable to clear toggle " + toggle_name +
                              " because sensor " + full_test_sensor_name +
                              " is still active.")
-                    if ((logging_level > 2) and
+                    if ((logging_level >= 4) and
                         (current_time > log_start_time)):
                       logfile.write ("\\hline " + format_time(current_time) +
                                      " & " + signal_face_name +
@@ -1549,17 +1615,17 @@ def perform_actions (signal_face, substate):
               the_timer["completion time"] = current_time + remaining_time
               if (the_timer not in running_timers):
                 running_timers.append(the_timer)
-              if (verbosity_level > 1):
+              if (verbosity_level >= 5):
                 print (format_time(current_time) + " signal face " +
                        signal_face["name"] + " start timer " +
                        timer_name + " duration " +
                        format_time(the_timer["remaining time"]) + ".")
-              if ((logging_level > 2) and (current_time > log_start_time)):
+              if ((logging_level >= 5) and (current_time > log_start_time)):
                 logfile.write ("\\hline " + format_time(current_time) + " & " +
                                signal_face ["name"] + " & Start timer " +
                                timer_name + ". \\\\\n")
       case _:
-        if (verbosity_level > 0):
+        if (verbosity_level >= 1):
           print (format_time(current_time) + " signal face " +
                  signal_face["name"] + " unknown action " + action[0] + ".")
           error_counter = error_counter + 1
@@ -1584,18 +1650,18 @@ def enter_state (signal_face, state_name, substate_name):
   if ((state_name != old_state_name) or (substate_name != old_substate_name)):
     no_activity = False
   else:
-    if (verbosity_level > 4):
+    if (verbosity_level >= 5):
       print (format_time(current_time) + " signal face " +
              signal_face["name"] + " not a significant state change.")
       
   signal_face["state"] = state_name
   signal_face["substate"] = substate_name
 
-  if (verbosity_level > 1):
+  if (verbosity_level >= 3):
     print (format_time(current_time) + " signal face " + signal_face["name"] +
            " enters state " + state_name +
            " substate " + substate_name + ".")
-  if ((logging_level > 1) and (current_time > log_start_time)):
+  if ((logging_level >= 3) and (current_time > log_start_time)):
     logfile.write ("\\hline " + format_time(current_time) + " & " +
                    signal_face["name"] + " & " +
                    "Enter state " + state_name + " substate " +
@@ -1621,7 +1687,6 @@ def perform_script_event (the_operator, signal_face_name, the_operand):
       match the_operator:
         case "set toggle":
           set_toggle_value (signal_face, the_operand, True, "script")
-          return
         case "sensor on" | "sensor off":
           sensor_name = the_operand
           sensors = signal_face["sensors"]
@@ -1630,11 +1695,11 @@ def perform_script_event (the_operator, signal_face_name, the_operand):
             sensor ["value"] = True
           else:
             sensor ["value"] = False
-          if (verbosity_level > 0):
+          if (verbosity_level >= 2):
             print (format_time(current_time)  + " sensor " +
                    signal_face["name"] + "/" + sensor_name + " set to " +
                    str(sensor["value"]) + ".")
-          if ((logging_level > 0) and (current_time > log_start_time)):
+          if ((logging_level >= 2) and (current_time > log_start_time)):
             logfile.write ("\\hline " + format_time(current_time) + " & " +
                            signal_face ["name"] + " & Sensor " +
                            sensor_name + " set to " + str(sensor["value"]) +
@@ -1647,7 +1712,7 @@ def update_timers():
   global no_activity
   
   remove_timers = list()
-  if (verbosity_level > 4):
+  if (verbosity_level >= 5):
     active_timer_list = ""
     for the_timer in running_timers:
       active_timer_list = (active_timer_list + " " +
@@ -1658,7 +1723,7 @@ def update_timers():
     
   for the_timer in running_timers:
     the_timer["remaining time"] = the_timer["completion time"] - current_time
-    if (verbosity_level > 4):
+    if (verbosity_level >= 5):
       print (format_time(current_time) + " timer " +
              the_timer ["signal face name"] + "/" + the_timer["name"] +
              " has " + format_time(the_timer["remaining time"]) +
@@ -1668,16 +1733,16 @@ def update_timers():
       the_timer["state"] = "completed"
       remove_timers.append(the_timer)
       no_activity = False
-      if (verbosity_level > 1):
+      if (verbosity_level >= 5):
         print (format_time(current_time) + " timer " +
                the_timer ["signal face name"] + "/" + the_timer["name"] +
                " completed.")
-      if ((logging_level > 2) and (current_time > log_start_time)):          
+      if ((logging_level >= 5) and (current_time > log_start_time)):          
         logfile.write ("\\hline " + format_time(current_time) + " & " +
                        the_timer ["signal face name"] + " & Timer " +
                        the_timer ["name"] + " completed. \\\\\n")
 
-  if ((verbosity_level > 4) and (len(remove_timers) > 0)):
+  if ((verbosity_level >= 5) and (len(remove_timers) > 0)):
     remove_timers_list = ""
 
     for the_timer in remove_timers:
@@ -1688,7 +1753,7 @@ def update_timers():
   for the_timer in remove_timers:
     running_timers.remove(the_timer)
 
-  if ((verbosity_level > 4) and (len(remove_timers) > 0)):
+  if ((verbosity_level >= 5) and (len(remove_timers) > 0)):
     active_timer_list = ""
     for the_timer in running_timers:
       active_timer_list = (active_timer_list + " " +
@@ -1724,7 +1789,7 @@ def find_next_script_event_time():
 
 while ((current_time < end_time) and (error_counter == 0)):
 
-  if (verbosity_level > 2):
+  if (verbosity_level >= 5):
     print (format_time(current_time) + " top of simulation loop.")
 
   # Run the state machines.
@@ -1745,7 +1810,7 @@ while ((current_time < end_time) and (error_counter == 0)):
       if (the_substate["name"] == substate_name):
         substate = the_substate
         break
-    if (verbosity_level > 4):
+    if (verbosity_level >= 5):
       print (format_time(current_time) + " Signal face " +
              signal_face["name"] + " state " + signal_face["state"] +
              " substate " + substate["name"] + " evaluating exits.")
@@ -1806,7 +1871,7 @@ while ((current_time < end_time) and (error_counter == 0)):
     for sensor_name in sensors:
       sensor = sensors[sensor_name]
       if (sensor ["value"]):
-        if (verbosity_level > 2):
+        if (verbosity_level >= 5):
           print (format_time(current_time) + " sensor " +
                  signal_face ["name"] + "/" + sensor ["name"] +
                  " remains True.")
@@ -1823,10 +1888,10 @@ while ((current_time < end_time) and (error_counter == 0)):
 
           toggle_signal_face = signal_faces_dict[toggle_signal_face_name]
           if (not toggle_value (toggle_signal_face, root_toggle_name)):
-            if (verbosity_level > 3):
+            if (verbosity_level >= 4):
               print (format_time(current_time) + " Sensor " +
                      signal_face ["name"] + "/" + sensor_name + " is True.")
-            if ((logging_level > 3) and (current_time > log_start_time)):
+            if ((logging_level >= 4) and (current_time > log_start_time)):
               logfile.write ("\\hline " + format_time(current_time) +
                              " & " + signal_face["name"] +
                              " &  Sensor " + sensor_name + " is True. \\\\\n")
@@ -1868,6 +1933,15 @@ if (do_trace != 0):
   tracefile.write ("Ending Signal Faces:\n")
   pprint.pprint (signal_faces_list, tracefile)
 
+ # If requested, also print the maximum wait times.
+if (verbosity_level >= 1):   
+  for signal_face in signal_faces_list:
+    if ("max wait time" in signal_face):
+      print (format_time(current_time) + " signal face " +
+             signal_face["name"] + " maximum wait " +
+             format_time(signal_face["max wait time"]) + " at " +
+             format_time(signal_face["max wait start"]) + ",")
+  
 if (do_logging == 1):
   logfile.write ("\\hline \\end{longtable}\n")
   logfile.close()

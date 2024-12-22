@@ -1,0 +1,15 @@
+time,operator,signal face,operand
+200.000,sensor on,A,Traffic Present
+200.100,sensor on,ps,Traffic Present
+200.200,sensor on,D,Traffic Present
+200.300,sensor on,E,Traffic Present
+200.400,sensor on,pn,Traffic Present
+200.500,sensor on,H,Traffic Present
+200.600,sensor on,J,Traffic Present
+50000.000,sensor off,A,Traffic Present
+50000.100,sensor off,ps,Traffic Present
+50000.200,sensor off,D,Traffic Present
+50000.300,sensor off,E,Traffic Present
+50000.400,sensor off,pn,Traffic Present
+50000.500,sensor off,H,Traffic Present
+50000.600,sensor off,J,Traffic Present
