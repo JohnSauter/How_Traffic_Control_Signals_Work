@@ -139,10 +139,10 @@
 200.100 signal face ps Clear toggle Request Green.
 200.100 signal face ps Set toggle Request Partial Clearance.
 200.100 signal face A Set toggle Clearance Requested by system program Partial Clearance Requested.
+200.100 signal face B Set toggle Clearance Requested by system program Partial Clearance Requested.
 200.100 signal face C Set toggle Clearance Requested by system program Partial Clearance Requested.
 200.100 signal face F Set toggle Clearance Requested by system program Partial Clearance Requested.
 200.100 signal face G Set toggle Clearance Requested by system program Partial Clearance Requested.
-200.100 signal face B Set toggle Clearance Requested by system program Partial Clearance Requested.
 200.100 signal face B enters state Yellow substate Going Red.
 200.100 signal face B lamp set to Steady Circular Yellow.
 200.100 signal face C enters state Yellow substate Going Red.
@@ -752,8 +752,8 @@
 356.100 signal face G enters state Red substate Going Green 2.
 356.100 signal face G Clear toggle Request Green.
 356.100 signal face G Set toggle Request Partial Clearance.
-356.100 signal face pn Set toggle Clearance Requested by system program Partial Clearance Requested.
 356.100 signal face ps Set toggle Clearance Requested by system program Partial Clearance Requested.
+356.100 signal face pn Set toggle Clearance Requested by system program Partial Clearance Requested.
 362.100 signal face ps enters state Green substate Looking for Gap.
 362.100 signal face ps Unable to clear toggle Traffic Present because sensor ps/Traffic Present is still active.
 362.100 signal face pn enters state Green substate Looking for Gap.
@@ -850,10 +850,10 @@
 388.100 signal face J enters state Red substate Going Green 2.
 388.100 signal face J Clear toggle Request Green.
 388.100 signal face J Set toggle Request Partial Clearance.
+388.100 signal face B Set toggle Clearance Requested by system program Partial Clearance Requested.
 388.100 signal face C Set toggle Clearance Requested by system program Partial Clearance Requested.
 388.100 signal face F Set toggle Clearance Requested by system program Partial Clearance Requested.
 388.100 signal face G Set toggle Clearance Requested by system program Partial Clearance Requested.
-388.100 signal face B Set toggle Clearance Requested by system program Partial Clearance Requested.
 400.100 signal face B enters state Green substate Looking for Gap.
 400.100 signal face C enters state Green substate Looking for Gap.
 400.100 signal face F enters state Green substate Looking for Gap.
@@ -1493,10 +1493,10 @@
 569.600 signal face D enters state Red substate Going Green 2.
 569.600 signal face D Clear toggle Request Green.
 569.600 signal face D Set toggle Request Partial Clearance.
+569.600 signal face B Set toggle Clearance Requested by system program Partial Clearance Requested.
+569.600 signal face C Set toggle Clearance Requested by system program Partial Clearance Requested.
 569.600 signal face F Set toggle Clearance Requested by system program Partial Clearance Requested.
 569.600 signal face G Set toggle Clearance Requested by system program Partial Clearance Requested.
-569.600 signal face C Set toggle Clearance Requested by system program Partial Clearance Requested.
-569.600 signal face B Set toggle Clearance Requested by system program Partial Clearance Requested.
 581.600 signal face B enters state Green substate Looking for Gap.
 581.600 signal face C enters state Green substate Looking for Gap.
 581.600 signal face F enters state Green substate Looking for Gap.

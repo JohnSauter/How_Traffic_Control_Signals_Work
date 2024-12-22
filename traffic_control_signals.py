@@ -53,7 +53,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.4 2024-12-21',
+                     version='traffic_control_signals 0.4 2024-12-22',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -982,26 +982,26 @@ for signal_face in signal_faces_list:
   
   match signal_face["name"]:
     case "A":
-      conflict_set = frozenset(["ps", "D", "F", "G", "H", "J"])
-      partial_conflict_set = conflict_set.difference(["F", "G"])
+      conflict_set = ("ps", "D", "F", "G", "H", "J")
+      partial_conflict_set = ("ps", "D", "H", "H")
     case "ps":
-      conflict_set = frozenset(["A", "B", "C", "D", "F", "G", "J"])
+      conflict_set = ("A", "B", "C", "D", "F", "G", "J")
     case "B" | "C":
-      conflict_set = frozenset(["ps", "D", "E", "pn", "H"])
+      conflict_set = ("ps", "D", "E", "pn", "H")
     case "D":
-      conflict_set = frozenset(["A", "ps", "B", "C", "E", "pn", "F", "G", "H",
-                                "J"])
+      conflict_set = ("A", "ps", "B", "C", "E", "pn", "F", "G", "H", "J")
     case "E":
-      conflict_set = frozenset(["B", "C", "D", "pn", "H"])
-      partial_conflict_set = conflict_set.difference(["B", "C"])
+      conflict_set = ("B", "C", "D", "pn", "H")
+      partial_conflict_set = ("D", "pn", "H")
     case "pn":
-      conflict_set = frozenset(["B", "C", "D", "E", "F", "G", "H"])
+      conflict_set = ("B", "C", "D", "E", "F", "G", "H")
     case "F" | "G":
-      conflict_set = frozenset(["A", "ps", "D", "pn", "H", "J"])
+      conflict_set = ("A", "ps", "D", "pn", "H", "J")
     case "H":
-      conflict_set = frozenset(["A", "B", "C", "D", "E", "pn", "F", "G"])
+      conflict_set = ("A", "B", "C", "D", "E", "pn", "F", "G")
     case "J":
-      conflict_set = frozenset(["A", "ps", "D", "F", "G"])
+      conflict_set = ("A", "ps", "D", "F", "G")
+      
   if (partial_conflict_set == None):
     partial_conflict_set = conflict_set
   signal_face["conflicts"] = conflict_set

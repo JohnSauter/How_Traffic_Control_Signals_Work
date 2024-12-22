@@ -1,4 +1,4 @@
-# File: Makefile.am, author: John Sauter, date: November 30, 2024.
+# File: Makefile.am, author: John Sauter, date: December 22, 2024.
 #
 # Build traffic_control_signals.pdf
 
@@ -101,11 +101,17 @@ traffic_control_signals_state_diagram.eps red_state_table.tex \
 green_state_table.tex yellow_state_table.tex lamp_map_names.tex \
 sensor_map.tex idle_log.tex left_turn_log.tex \
 pedestrian_log.tex pedestrian_and_left_turn_log.tex multiple_log.tex \
-fig4d_02.eps fig4d_09.eps fig4d_12.eps fig4d_17.eps
-	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape ${builddir}/traffic_control_signals.tex
-	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape ${srcdir}/traffic_control_signals.tex
-	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape ${srcdir}/traffic_control_signals.tex
-	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape ${srcdir}/traffic_control_signals.tex
+fig4d_02.eps fig4d_09.eps fig4d_12.eps fig4d_17.eps \
+MUTCD_Ped_Signal_-_Hand_with_timer.pdf MUTCD_Ped_Signal_-_Steady_hand.pdf \
+MUTCD_Ped_Signal_-_Walk.pdf
+	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
+${srcdir}/traffic_control_signals.tex
+	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
+${srcdir}/traffic_control_signals.tex
+	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
+${srcdir}/traffic_control_signals.tex
+	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
+${srcdir}/traffic_control_signals.tex
 
 # Build the bbl file by running LaTeX without it, then running bibtex.
 traffic_control_signals.bbl : traffic_control_signals.tex references.bib \
@@ -113,10 +119,14 @@ LICENSE legalcode.txt traffic_control_signals_state_diagram.eps \
 red_state_table.tex green_state_table.tex yellow_state_table.tex \
 lamp_map_names.tex sensor_map.tex idle_log.tex left_turn_log.tex \
 pedestrian_log.tex pedestrian_and_left_turn_log.tex multiple_log.tex \
-fig4d_02.eps fig4d_09.eps fig4d_12.eps fig4d_17.eps
+fig4d_02.eps fig4d_09.eps fig4d_12.eps fig4d_17.eps \
+MUTCD_Ped_Signal_-_Hand_with_timer.pdf MUTCD_Ped_Signal_-_Steady_hand.pdf \
+MUTCD_Ped_Signal_-_Walk.pdf
 	echo " " >${builddir}/traffic_control_signals.bbl
-	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape ${srcdir}/traffic_control_signals.tex
-	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} bibtex ${builddir}/traffic_control_signals.aux
+	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
+${srcdir}/traffic_control_signals.tex
+	BIBINPUTS=${TEXINPUTS}:${builddir}:${srcdir} bibtex \
+${builddir}/traffic_control_signals.aux
 
 # Build a chart of states of the finite state machines
 traffic_control_signals_state_diagram.eps : \
@@ -185,6 +195,8 @@ fig4d_12.eps : fig4d_12.gif
 fig4d_17.eps : fig4d_17.gif
 	magick ${srcdir}/fig4d_17.gif ${builddir}/fig4d_17.eps
 
+%.pdf : %.svg ; inkscape --export-type=pdf ${srcdir}/$(<F) -o ${builddir}/$(@F)
+
 # Buld the PDF on demand, if requested.
 pdf-local: traffic_control_signals.pdf
 .PHONEY: pdf-local
@@ -199,7 +211,7 @@ ${PACKAGE}-${VERSION}.tar.gz.asc : ${PACKAGE}-${VERSION}.tar.gz
 	gpg2 --detach-sign --armor ${PACKAGE}-${VERSION}.tar.gz
 
 # Support make check and make distcheck
-dist_check_DATA = check_output.txt check_expected_output.txt
+dist_check_DATA = check_expected_output.txt heavy_script.txt
 dist_check_SCRIPTS = verify_files_template.sh
 
 TESTS = verify_files.sh
@@ -208,7 +220,7 @@ verify_files.sh : verify_files_template.sh check_output.txt
 	if [ ! -r "check_expected_output.txt" ] ; then cp $(srcdir)/check_expected_output.txt check_expected_output.txt ; touch copied_from_srcdir ; fi
 	chmod +x verify_files.sh
 
-check_output.txt : traffic_control_signals.py
+check_output.txt : traffic_control_signals.py heavy_script.txt
 	python3 ${srcdir}/traffic_control_signals.py \
 --script ${srcdir}/heavy_script.txt \
 --duration 1000 --verbose 4 | tee ${builddir}/check_output.txt
@@ -233,7 +245,12 @@ lamp_map_names.tex \
 sensor_map.tex \
 fig4d_*.eps \
 fig4d_*-eps-converted-to.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer.pdf \
+MUTCD_Ped_Signal_-_Steady_hand.pdf \
+MUTCD_Ped_Signal_-_Walk.pdf \
 *_log.tex \
+check_output.txt \
+verify_files.sh \
 *trace.txt 
 
 clean-local: clean-local-check
