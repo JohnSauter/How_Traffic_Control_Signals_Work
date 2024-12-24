@@ -1,6 +1,7 @@
 #!/bin/bash
-# File: verify_files_template.sh, author: John Sauter, date: August 29, 2020. 
-# This file is executed as verify_files.sh to check extraordinary_days.dat.
+# File: verify_files_template.sh, author: John Sauter,
+# date: December 23, 2024. 
+# This file is executed as verify_files.sh during make check.
 
 diff check_output.txt check_expected_output.txt
 diff_result=$?

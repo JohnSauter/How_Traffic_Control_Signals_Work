@@ -53,7 +53,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.4 2024-12-22',
+                     version='traffic_control_signals 0.5 2024-12-24',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -83,8 +83,8 @@ parser.add_argument ('--log-caption', metavar='log_caption',
                      help='caption of table created by log file')
 parser.add_argument ('--script-input', metavar='script_input',
                      help='events for the simulator to execute')
-parser.add_argument ('--max-wait', type=int, metavar='max_wait',
-                     help='max wait time before getting preferernce ' +
+parser.add_argument ('--waiting-limit', type=int, metavar='waiting_limit',
+                     help='max wait time before getting green preference ' +
                      'for turning green; default 60 seconds.')
 parser.add_argument ('--verbose', type=int, metavar='verbosity_level',
                      help='control the amount of output from the program: ' +
@@ -105,13 +105,14 @@ log_start_time  = decimal.Decimal ('-1.000')
 log_caption = "no caption"
 do_script_input = 0
 script_input_file = ""
-max_wait_time = 60
+waiting_limit = 60
 verbosity_level = 1
 error_counter = 0
 
 # Verbosity_level and logging level:
 # 1 only totals and errors
-# 2 add lamp changes and script actions
+# 2 add lamp changes, script actions and vehicles and pedestrians
+#   arriving, leaving and reaching milestones
 # 3 add state changes
 # 4 add toggle and sensor changes
 # 5 add lots of other items
@@ -166,15 +167,14 @@ if (arguments ['script_input'] != None):
   do_script_input = 1
   script_file_name = arguments ['script_input']
   
-if (arguments ['max_wait'] != None):
-  max_wait_time = arguments ['max_wait']
+if (arguments ['waiting_limit'] != None):
+  waiting_limit = arguments ['waiting_limit']
 
 if (arguments ['verbose'] != None):
   verbosity_level = int(arguments ['verbose'])
 
 start_time = decimal.Decimal("0.000")
 current_time = fractions.Fraction(start_time)
-
   
 # Write the first lines in the log file.
 
@@ -948,6 +948,7 @@ signal_faces_dict = dict()
 for signal_face_name in signal_face_names:
   signal_face = dict()
   signal_face["name"] = signal_face_name
+
   toggles_list = list()
   for toggle_name in toggle_names:
     toggle = dict()
@@ -967,6 +968,7 @@ for signal_face_name in signal_face_names:
       timer["duration"] = timer_durations[timer_full_name]
     timers_list.append(timer)
   signal_face["timers"] = timers_list
+
   signal_faces_list.append(signal_face)
   signal_faces_dict[signal_face_name] = signal_face
 
@@ -1006,6 +1008,148 @@ for signal_face in signal_faces_list:
     partial_conflict_set = conflict_set
   signal_face["conflicts"] = conflict_set
   signal_face["partial conflicts"] = partial_conflict_set
+
+# Limit the time a signal face stays red while it is waiting to
+# turn green.  This is a tradeoff between throughput and maximum
+# waiting time for a vehicle or pedestrian.
+
+for signal_face in signal_faces_list:
+  match signal_face["name"]:
+    case "A" | "ps" | "D" | "E" | "pn" | "H" | "J":
+      signal_face["waiting limit"] = waiting_limit
+
+    case "B" | "C" | "F" | "G":
+      signal_face["waiting limit"] = waiting_limit / 2;
+
+# Construct the travel paths.  A traffic element appears at the first
+# milestone, then proceeds each following milestone.  When it reaches
+# the last milestone it vanishes from the simulation.
+approach_sensor_distance = 365
+long_lane_length = 528
+short_lane_length = 450
+lane_width = 12
+
+travel_paths = dict()
+for entry_lane_name in ("A", "ps", "B", "C", "D", "E", "pn",
+                        "F", "G", "H", "J"):
+  
+  adjacent_lane_name = None
+  match entry_lane_name:
+    case "A":
+      adjacent_lane_name = "B"
+    case "E":
+      adjacent_lane_name = "F"
+    
+  for exit_lane_name in ("1", "2", "3", "4", "5", "6"):
+    travel_path_name = entry_lane_name + exit_lane_name
+    trvel_path = None
+    
+    match travel_path_name:
+      case "A1" | "E4":
+        # U turn to far lane
+        travel_path = ((adjacent_lane_name, long_lane_length),
+                       (adjacent_lane_name, short_lane_length),
+                       (entry_lane_name, short_lane_length),
+                       (entry_lane_name, 0),
+                       ("intersection", lane_width*4), ("intersection", 0),
+                       (exit_lane_name, 0), (exit_lane_name, long_lane_length))
+
+      case "A2" | "E5":
+        # U turn to near lane
+        travel_path = ((adjacent_lane_name, long_lane_length),
+                       (adjacent_lane_name, short_lane_length),
+                       (entry_lane_name, short_lane_length),
+                       (entry_lane_name, 0),
+                       ("intersection", lane_width*3), ("intersection", 0),
+                       (exit_lane_name, 0), (exit_lane_name, long_lane_length))
+
+      case "A6":
+        # Left turn
+        travel_path = ((adjacent_lane_name, long_lane_length),
+                       (adjacent_lane_name, short_lane_length),
+                       (entry_lane_name, short_lane_length),
+                       (entry_lane_name, 0),
+                       ("intersection", lane_width*7), ("intersection", 0),
+                       (exit_lane_name, 0), (exit_lane_name, long_lane_length))
+
+      case "E3":
+        # Left turn
+        travel_path = ((adjacent_lane_name, long_lane_length),
+                       (adjacent_lane_name, short_lane_length),
+                       (entry_lane_name, short_lane_length),
+                       (entry_lane_name, 0),
+                       ("intersection", lane_width*6), ("intersection", 0),
+                       (exit_lane_name, 0), (exit_lane_name, long_lane_length))
+
+      case "B5" | "C4" | "F2" | "G1":
+        # Straight through
+        travel_path = ((entry_lane_name, long_lane_length),
+                       (entry_lane_name, 0), ("intersection", lane_width*5),
+                       (exit_lane_name, 0), (exit_lane_name, long_lane_length))
+        
+      case "D2":
+        # Left turn to far lane
+        travel_path = ((entry_lane_name, long_lane_length),
+                       (entry_lane_name, 0), ("intersection", lane_width*7),
+                       (exit_lane_name, 0), (exit_lane_name, long_lane_length))
+
+      case "D1":
+        # Left turn to near lane
+        travel_path = ((entry_lane_name, long_lane_length),
+                       (entry_lane_name, 0), ("intersection", lane_width*8),
+                       (exit_lane_name, 0), (exit_lane_name, long_lane_length))
+
+      case "D6":
+        # Straight through
+        travel_path = ((entry_lane_name, long_lane_length),
+                       (entry_lane_name, 0), ("intersection", lane_width*7),
+                       (exit_lane_name, 0), (exit_lane_name, long_lane_length))
+        
+      case "D5":
+        # Right turn to far lane
+        travel_path = ((entry_lane_name, long_lane_length),
+                       (entry_lane_name, 0), ("intersection", lane_width*4),
+                       (exit_lane_name, 0), (exit_lane_name, long_lane_length))
+
+      case "D4":
+        # Right turn to near lane
+        travel_path = ((entry_lane_name, long_lane_length),
+                       (entry_lane_name, 0), ("intersection", lane_width*3),
+                       (exit_lane_name, 0), (exit_lane_name, long_lane_length))
+
+      case "H5":
+        # Left turn to ner lane
+        travel_path = ((entry_lane_name, long_lane_length),
+                       (entry_lane_name, 0), ("intersection", lane_width*7),
+                       (exit_lane_name, 0), (exit_lane_name, long_lane_length))
+
+      case "H4":
+        # Left turn to far lane
+        travel_path = ((entry_lane_name, long_lane_length),
+                       (entry_lane_name, 0), ("intersection", lane_width*8),
+                       (exit_lane_name, 0), (exit_lane_name, long_lane_length))
+
+      case "J1":
+        # Right turn to near lane
+        travel_path = ((entry_lane_name, long_lane_length),
+                       (entry_lane_name, 0), ("intersection", lane_width*3),
+                       (exit_lane_name, 0), (exit_lane_name, long_lane_length))
+
+      case "J2":
+        # Right turn to far lane
+        travel_path = ((entry_lane_name, long_lane_length),
+                       (entry_lane_name, 0), ("intersection", lane_width*4),
+                       (exit_lane_name, 0), (exit_lane_name, long_lane_length))
+
+    travel_paths[travel_path_name] = travel_path
+
+for entry_lane_name in ("ps", "pn"):
+  travel_path = ((entry_lane_name, lane_width*6), (entry_lane_name, 0))
+  travel_paths[travel_path_name] = travel_path
+    
+if (do_trace > 0):
+  tracefile.write ("Travel paths:\n")
+  pprint.pprint (travel_paths, tracefile)
 
 # Set up the mapping from the lamp names specified in the finite state
 # machines and the lamps actually used.  Each signal face dictionary
@@ -1074,19 +1218,23 @@ if (do_lamp_map_output != 0):
 
 # Signal_face["sensors"]is a dictionary whose indexes are sensor names.
 # The value of each entry is a sensor, which is a dictionary
-# with entries name, toggles, and value  Toggles is a tuple of toggle
-# names.  If a toggle name contains a slash it refers to a different
-# signal face.  Value is True or False.
+# with entries name, toggles, position, length, and value.
+# Toggles is a tuple of toggle names.  If a toggle name contains a slash
+# it refers to a different signal face.  Position is the distance from
+# the stop line to the center of the sensor.  Length is the length of
+# the sensor.  Value is True or False.  Only the Traffic Approaching
+# and Traffic Present sensors have sizes and positions in the lane.
 
+# Specify which toggles are set by which sensors.
 for signal_face in signal_faces_list:
 
   sensor_map = dict()
 
-  # Default traffic sensors
+  # Default mapping of traffic sensors
   sensor_map["Traffic Approaching"] = ("Traffic Approaching",)
   sensor_map["Traffic Present"] = ("Traffic Present",)
 
-  # Non-default traffic sensors
+  # Non-default mapping of traffic sensors
   match signal_face["name"]:
     case "B":
       sensor_map["Traffic Approaching"] = ("Traffic Approaching",
@@ -1158,11 +1306,21 @@ for signal_face in signal_faces_list:
   sensor_map["Manual Red"] = ("Manual Red",)
   sensor_map["Manual Green"] = ("Manual Green",)
 
+  # Now construct the sensors for this signal face.
   sensors = dict()
   for sensor_name in sensor_map:
     sensor = dict()
     sensor["name"] = sensor_name
     sensor["toggles"] = sensor_map[sensor_name]
+
+    match sensor_name:
+      case "Traffic Approaching":
+        sensor["position"] = 365
+        sensor["size"] = 6
+      case "Traffic Present":
+        sensor["position"] = 3
+        sensor["size"] = 6
+    
     sensor["value"] = False
     sensors [sensor_name] = sensor
     
@@ -1313,11 +1471,11 @@ def does_conflict (signal_face, conflicting_signal_face):
            " does not conflict with " + conflicting_signal_face ["name"] + ".")
   return False
 
-
 # Allow signal faces to turn green in the order they requested, but
 # allow non-conflicting faces to turn green even if they were requested
 # later, provided they haven't already turned green while the oldest
-# request is waiting for its turn.
+# request is waiting for its turn and provided the oldest request has not
+# been waiting too long.
 
 requesting_green = list()
 allowed_green = list()
@@ -1327,7 +1485,6 @@ def green_request_granted():
   global requesting_green
   global allowed_green
   global had_its_chance
-  global max_wait_time
   global no_activity
 
   # If a signal face is requesting green, place it on the list of
@@ -1402,17 +1559,19 @@ def green_request_granted():
   # Allow a signal face to turn green even if it is not its turn
   # provided it does not conflict with any signal face already
   # allowed to turn green and has not already been allowed to turn
-  # green out of turn.  However, if the oldest signal face has
+  # green out of turn since the oldest waiting signal face was allowed
+  # to turn green.  However, if the oldest signal face has
   # been waiting a long time, don't allow any other signal face
-  # to go ahead of it.... TODO
+  # to go ahead of it.
   if (len(requesting_green) > 0):
     signal_face = requesting_green[0]
     waiting_time = current_time - signal_face["wait start"]
-    if (waiting_time > max_wait_time):
+    if (waiting_time > signal_face["waiting limit"]):
       if (verbosity_level >= 5):
         print (format_time(current_time) + " signal face " +
                signal_face["name"] +
-               " is given preference because it has been waiting a long time.")
+               " is given preference because it has been waiting for " +
+               format_time(waiting_time) + ".")
     else:
       for signal_face in requesting_green:
         no_conflicts = True
@@ -1673,6 +1832,131 @@ def enter_state (signal_face, state_name, substate_name):
           
   return
 
+# The traffic element dictionary holds information about each car, truck
+# and pedestrian who is close to the intersection.
+traffic_elements = dict()
+
+# The conversion factor from miles per hour to feet per second:
+mph_to_fps = fractions.Fraction(60*60, 5280)
+
+# Subroutine to return the speed limit for a lane in feet per second.
+# Because lane positions are measured from the stop line,
+# approach lanes have negative speed, departure lanes have positive speed.
+def speed_limit (lane_name):
+  match lane_name:
+    case "1" | "2" |"4" | "5":
+      return (45 * mph_to_fps)
+    case "B" | "C" | "F" | "G":
+      return (-45 * mph_to_fps)
+    case "3" | "6":
+      return (25 * mph_to_fps)
+    case "A" | "D" | "E" | "H" | "J":
+      return (-25 * mph_to_fps)
+    case "ps" | "pn" :
+      return (-3.5)
+    case "intersection":
+      return (-25 * mph_to_fps)
+  return None
+
+# Subroutine to add a traffic element to the traffic elements dictionary.
+# A traffic element starts at its first milestone.
+next_traffic_element_number = 0
+def add_traffic_element (type, travel_path_name):
+  global traffic_elements
+  global next_traffic_element_number
+  
+  traffic_element = dict()
+
+  this_name = f'{type}_{next_traffic_element_number:04d}'
+  next_traffic_element_number = next_traffic_element_number + 1
+  traffic_element["name"] = this_name
+  
+  traffic_element["type"] = type
+  match travel_path_name:
+    case "ps" | "pn":
+      traffic_element["entrance lane"] = travel_path_name
+      traffic_element["exit lane"] = ""
+    case _:
+      traffic_element["entrance lane"] = travel_path_name[0]
+      traffic_element["exit lane"] = travel_path_name[1]
+
+  milestone_list = travel_paths[travel_path_name]
+  traffic_element["milestones"] = milestone_list
+  milestone_index = 0
+  milestone = milestone_list[milestone_index]
+  traffic_element["current lane"] = milestone[0]
+  position = milestone[1]
+  traffic_element["position"] = position
+  milestone_index = milestone_index + 1
+  traffic_element["milestone index"] = milestone_index
+  milestone = milestone_list[milestone_index]
+  traffic_element["distance remaining"] = abs(position - milestone[1])
+  traffic_element["speed"] = speed_limit(traffic_element["current lane"])
+  match type:
+    case "car":
+      traffic_element["length"] = 15
+    case "truck":
+      traffic_element["length"] = 40
+    case "pedestrian":
+      traffic_element["length"] = 3
+      
+  traffic_element["current time"] = current_time
+  traffic_element["present"] = True
+
+  if (verbosity_level >= 2):
+    print (format_time(current_time) + " " + this_name +
+           " starts on travel path " + travel_path_name + ".")
+    if ((logging_level >= 2) and (current_time > log_start_time)):
+      logfile.write ("\\hline " + format_time(current_time) + " & " +
+                     traffic_element["entrance lane"] + " & " +
+                     this_name + " starts on travel path " +
+                     travel_path_name + ". \\\\\n")
+
+  traffic_elements[this_name] = traffic_element
+  return
+
+# Subroutine to move the traffic element
+def move_traffic_element (traffic_element):
+  global current_time
+  global no_activity
+
+  delta_time = current_time - traffic_element["current time"]
+  current_position = traffic_element["position"]
+  distance_remaining = traffic_element["distance remaining"]
+  if (delta_time > 0):
+    current_speed = traffic_element["speed"]
+    # Approach lanes have negative speed, departure lanes positive speed.
+    current_position = current_position + (delta_time * current_speed)
+    distance_remaining = distance_remaining + (delta_time * current_speed)
+    if (distance_remaining <= 0):
+      current_position = current_position - distance_remaining
+      distance_remaining = 0
+    traffic_element["distance remaining"] = distance_remaining
+    traffic_element["position"] = current_position
+    traffic_element["current time"] = current_time
+    no_activity = False
+  if (distance_remaining == 0):
+    if (verbosity_level >= 2):
+      print (format_time(current_time) + " " + traffic_element["name"] +
+             " in lane " + traffic_element["current lane"] + 
+             " at position " + str(traffic_element["position"]) + ".")
+    milestones = traffic_element["milestones"]
+    milestone_index = traffic_element["milestone index"]
+    milestone_index = milestone_index + 1
+    traffic_element["milestone index"] = milestone_index
+    if (milestone_index >= len(milestones)):
+      traffic_element["present"] = False
+    else:
+      milestone_list = traffic_element["milestones"]
+      milestone = milestone_list[milestone_index]
+      traffic_element["current lane"] = milestone[0]
+      traffic_element["distance remaining"] = current_position - milestone[1]
+      traffic_element["speed"] = speed_limit(traffic_element["current lane"])
+      traffic_element["milestone index"] = milestone_index
+      no_activity = False
+      
+  return
+
 def timer_state (signal_face, timer_name):
   timers_list = signal_face["timers"]
   for the_timer in timers_list:
@@ -1704,7 +1988,10 @@ def perform_script_event (the_operator, signal_face_name, the_operand):
                            signal_face ["name"] + " & Sensor " +
                            sensor_name + " set to " + str(sensor["value"]) +
                            " by script. \\\\\n")
-                        
+            
+        case "car" | "truck" | "pedestrian":
+          add_traffic_element (the_operator, the_operand)
+          
   return
 
 # Update the timers to the current time.
@@ -1786,6 +2073,16 @@ def find_next_script_event_time():
       if (the_time < next_script_event_time):
         next_script_event_time = the_time
   return (next_script_event_time)
+
+# Find the next traffic element time.
+# TODO
+def find_next_traffic_element_time():
+  min_time = end_time
+  for traffic_element_name in traffic_elements:
+    traffic_element = traffic_elements[traffic_element_name]
+    if (traffic_element["present"]):
+      return (current_time + fractions.Fraction(1, 1000))
+  return (None)
 
 while ((current_time < end_time) and (error_counter == 0)):
 
@@ -1900,7 +2197,12 @@ while ((current_time < end_time) and (error_counter == 0)):
                               sensor_name)
             no_activity = False          
         
-
+  # Update the positions of the cars, trucks and pedestrians
+  for traffic_element_name in traffic_elements:
+    traffic_element = traffic_elements[traffic_element_name]
+    if (traffic_element["present"]):
+      move_traffic_element(traffic_element)
+        
   # Update the timers.
   update_timers()
   
@@ -1908,27 +2210,30 @@ while ((current_time < end_time) and (error_counter == 0)):
   if (no_activity):
     next_timer_completion_time = find_next_timer_completion_time()
     next_script_event_time = find_next_script_event_time()
+    next_traffic_element_time = find_next_traffic_element_time()
 
-    # If there are no timers running and no script events waiting to run
-    # then we are done.
+    # If there are no timers running, no script events waiting to run
+    # and no traffic elements present then we are done.
     if ((next_timer_completion_time == None) and
-        (next_script_event_time == None)):
+        (next_script_event_time == None) and
+        (next_traffic_element_time == None)):
       break
 
     # Otherwise we advance the clock to the next significant event.
-    next_clock_time = next_timer_completion_time
-    if (next_clock_time == None):
+    next_clock_time = end_time
+    if ((next_timer_completion_time != None) and
+        (next_timer_completion_time < next_clock_time)):
+      next_clock_time = next_timer_completion_time
+    if ((next_script_event_time != None) and
+        (next_script_event_time < next_clock_time)):
       next_clock_time = next_script_event_time
-    else:
-      if (next_script_event_time != None):
-        if (next_script_event_time < next_clock_time):
-          next_clock_time = next_script_event_time
+    if ((next_traffic_element_time != None) and
+        (next_traffic_element_time < next_clock_time)):
+      next_clock_time = next_traffic_element_time
     current_time = next_clock_time
   else:
     no_activity = True
   
-# TODO: the vehicle simulator
-
 if (do_trace != 0):
   tracefile.write ("Ending Signal Faces:\n")
   pprint.pprint (signal_faces_list, tracefile)
