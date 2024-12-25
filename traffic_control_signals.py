@@ -86,6 +86,9 @@ parser.add_argument ('--script-input', metavar='script_input',
 parser.add_argument ('--waiting-limit', type=int, metavar='waiting_limit',
                      help='max wait time before getting green preference ' +
                      'for turning green; default 60 seconds.')
+parser.add_argument ('--statistics', type=int, metavar='statistics',
+                     help='statistics about the simulation ' +
+                     'default is none.')
 parser.add_argument ('--verbose', type=int, metavar='verbosity_level',
                      help='control the amount of output from the program: ' +
                      '1 is normal, 0 suppresses summary messages')
@@ -106,12 +109,13 @@ log_caption = "no caption"
 do_script_input = 0
 script_input_file = ""
 waiting_limit = 60
+statistics = 0
 verbosity_level = 1
 error_counter = 0
 
 # Verbosity_level and logging level:
-# 1 only totals and errors
-# 2 add lamp changes, script actions and vehicles and pedestrians
+# 1 only errors and statistics if requested
+# 2 add lamp changes, script actions, and vehicles and pedestrians
 #   arriving, leaving and reaching milestones
 # 3 add state changes
 # 4 add toggle and sensor changes
@@ -170,6 +174,9 @@ if (arguments ['script_input'] != None):
 if (arguments ['waiting_limit'] != None):
   waiting_limit = arguments ['waiting_limit']
 
+if (arguments ['statistics'] != None):
+  statistics = arguments ['statistics']
+
 if (arguments ['verbose'] != None):
   verbosity_level = int(arguments ['verbose'])
 
@@ -181,9 +188,9 @@ current_time = fractions.Fraction(start_time)
 if (do_logging):
   logfile.write ("\\begin{longtable}{c | P{1.00cm} | p{9.25cm}}\n")
   logfile.write ("  \\caption{" + log_caption + "} \\\\\n")
-  logfile.write ("  Time & Signal Face & Event \\endfirsthead \n")
+  logfile.write ("  Time & Lane & Event \\endfirsthead \n")
   logfile.write ("  \\caption{" + log_caption + " continued} \\\\\n")
-  logfile.write ("  Time & Signal Face & Events \\endhead \n")
+  logfile.write ("  Time & Lane & Events \\endhead \n")
   
 # Construct the template finite state machine.  This template
 # contains the states, actions and transitions.  All of the signal
@@ -1042,7 +1049,7 @@ for entry_lane_name in ("A", "ps", "B", "C", "D", "E", "pn",
     
   for exit_lane_name in ("1", "2", "3", "4", "5", "6"):
     travel_path_name = entry_lane_name + exit_lane_name
-    trvel_path = None
+    travel_path = None
     
     match travel_path_name:
       case "A1" | "E4":
@@ -1143,8 +1150,13 @@ for entry_lane_name in ("A", "ps", "B", "C", "D", "E", "pn",
 
     travel_paths[travel_path_name] = travel_path
 
-for entry_lane_name in ("ps", "pn"):
-  travel_path = ((entry_lane_name, lane_width*6), (entry_lane_name, 0))
+for travel_path_name in ("ps", "pn"):
+  entry_lane_name = travel_path_name
+  travel_path = ((entry_lane_name, lane_width),
+                 (entry_lane_name, 0),
+                 ("crosswalk", lane_width*6),
+                 ("crosswalk", 0))
+  
   travel_paths[travel_path_name] = travel_path
     
 if (do_trace > 0):
@@ -1312,20 +1324,31 @@ for signal_face in signal_faces_list:
     sensor = dict()
     sensor["name"] = sensor_name
     sensor["toggles"] = sensor_map[sensor_name]
+    sensor["controlled by script"] = False
 
+    # for the Traffic Approaching and Traffic Present sensors,
+    # the size and placement varies between lanes.  These
+    # sensors are activated by vehicles and pedestrians.
     match sensor_name:
       case "Traffic Approaching":
-        sensor["position"] = 365
-        sensor["size"] = 6
+        match signal_face["name"]:
+          case "A" | "B" | "C" | "E" | "F" | "G":
+            sensor["position"] = 365
+            sensor["length"] = 6
+            
       case "Traffic Present":
-        sensor["position"] = 3
-        sensor["size"] = 6
+        match signal_face["name"]:
+          case "ps" | "pn":
+            sensor["position"] = 1
+            sensor["length"] = 2
+          case _:
+            sensor["position"] = 3
+            sensor["length"] = 6
     
     sensor["value"] = False
     sensors [sensor_name] = sensor
     
   signal_face ["sensors"] = sensors
-
           
 if (do_sensor_map_output != 0):
   sensor_file = open (sensor_map_file_name, 'w')
@@ -1385,6 +1408,27 @@ no_activity = True
 # Format the clock for display
 def format_time(the_time):
   return (f'{the_time:07.3f}')
+
+# The conversion factor from miles per hour to feet per second:
+mph_to_fps = fractions.Fraction(5280, 60*60)
+
+# Format the speed for display.
+def format_speed(the_speed):
+  the_speed_in_mph = the_speed / mph_to_fps
+  return (f'{the_speed_in_mph:02.0f}')
+
+# Format the place name for display
+def place_name(traffic_element):
+  current_lane = traffic_element["current lane"]
+  match current_lane:
+    case "intersection":
+      return ("the intersection")
+    case "crosswalk":
+      return ("the crosswalk")
+    case _:
+      return ("lane " + current_lane)
+  return (None)
+
 
 # Return the value of a named toggle in a specified signal face
 def toggle_value (signal_face, toggle_name):
@@ -1836,12 +1880,11 @@ def enter_state (signal_face, state_name, substate_name):
 # and pedestrian who is close to the intersection.
 traffic_elements = dict()
 
-# The conversion factor from miles per hour to feet per second:
-mph_to_fps = fractions.Fraction(60*60, 5280)
-
 # Subroutine to return the speed limit for a lane in feet per second.
 # Because lane positions are measured from the stop line,
 # approach lanes have negative speed, departure lanes have positive speed.
+# The crosswalk and intersection measure from the end, so they have
+# negative speeds.
 def speed_limit (lane_name):
   match lane_name:
     case "1" | "2" |"4" | "5":
@@ -1852,8 +1895,8 @@ def speed_limit (lane_name):
       return (25 * mph_to_fps)
     case "A" | "D" | "E" | "H" | "J":
       return (-25 * mph_to_fps)
-    case "ps" | "pn" :
-      return (-3.5)
+    case "ps" | "pn" | "crosswalk" :
+      return (fractions.Fraction(-35, 10))
     case "intersection":
       return (-25 * mph_to_fps)
   return None
@@ -1862,35 +1905,28 @@ def speed_limit (lane_name):
 # A traffic element starts at its first milestone.
 next_traffic_element_number = 0
 def add_traffic_element (type, travel_path_name):
+  global travel_paths
   global traffic_elements
   global next_traffic_element_number
   
   traffic_element = dict()
 
-  this_name = f'{type}_{next_traffic_element_number:04d}'
+  this_name = f'{type} {next_traffic_element_number:04d}'
   next_traffic_element_number = next_traffic_element_number + 1
   traffic_element["name"] = this_name
   
   traffic_element["type"] = type
-  match travel_path_name:
-    case "ps" | "pn":
-      traffic_element["entrance lane"] = travel_path_name
-      traffic_element["exit lane"] = ""
-    case _:
-      traffic_element["entrance lane"] = travel_path_name[0]
-      traffic_element["exit lane"] = travel_path_name[1]
-
   milestone_list = travel_paths[travel_path_name]
   traffic_element["milestones"] = milestone_list
   milestone_index = 0
+  traffic_element["milestone index"] = milestone_index
   milestone = milestone_list[milestone_index]
   traffic_element["current lane"] = milestone[0]
   position = milestone[1]
   traffic_element["position"] = position
-  milestone_index = milestone_index + 1
-  traffic_element["milestone index"] = milestone_index
-  milestone = milestone_list[milestone_index]
-  traffic_element["distance remaining"] = abs(position - milestone[1])
+  next_milestone_index = milestone_index + 1
+  next_milestone = milestone_list[next_milestone_index]
+  traffic_element["distance remaining"] = abs(position - next_milestone[1])
   traffic_element["speed"] = speed_limit(traffic_element["current lane"])
   match type:
     case "car":
@@ -1905,17 +1941,41 @@ def add_traffic_element (type, travel_path_name):
 
   if (verbosity_level >= 2):
     print (format_time(current_time) + " " + this_name +
-           " starts on travel path " + travel_path_name + ".")
-    if ((logging_level >= 2) and (current_time > log_start_time)):
-      logfile.write ("\\hline " + format_time(current_time) + " & " +
-                     traffic_element["entrance lane"] + " & " +
-                     this_name + " starts on travel path " +
-                     travel_path_name + ". \\\\\n")
+           " starts on travel path " + travel_path_name +
+           " in lane " + traffic_element["current lane"] +
+           " at position " + str(traffic_element["position"]) +
+           " distance to next milestone " +
+           str(traffic_element["distance remaining"]) +
+           " speed " + format_speed(traffic_element["speed"]) + ".")
+  if ((logging_level >= 2) and (current_time > log_start_time)):
+    logfile.write ("\\hline " + format_time(current_time) + " & " +
+                   traffic_element["current lane"] + " & " +
+                   cap_first_letter(this_name) + " starts on travel path " +
+                   travel_path_name + " speed " +
+                   format_speed(abs(traffic_element["speed"])) + ". \\\\\n")
 
   traffic_elements[this_name] = traffic_element
   return
 
-# Subroutine to move the traffic element
+# Subroutine to test for overlap of a traffic element
+# with either a sensor or another traffic element.
+def check_overlap (object_A, object_B):
+  position_A = object_A["position"]
+  length_A = object_A["length"]
+  max_A = position_A + (length_A / 2)
+  min_A = position_A - (length_A / 2)
+  position_B = object_B["position"]
+  length_B = object_B["length"]
+  max_B = position_B + (length_B / 2)
+  min_B = position_B - (length_B / 2)
+
+  if ((max_A >= min_B) and (min_A <= max_B)):
+    return (True)
+  if ((max_B >= min_A) and (min_B <= max_A)):
+    return (True)
+  return (False)
+
+# Subroutine to move a traffic element
 def move_traffic_element (traffic_element):
   global current_time
   global no_activity
@@ -1923,40 +1983,194 @@ def move_traffic_element (traffic_element):
   delta_time = current_time - traffic_element["current time"]
   current_position = traffic_element["position"]
   distance_remaining = traffic_element["distance remaining"]
+    
   if (delta_time > 0):
     current_speed = traffic_element["speed"]
     # Approach lanes have negative speed, departure lanes positive speed.
-    current_position = current_position + (delta_time * current_speed)
-    distance_remaining = distance_remaining + (delta_time * current_speed)
+    distance_moved = delta_time * current_speed
+    current_position = current_position + distance_moved
+    distance_remaining = distance_remaining - abs(distance_moved)
     if (distance_remaining <= 0):
       current_position = current_position - distance_remaining
       distance_remaining = 0
     traffic_element["distance remaining"] = distance_remaining
     traffic_element["position"] = current_position
     traffic_element["current time"] = current_time
+    if (verbosity_level >= 5):
+        
+      print (format_time(current_time) + " " + traffic_element["name"] +
+             " in " + place_name(traffic_element) + " at position " +
+             str(traffic_element["position"]) +
+             " distance to next milestone  " +
+             str(traffic_element["distance remaining"]) +
+             " speed " + format_speed(traffic_element["speed"]) + ".")
     no_activity = False
   if (distance_remaining == 0):
-    if (verbosity_level >= 2):
+    # We have reached this milestone.
+    if ((verbosity_level >= 5) and (traffic_element["speed"] != 0)):        
       print (format_time(current_time) + " " + traffic_element["name"] +
-             " in lane " + traffic_element["current lane"] + 
-             " at position " + str(traffic_element["position"]) + ".")
-    milestones = traffic_element["milestones"]
-    milestone_index = traffic_element["milestone index"]
-    milestone_index = milestone_index + 1
-    traffic_element["milestone index"] = milestone_index
-    if (milestone_index >= len(milestones)):
+             " in " + place_name(traffic_element) + " at position " +
+             str(traffic_element["position"]) +
+             " (a milestone) speed " + format_speed(traffic_element["speed"]) +
+             ".")
+    this_milestone_index = traffic_element["milestone index"]
+    next_milestone_index = this_milestone_index + 1
+    milestone_list = traffic_element["milestones"]
+    if (next_milestone_index >= len(milestone_list)):
       traffic_element["present"] = False
-    else:
-      milestone_list = traffic_element["milestones"]
-      milestone = milestone_list[milestone_index]
-      traffic_element["current lane"] = milestone[0]
-      traffic_element["distance remaining"] = current_position - milestone[1]
-      traffic_element["speed"] = speed_limit(traffic_element["current lane"])
-      traffic_element["milestone index"] = milestone_index
-      no_activity = False
+      if (verbosity_level >= 2):
+        print (format_time(current_time) + " " +
+               traffic_element["name"] +
+               " in " + place_name(traffic_element) + " exits the simulation.")
+      if ((logging_level >= 2) and (current_time > log_start_time)):
+        logfile.write ("\\hline " + format_time(current_time) + " & " +
+                         traffic_element["current lane"] + " & " +
+                       cap_first_letter(traffic_element["name"]) +
+                       " exits the simulation. \\\\\n")
       
+      no_activity = False
+    else:
+      this_milestone = milestone_list[this_milestone_index]
+      next_milestone = milestone_list[next_milestone_index]
+      # Check for changing lanes
+      current_lane = traffic_element["current lane"]
+      if (next_milestone[0] != current_lane):
+        # We cannot enter the intersection or crosswalk if the light is red.
+        if ((next_milestone[0] == "intersection") or
+            (next_milestone[0] == "crosswalk")):
+          if (current_lane in signal_faces_dict):
+            signal_face = signal_faces_dict[current_lane]
+            if (signal_face["state"] != "Green"):
+              if (traffic_element["speed"] != 0):
+                traffic_element["speed"] = 0
+                if (verbosity_level >= 2):
+                    print (format_time(current_time) + " " +
+                           traffic_element["name"] +
+                           " in " + place_name(traffic_element) +
+                           " at position " + str(traffic_element["position"]) +
+                           " distance to next milestone " +
+                           str(traffic_element["distance remaining"]) +
+                           " stopped.")
+                if ((logging_level >= 2) and (current_time > log_start_time)):
+                  logfile.write ("\\hline " + format_time(current_time) +
+                                 " & " + traffic_element["current lane"] +
+                                 " & " +
+                                 cap_first_letter(traffic_element["name"]) +
+                                 " stopped. \\\\\n")
+                no_activity = False
+            else:
+              # We are trying to enter the intersection or the crosswalk
+              # and the light is green.
+              if (verbosity_level >= 2):
+                print (format_time(current_time) + " " +
+                       traffic_element["name"] +
+                       " in " + place_name(traffic_element) +
+                       " entering " + next_milestone[0] + ".")
+            
+              if ((logging_level >= 2) and (current_time > log_start_time)):
+                logfile.write ("\\hline " + format_time(current_time) +
+                               " & " + traffic_element["current lane"] +
+                               " & " +
+                               cap_first_letter(traffic_element["name"]) +
+                               " entering " + next_milestone[0] + ". \\\\\n")
+                
+              traffic_element["current lane"] = next_milestone[0]
+              traffic_element["position"] = next_milestone[1]
+              traffic_element["speed"] = speed_limit(next_milestone[0])
+              following_milestone_index = next_milestone_index + 1
+              following_milestone = milestone_list[following_milestone_index]
+              traffic_element["distance remaining"] = (
+                abs(next_milestone[1] - following_milestone[1]))
+              traffic_element["milestone index"] = next_milestone_index
+              no_activity = False
+        else:
+          # Changing lanes but not into the intersection or crosswalk
+          traffic_element["current lane"] = next_milestone[0]
+          traffic_element["speed"] = speed_limit(next_milestone[0])
+          # A milestone that changes lanes must be followed by
+          # a milestone that does not change lanes.
+          following_milestone_index = next_milestone_index + 1
+          following_milestone = milestone_list[following_milestone_index]
+          current_position = next_milestone[1]
+          traffic_element["position"] = current_position
+          traffic_element["distance remaining"] = (
+            abs(current_position - following_milestone[1]))
+          traffic_element["milestone index"] = next_milestone_index
+          if (verbosity_level >= 2):
+              print (format_time(current_time) + " " +
+                     traffic_element["name"] +
+                     " in " + place_name(traffic_element) +
+                     " at position " + str(traffic_element["position"]) +
+                     " distance to next milestone " +
+                     str(traffic_element["distance remaining"]) +
+                     " speed " + format_speed(traffic_element["speed"]) +
+                     " lane change.")
+          if ((logging_level >= 2) and (current_time > log_start_time)):
+            logfile.write ("\\hline " + format_time(current_time) +
+                           " & " + traffic_element["current lane"] +
+                           " & " +
+                           cap_first_letter(traffic_element["name"]) +
+                           " at position " + str(traffic_element["position"]) +
+                           " lane change. \\\\\n")
+          no_activity = False
+      else:
+        # Not changing lanes
+        current_position = next_milestone[1]
+        traffic_element["position"] = current_position
+        traffic_element["distance remaining"] = (
+          abs(current_position - next_milestone[1]))
+        traffic_element["milestone index"] = next_milestone_index
+        if (verbosity_level >= 5):
+          print (format_time(current_time) + " " +
+                 traffic_element["name"] +
+                 " in " + place_name(traffic_element) + " at position " +
+                 str(traffic_element["position"]) +
+                 " speed " + format_speed(traffic_element["speed"]) +
+                 " at a milestone.")
+        if ((logging_level >= 5) and (current_time > log_start_time)):
+          logfile.write ("\\hline " + format_time(current_time) +
+                         " & " + traffic_element["current lane"] +
+                         " & " +
+                         cap_first_letter(traffic_element["name"]) +
+                         " at position " + str(traffic_element["position"]) +
+                         " at a milestone. \\\\\n")
+        no_activity = False
+              
   return
 
+# Subroutine to activate any sensors that detect a traffic element.
+def check_sensors():
+  for signal_face in signal_faces_list:
+    signal_face_name = signal_face["name"]
+    sensors = signal_face["sensors"]
+    for sensor_name in sensors:
+      sensor = sensors[sensor_name]
+      if ("position" in sensor):
+        triggered = False
+        for traffic_element_name in traffic_elements:
+          traffic_element = traffic_elements[traffic_element_name]
+          if (signal_face_name == traffic_element["current lane"]):
+            if (check_overlap (traffic_element, sensor)):
+              triggered = True
+              sensor["triggered by"] = traffic_element["name"]
+        if (not sensor["controlled by script"]):
+          if (sensor["value"] != triggered):
+            sensor["value"] = triggered
+            if (verbosity_level >= 2):
+              print (format_time(current_time)  + " sensor " +
+                     signal_face["name"] + "/" + sensor_name + " set to " +
+                     str(sensor["value"]) + " by " + sensor["triggered by"] +
+                     ".")
+            if ((logging_level >= 2) and (current_time > log_start_time)):
+              logfile.write ("\\hline " + format_time(current_time) + " & " +
+                             signal_face ["name"] + " & Sensor " +
+                             sensor_name + " set to " + str(sensor["value"]) +
+                             " by " + sensor["triggered by"] +
+                             ". \\\\\n")
+            
+  return
+            
+  
 def timer_state (signal_face, timer_name):
   timers_list = signal_face["timers"]
   for the_timer in timers_list:
@@ -1975,6 +2189,8 @@ def perform_script_event (the_operator, signal_face_name, the_operand):
           sensor_name = the_operand
           sensors = signal_face["sensors"]
           sensor = sensors[sensor_name]
+          sensor["controlled by script"] = True
+
           if (the_operator == "sensor on"):
             sensor ["value"] = True
           else:
@@ -1982,7 +2198,7 @@ def perform_script_event (the_operator, signal_face_name, the_operand):
           if (verbosity_level >= 2):
             print (format_time(current_time)  + " sensor " +
                    signal_face["name"] + "/" + sensor_name + " set to " +
-                   str(sensor["value"]) + ".")
+                   str(sensor["value"]) + " by script.")
           if ((logging_level >= 2) and (current_time > log_start_time)):
             logfile.write ("\\hline " + format_time(current_time) + " & " +
                            signal_face ["name"] + " & Sensor " +
@@ -2084,6 +2300,7 @@ def find_next_traffic_element_time():
       return (current_time + fractions.Fraction(1, 1000))
   return (None)
 
+# Main loop
 while ((current_time < end_time) and (error_counter == 0)):
 
   if (verbosity_level >= 5):
@@ -2162,6 +2379,9 @@ while ((current_time < end_time) and (error_counter == 0)):
   for the_event in to_remove:
     script_set.remove(the_event)
 
+  # See if any vehicles or pedestrians are activating any sensors
+  check_sensors()
+    
   # If there are active sensors, set their corresponding toggles.
   for signal_face in signal_faces_list:
     sensors = signal_face ["sensors"]
@@ -2239,13 +2459,13 @@ if (do_trace != 0):
   pprint.pprint (signal_faces_list, tracefile)
 
  # If requested, also print the maximum wait times.
-if (verbosity_level >= 1):   
+if ((statistics >= 1) and (verbosity_level >= 1)):
   for signal_face in signal_faces_list:
     if ("max wait time" in signal_face):
       print (format_time(current_time) + " signal face " +
              signal_face["name"] + " maximum wait " +
              format_time(signal_face["max wait time"]) + " at " +
-             format_time(signal_face["max wait start"]) + ",")
+             format_time(signal_face["max wait start"]) + ".")
   
 if (do_logging == 1):
   logfile.write ("\\hline \\end{longtable}\n")

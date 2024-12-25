@@ -114,7 +114,7 @@
 120.000 signal face C enters state Green substate Waiting for Clearance Request.
 120.000 signal face F enters state Green substate Waiting for Clearance Request.
 120.000 signal face G enters state Green substate Waiting for Clearance Request.
-200.000 sensor A/Traffic Present set to True.
+200.000 sensor A/Traffic Present set to True by script.
 200.000 Sensor A/Traffic Present is True.
 200.000 signal face A Set toggle Traffic Present by sensor A/Traffic Present.
 200.000 signal face A enters state Red substate Going Green 1.
@@ -129,7 +129,7 @@
 200.000 signal face A Clear toggle Cleared.
 200.000 signal face A Set toggle Traffic Flowing.
 200.000 signal face A Clear toggle Green Request Granted by system program Green Request Granted.
-200.100 sensor ps/Traffic Present set to True.
+200.100 sensor ps/Traffic Present set to True by script.
 200.100 Sensor ps/Traffic Present is True.
 200.100 signal face ps Set toggle Traffic Present by sensor ps/Traffic Present.
 200.100 signal face ps enters state Red substate Going Green 1.
@@ -151,14 +151,14 @@
 200.100 signal face F lamp set to Steady Circular Yellow.
 200.100 signal face G enters state Yellow substate Going Red.
 200.100 signal face G lamp set to Steady Circular Yellow.
-200.200 sensor D/Traffic Present set to True.
+200.200 sensor D/Traffic Present set to True by script.
 200.200 Sensor D/Traffic Present is True.
 200.200 signal face D Set toggle Traffic Present by sensor D/Traffic Present.
 200.200 Sensor D/Traffic Present is True.
 200.200 signal face D Set toggle Traffic Approaching by sensor D/Traffic Present.
 200.200 signal face D enters state Red substate Going Green 1.
 200.200 signal face D Set toggle Request Green.
-200.300 sensor E/Traffic Present set to True.
+200.300 sensor E/Traffic Present set to True by script.
 200.300 Sensor E/Traffic Present is True.
 200.300 signal face E Set toggle Traffic Present by sensor E/Traffic Present.
 200.300 signal face E enters state Red substate Going Green 1.
@@ -173,7 +173,7 @@
 200.300 signal face E Clear toggle Cleared.
 200.300 signal face E Set toggle Traffic Flowing.
 200.300 signal face E Clear toggle Green Request Granted by system program Green Request Granted.
-200.400 sensor pn/Traffic Present set to True.
+200.400 sensor pn/Traffic Present set to True by script.
 200.400 Sensor pn/Traffic Present is True.
 200.400 signal face pn Set toggle Traffic Present by sensor pn/Traffic Present.
 200.400 signal face pn enters state Red substate Going Green 1.
@@ -183,14 +183,14 @@
 200.400 signal face pn Clear toggle Request Green.
 200.400 signal face pn Set toggle Request Partial Clearance.
 200.400 signal face E Set toggle Clearance Requested by system program Partial Clearance Requested.
-200.500 sensor H/Traffic Present set to True.
+200.500 sensor H/Traffic Present set to True by script.
 200.500 Sensor H/Traffic Present is True.
 200.500 signal face H Set toggle Traffic Present by sensor H/Traffic Present.
 200.500 Sensor H/Traffic Present is True.
 200.500 signal face H Set toggle Traffic Approaching by sensor H/Traffic Present.
 200.500 signal face H enters state Red substate Going Green 1.
 200.500 signal face H Set toggle Request Green.
-200.600 sensor J/Traffic Present set to True.
+200.600 sensor J/Traffic Present set to True by script.
 200.600 Sensor J/Traffic Present is True.
 200.600 signal face J Set toggle Traffic Present by sensor J/Traffic Present.
 200.600 Sensor J/Traffic Present is True.
@@ -1564,28 +1564,28 @@
 601.000 signal face D enters state Green substate Looking for Gap.
 601.000 signal face D Unable to clear toggle Traffic Present because sensor D/Traffic Present is still active.
 601.000 signal face D Unable to clear toggle Traffic Approaching because sensor D/Traffic Present is still active.
-601.000 sensor A/Traffic Present set to False.
+601.000 sensor A/Traffic Present set to False by script.
 601.000 signal face D enters state Green substate Looking for Gap.
 601.000 signal face D Unable to clear toggle Traffic Present because sensor D/Traffic Present is still active.
 601.000 signal face D Unable to clear toggle Traffic Approaching because sensor D/Traffic Present is still active.
 601.100 signal face D enters state Green substate Looking for Gap.
 601.100 signal face D Unable to clear toggle Traffic Present because sensor D/Traffic Present is still active.
 601.100 signal face D Unable to clear toggle Traffic Approaching because sensor D/Traffic Present is still active.
-601.100 sensor ps/Traffic Present set to False.
+601.100 sensor ps/Traffic Present set to False by script.
 601.100 signal face D enters state Green substate Looking for Gap.
 601.100 signal face D Unable to clear toggle Traffic Present because sensor D/Traffic Present is still active.
 601.100 signal face D Unable to clear toggle Traffic Approaching because sensor D/Traffic Present is still active.
 601.200 signal face D enters state Green substate Looking for Gap.
 601.200 signal face D Unable to clear toggle Traffic Present because sensor D/Traffic Present is still active.
 601.200 signal face D Unable to clear toggle Traffic Approaching because sensor D/Traffic Present is still active.
-601.200 sensor D/Traffic Present set to False.
+601.200 sensor D/Traffic Present set to False by script.
 601.200 signal face D enters state Green substate Looking for Gap.
 601.200 signal face D Clear toggle Traffic Present.
 601.200 signal face D Clear toggle Traffic Approaching.
-601.300 sensor E/Traffic Present set to False.
-601.400 sensor pn/Traffic Present set to False.
-601.500 sensor H/Traffic Present set to False.
-601.600 sensor J/Traffic Present set to False.
+601.300 sensor E/Traffic Present set to False by script.
+601.400 sensor pn/Traffic Present set to False by script.
+601.500 sensor H/Traffic Present set to False by script.
+601.600 sensor J/Traffic Present set to False by script.
 603.100 signal face D enters state Yellow substate Going Red.
 603.100 signal face D lamp set to Steady Circular Yellow.
 606.100 signal face D enters state Red substate Waiting for Clearance.
@@ -1810,14 +1810,3 @@
 721.400 signal face C enters state Green substate Waiting for Clearance Request.
 721.400 signal face F enters state Green substate Waiting for Clearance Request.
 721.400 signal face G enters state Green substate Waiting for Clearance Request.
-721.400 signal face A maximum wait 122.500 at 356.100,
-721.400 signal face ps maximum wait 115.000 at 388.100,
-721.400 signal face B maximum wait 123.000 at 265.100,
-721.400 signal face C maximum wait 123.000 at 265.100,
-721.400 signal face D maximum wait 112.500 at 331.600,
-721.400 signal face E maximum wait 122.500 at 356.100,
-721.400 signal face pn maximum wait 115.000 at 388.100,
-721.400 signal face F maximum wait 123.000 at 265.100,
-721.400 signal face G maximum wait 123.000 at 265.100,
-721.400 signal face H maximum wait 112.500 at 297.100,
-721.400 signal face J maximum wait 113.000 at 296.600,

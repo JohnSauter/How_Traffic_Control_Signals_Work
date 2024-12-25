@@ -1,3 +1,0 @@
-time,operator,signal face,operand
-200.000,car,B,A6
-

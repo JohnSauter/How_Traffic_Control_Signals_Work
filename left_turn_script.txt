@@ -1,10 +1,2 @@
 time,operator,signal face,operand
-200.000,sensor on,F,Traffic Present
-200.000,sensor on,B,Traffic Approaching
-200.100,sensor off,B,Traffic Approaching
-201.000,sensor on,A,Traffic Approaching
-202.100,sensor off,A,Traffic Approaching
-202.000,sensor on,A,Traffic Present
-221.000,sensor off,A,Traffic Present
-235.000,sensor off,F,Traffic Present
-
+200.000,car,B,A6

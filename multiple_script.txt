@@ -1,15 +1,8 @@
 time,operator,signal face,operand
-200.000,sensor on,A,Traffic Present
-200.100,sensor on,ps,Traffic Present
-200.200,sensor on,D,Traffic Present
-200.300,sensor on,E,Traffic Present
-200.400,sensor on,pn,Traffic Present
-200.500,sensor on,H,Traffic Present
-200.600,sensor on,J,Traffic Present
-201.000,sensor off,A,Traffic Present
-201.100,sensor off,ps,Traffic Present
-201.200,sensor off,D,Traffic Present
-201.300,sensor off,E,Traffic Present
-201.400,sensor off,pn,Traffic Present
-201.500,sensor off,H,Traffic Present
-201.600,sensor off,J,Traffic Present
+200.000,car,B,A6
+201.000,pedestrian,ps,ps
+202.000,car,D,D6
+203.000,car,E,E3
+204.000,pedestrian,pn,pn
+205.000,truck,H,H5
+206.000,car,J,J1
