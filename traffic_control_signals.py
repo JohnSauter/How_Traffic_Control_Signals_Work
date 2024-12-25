@@ -53,7 +53,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.5 2024-12-24',
+                     version='traffic_control_signals 0.6 2024-12-25',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -1155,7 +1155,9 @@ for travel_path_name in ("ps", "pn"):
   travel_path = ((entry_lane_name, lane_width),
                  (entry_lane_name, 0),
                  ("crosswalk", lane_width*6),
-                 ("crosswalk", 0))
+                 ("crosswalk", 0),
+                 (entry_lane_name, lane_width),
+                 (entry_lane_name, lane_width))
   
   travel_paths[travel_path_name] = travel_path
     
@@ -1416,6 +1418,10 @@ mph_to_fps = fractions.Fraction(5280, 60*60)
 def format_speed(the_speed):
   the_speed_in_mph = the_speed / mph_to_fps
   return (f'{the_speed_in_mph:02.0f}')
+
+# format a location or distance for display.
+def format_location(the_location):
+  return (f'{the_location:.0f}')
 
 # Format the place name for display
 def place_name(traffic_element):
@@ -1938,14 +1944,15 @@ def add_traffic_element (type, travel_path_name):
       
   traffic_element["current time"] = current_time
   traffic_element["present"] = True
+  traffic_element["blocker"] = None
 
   if (verbosity_level >= 2):
     print (format_time(current_time) + " " + this_name +
            " starts on travel path " + travel_path_name +
            " in lane " + traffic_element["current lane"] +
-           " at position " + str(traffic_element["position"]) +
+           " at position " + format_location(traffic_element["position"]) +
            " distance to next milestone " +
-           str(traffic_element["distance remaining"]) +
+           format_location(traffic_element["distance remaining"]) +
            " speed " + format_speed(traffic_element["speed"]) + ".")
   if ((logging_level >= 2) and (current_time > log_start_time)):
     logfile.write ("\\hline " + format_time(current_time) + " & " +
@@ -1975,11 +1982,39 @@ def check_overlap (object_A, object_B):
     return (True)
   return (False)
 
+# Check a traffic element to see if the last move
+# caused it to overlap another traffic element.
+# If so, return that blocking traffic element.
+def check_blocked(traffic_element):
+  
+  for target_traffic_element_name in traffic_elements:
+    target_traffic_element = traffic_elements[target_traffic_element_name]
+    # Only traffic elements in our lane count, but the intersection
+    # and crosswalks don't count.  Also, don't consider outselves or
+    # any traffic element that has exited the simulation.
+    target_lane = target_traffic_element["current lane"]
+    target_name = target_traffic_element["name"]
+    if ((target_lane != "intersection") and (target_lane != "crosswalk") and
+        (target_lane == traffic_element["current lane"]) and
+        (target_name != traffic_element["name"]) and
+        (target_traffic_element["present"])):
+      if (check_overlap(traffic_element, target_traffic_element)):
+        return (target_traffic_element)
+      
+  return (None)
+
 # Subroutine to move a traffic element
 def move_traffic_element (traffic_element):
   global current_time
   global no_activity
 
+  # See if our blocker has moved.
+  blocking_traffic_element = traffic_element["blocker"]
+  if (blocking_traffic_element != None):
+    if (check_overlap(traffic_element, blocking_traffic_element)):
+      traffic_element["speed"] = traffic_element["old speed"]
+      traffic_element["blocker"] = None
+        
   delta_time = current_time - traffic_element["current time"]
   current_position = traffic_element["position"]
   distance_remaining = traffic_element["distance remaining"]
@@ -1988,6 +2023,9 @@ def move_traffic_element (traffic_element):
     current_speed = traffic_element["speed"]
     # Approach lanes have negative speed, departure lanes positive speed.
     distance_moved = delta_time * current_speed
+    old_position = current_position
+    old_distance_remaining = distance_remaining
+    old_time = traffic_element["current time"]
     current_position = current_position + distance_moved
     distance_remaining = distance_remaining - abs(distance_moved)
     if (distance_remaining <= 0):
@@ -1996,21 +2034,44 @@ def move_traffic_element (traffic_element):
     traffic_element["distance remaining"] = distance_remaining
     traffic_element["position"] = current_position
     traffic_element["current time"] = current_time
-    if (verbosity_level >= 5):
-        
+    if (verbosity_level >= 5):  
       print (format_time(current_time) + " " + traffic_element["name"] +
              " in " + place_name(traffic_element) + " at position " +
-             str(traffic_element["position"]) +
+             format_location(traffic_element["position"]) +
              " distance to next milestone  " +
-             str(traffic_element["distance remaining"]) +
-             " speed " + format_speed(traffic_element["speed"]) + ".")
+             format_location(traffic_element["distance remaining"]) +
+             " speed " + format_speed(traffic_element["speed"]) +
+             " moved " + format_location(distance_moved) + ".")
+    # Don't move if we are blocked.
+    blocking_traffic_element = check_blocked(traffic_element)
+    if (blocking_traffic_element != None):
+      traffic_element["position"] = old_position
+      traffic_element["distance remaining"] = old_distance_remaining
+      traffic_element["blocker"] = blocking_traffic_element
+      traffic_element["old speed"] = traffic_element["speed"]
+      traffic_element["speed"] = 0
+      if (verbosity_level >= 2):  
+        print (format_time(current_time) + " " + traffic_element["name"] +
+               " in " + place_name(traffic_element) + " at position " +
+               format_location(traffic_element["position"]) +
+               " distance to next milestone  " +
+               format_location(traffic_element["distance remaining"]) +
+               " is blocked by " + blocking_traffic_element["name"] + ".")
+      if ((logging_level >= 2) and (current_time > log_start_time)):
+        logfile.write ("\\hline " + format_time(current_time) + " & " +
+                       traffic_element["current lane"] + " & " +
+                       cap_first_letter(traffic_element["name"]) +
+                       " is blocked by " + blocking_traffic_element["name"] +
+                       ". \\\\\n")
+      return
+    
     no_activity = False
   if (distance_remaining == 0):
     # We have reached this milestone.
     if ((verbosity_level >= 5) and (traffic_element["speed"] != 0)):        
       print (format_time(current_time) + " " + traffic_element["name"] +
              " in " + place_name(traffic_element) + " at position " +
-             str(traffic_element["position"]) +
+             format_location(traffic_element["position"]) +
              " (a milestone) speed " + format_speed(traffic_element["speed"]) +
              ".")
     this_milestone_index = traffic_element["milestone index"]
@@ -2047,9 +2108,11 @@ def move_traffic_element (traffic_element):
                     print (format_time(current_time) + " " +
                            traffic_element["name"] +
                            " in " + place_name(traffic_element) +
-                           " at position " + str(traffic_element["position"]) +
+                           " at position " +
+                           format_location(traffic_element["position"]) +
                            " distance to next milestone " +
-                           str(traffic_element["distance remaining"]) +
+                           format_location(
+                             traffic_element["distance remaining"]) +
                            " stopped.")
                 if ((logging_level >= 2) and (current_time > log_start_time)):
                   logfile.write ("\\hline " + format_time(current_time) +
@@ -2065,14 +2128,14 @@ def move_traffic_element (traffic_element):
                 print (format_time(current_time) + " " +
                        traffic_element["name"] +
                        " in " + place_name(traffic_element) +
-                       " entering " + next_milestone[0] + ".")
+                       " enters the " + next_milestone[0] + ".")
             
               if ((logging_level >= 2) and (current_time > log_start_time)):
                 logfile.write ("\\hline " + format_time(current_time) +
                                " & " + traffic_element["current lane"] +
                                " & " +
                                cap_first_letter(traffic_element["name"]) +
-                               " entering " + next_milestone[0] + ". \\\\\n")
+                               " enters the " + next_milestone[0] + ". \\\\\n")
                 
               traffic_element["current lane"] = next_milestone[0]
               traffic_element["position"] = next_milestone[1]
@@ -2085,6 +2148,7 @@ def move_traffic_element (traffic_element):
               no_activity = False
         else:
           # Changing lanes but not into the intersection or crosswalk
+          old_lane = traffic_element["current lane"]
           traffic_element["current lane"] = next_milestone[0]
           traffic_element["speed"] = speed_limit(next_milestone[0])
           # A milestone that changes lanes must be followed by
@@ -2096,22 +2160,29 @@ def move_traffic_element (traffic_element):
           traffic_element["distance remaining"] = (
             abs(current_position - following_milestone[1]))
           traffic_element["milestone index"] = next_milestone_index
+
+          match old_lane:
+            case "intersection" | "crosswalk":
+              tail_text = " leaves the " + old_lane
+            case _:
+              tail_text = (" at position " +
+                           format_location(traffic_element["position"]) +
+                           " leaves lane " + old_lane)
+              
           if (verbosity_level >= 2):
               print (format_time(current_time) + " " +
                      traffic_element["name"] +
                      " in " + place_name(traffic_element) +
-                     " at position " + str(traffic_element["position"]) +
                      " distance to next milestone " +
-                     str(traffic_element["distance remaining"]) +
+                     format_location(traffic_element["distance remaining"]) +
                      " speed " + format_speed(traffic_element["speed"]) +
-                     " lane change.")
+                     tail_text + ".")
           if ((logging_level >= 2) and (current_time > log_start_time)):
             logfile.write ("\\hline " + format_time(current_time) +
                            " & " + traffic_element["current lane"] +
                            " & " +
                            cap_first_letter(traffic_element["name"]) +
-                           " at position " + str(traffic_element["position"]) +
-                           " lane change. \\\\\n")
+                           tail_text + ". \\\\\n")
           no_activity = False
       else:
         # Not changing lanes
@@ -2124,7 +2195,7 @@ def move_traffic_element (traffic_element):
           print (format_time(current_time) + " " +
                  traffic_element["name"] +
                  " in " + place_name(traffic_element) + " at position " +
-                 str(traffic_element["position"]) +
+                 format_location(traffic_element["position"]) +
                  " speed " + format_speed(traffic_element["speed"]) +
                  " at a milestone.")
         if ((logging_level >= 5) and (current_time > log_start_time)):
@@ -2132,7 +2203,8 @@ def move_traffic_element (traffic_element):
                          " & " + traffic_element["current lane"] +
                          " & " +
                          cap_first_letter(traffic_element["name"]) +
-                         " at position " + str(traffic_element["position"]) +
+                         " at position " +
+                         format_location(traffic_element["position"]) +
                          " at a milestone. \\\\\n")
         no_activity = False
               
