@@ -1,4 +1,4 @@
-# File: Makefile.am, author: John Sauter, date: December 22, 2024.
+# File: Makefile.am, author: John Sauter, date: December 25, 2024.
 #
 # Build traffic_control_signals.pdf
 
@@ -60,6 +60,7 @@ fig4d_19.gif \
 fig4d_20_1.gif \
 fig4d_20_2.gif \
 fig4d_20_3.gif \
+traffic_signal_3_lamps.svg \
 fix_files.sh autogen.sh \
 left_turn_script.txt \
 legalcode.txt mutcd11thedition.pdf \
@@ -103,7 +104,7 @@ sensor_map.tex idle_log.tex left_turn_log.tex \
 pedestrian_log.tex pedestrian_and_left_turn_log.tex multiple_log.tex \
 fig4d_02.eps fig4d_09.eps fig4d_12.eps fig4d_17.eps \
 MUTCD_Ped_Signal_-_Hand_with_timer.pdf MUTCD_Ped_Signal_-_Steady_hand.pdf \
-MUTCD_Ped_Signal_-_Walk.pdf
+MUTCD_Ped_Signal_-_Walk.pdf traffic_signal_3_lamps.pdf
 	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
 ${srcdir}/traffic_control_signals.tex
 	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
@@ -121,7 +122,7 @@ lamp_map_names.tex sensor_map.tex idle_log.tex left_turn_log.tex \
 pedestrian_log.tex pedestrian_and_left_turn_log.tex multiple_log.tex \
 fig4d_02.eps fig4d_09.eps fig4d_12.eps fig4d_17.eps \
 MUTCD_Ped_Signal_-_Hand_with_timer.pdf MUTCD_Ped_Signal_-_Steady_hand.pdf \
-MUTCD_Ped_Signal_-_Walk.pdf
+MUTCD_Ped_Signal_-_Walk.pdf traffic_signal_3_lamps.pdf
 	echo " " >${builddir}/traffic_control_signals.bbl
 	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
 ${srcdir}/traffic_control_signals.tex
@@ -248,6 +249,7 @@ fig4d_*-eps-converted-to.pdf \
 MUTCD_Ped_Signal_-_Hand_with_timer.pdf \
 MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf \
+traffic_signal_3_lamps.pdf \
 *_log.tex \
 check_output.txt \
 verify_files.sh \
