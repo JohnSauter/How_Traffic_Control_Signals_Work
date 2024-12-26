@@ -196,7 +196,8 @@ fig4d_12.eps : fig4d_12.gif
 fig4d_17.eps : fig4d_17.gif
 	magick ${srcdir}/fig4d_17.gif ${builddir}/fig4d_17.eps
 
-%.pdf : %.svg ; inkscape --export-type=pdf ${srcdir}/$(<F) -o ${builddir}/$(@F)
+%.pdf : %.svg ; inkscape --export-type=pdf --export-dpi=4800 \
+${srcdir}/$(<F) -o ${builddir}/$(@F)
 
 # Buld the PDF on demand, if requested.
 pdf-local: traffic_control_signals.pdf
