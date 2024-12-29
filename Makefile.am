@@ -70,6 +70,7 @@ MUTCD_Ped_Signal_-_Steady_hand.svg \
 MUTCD_Ped_Signal_-_Walk.svg \
 pedestrian_and_left_turn_script.txt \
 pedestrian_script.txt \
+events_script.txt \
 references.bib \
 Signal_Timing_Manual_Second_Edition_22097.pdf \
 traffic_control_signals.py \
@@ -227,6 +228,15 @@ check_output.txt : traffic_control_signals.py heavy_script.txt
 --script ${srcdir}/heavy_script.txt \
 --duration 1000 --verbose 4 | tee ${builddir}/check_output.txt
 
+# A secondary target is the event output, for post-processing.
+events: events.csv
+.PHONEY: events
+
+events.csv : traffic_control_signals.py events_script.txt
+	python3 ${srcdir}/traffic_control_signals.py \
+--script ${srcdir}/events_script.txt \
+--duration 1000 --events-file events.csv
+
 # When removing files, also remove the followins:
 CLEANFILES = \
 _minted-traffic_control_signals \
@@ -252,6 +262,7 @@ MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf \
 signal_ccc.pdf \
 *_table.tex \
+events.csv \
 check_output.txt \
 verify_files.sh \
 *trace.txt 

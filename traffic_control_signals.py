@@ -57,6 +57,8 @@ parser.add_argument ('--version', action='version',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
+parser.add_argument ('--events-file', metavar='events_file',
+                     help='write event output to the specified file')
 parser.add_argument ('--table-file', metavar='table_file',
                      help='write LaTeX table output to the specified file' +
                      ' as a LaTex longtable.')
@@ -84,7 +86,7 @@ parser.add_argument ('--duration', type=decimal.Decimal, metavar='duration',
 parser.add_argument ('--table-caption', metavar='table_caption',
                      help='caption of LaTex table.')
 parser.add_argument ('--script-input', metavar='script_input',
-                     help='events for the simulator to execute')
+                     help='actions for the simulator to execute')
 parser.add_argument ('--waiting-limit', type=int, metavar='waiting_limit',
                      help='max wait time before getting green preference ' +
                      'for turning green; default 60 seconds.')
@@ -97,7 +99,9 @@ parser.add_argument ('--verbose', type=int, metavar='verbosity_level',
                      '1 is normal, 0 suppresses summary messages')
 
 do_trace = False
-tracefile = ""
+trace_file_name = ""
+do_events_output = False
+events_file_name = ""
 do_table_output = False
 table_file_name = ""
 do_red_state_output = False
@@ -131,7 +135,12 @@ arguments = vars(arguments)
 if (arguments ['trace_file'] != None):
   do_trace = True
   trace_file_name = arguments ['trace_file']
-  tracefile = open (trace_file_name, 'wt')
+  trace_file = open (trace_file_name, 'wt')
+
+if (arguments ['events_file'] != None):
+  do_events_output = True
+  events_file_name = arguments ['events_file']
+  events_file = open (events_file_name, 'wt')
 
 if (arguments ['table_file'] != None):
   do_table_output = True
@@ -194,6 +203,11 @@ if (do_table_output):
   table_file.write ("  Time & Lane & Event \\endfirsthead \n")
   table_file.write ("  \\caption{" + table_caption + " continued} \\\\\n")
   table_file.write ("  Time & Lane & Events \\endhead \n")
+
+# Write the first line in the event file.
+
+if (do_events_output):
+  events_file.write ("time,lane,type,position,speed,travel path,color\n")
   
 # Construct the template finite state machine.  This template
 # contains the states, actions and transitions.  All of the signal
@@ -784,10 +798,10 @@ yellow_state.append(substate)
 
 finite_state_machine["Yellow"] = yellow_state
 
-if (do_trace != 0):
-  tracefile.write ("Finite State Machine template:\n")
-  pprint.pprint (finite_state_machine, tracefile)
-  tracefile.write ("\n")
+if (do_trace):
+  trace_file.write ("Finite State Machine template:\n")
+  pprint.pprint (finite_state_machine, trace_file)
+  trace_file.write ("\n")
 
 #
 # Write out the finite state machine template for the documentation.
@@ -801,7 +815,7 @@ def write_out_state (the_state, output_file_name):
 
   for substate in the_state:
     if (do_trace):
-      tracefile.write ("Writing out substate " + substate ["name"] + ".\n")
+      trace_file.write ("Writing out substate " + substate ["name"] + ".\n")
     substate_name = substate["name"]
     output_file.write ("\\item [Substate] " + substate_name + "\n")
     output_file.write ("  \\begin{description}\n")
@@ -983,9 +997,9 @@ for signal_face_name in signal_face_names:
   signal_faces_dict[signal_face_name] = signal_face
 
 if (do_trace):
-  tracefile.write ("Timer durations:\n")
-  pprint.pprint (timer_durations, tracefile)
-  tracefile.write ("\n")
+  trace_file.write ("Timer durations:\n")
+  pprint.pprint (timer_durations, trace_file)
+  trace_file.write ("\n")
 
 # Construct the conflict and partial conflict tables.
   
@@ -1165,8 +1179,8 @@ for travel_path_name in ("ps", "pn"):
   travel_paths[travel_path_name] = travel_path
     
 if (do_trace):
-  tracefile.write ("Travel paths:\n")
-  pprint.pprint (travel_paths, tracefile)
+  trace_file.write ("Travel paths:\n")
+  pprint.pprint (travel_paths, trace_file)
 
 # Set up the mapping from the lamp names specified in the finite state
 # machines and the lamps actually used.  Each signal face dictionary
@@ -1384,8 +1398,8 @@ if (do_sensor_map_output):
   sensor_file.close()
   
 if (do_trace):
-  tracefile.write ("Starting Signal Faces:\n")
-  pprint.pprint (signal_faces_list, tracefile)
+  trace_file.write ("Starting Signal Faces:\n")
+  pprint.pprint (signal_faces_list, trace_file)
 
 # Read the script file, if one was specified.
 script_set = set()
@@ -1397,13 +1411,13 @@ if (do_script_input):
       the_operator = row['operator']
       signal_face_name = row['signal face']
       the_operand = row['operand']
-      the_event = (the_time, the_operator, signal_face_name, the_operand)
-      script_set.add(the_event)
+      the_action = (the_time, the_operator, signal_face_name, the_operand)
+      script_set.add(the_action)
 
   if (do_trace):
-    tracefile.write ("Script:\n")
-    pprint.pprint (script_set, tracefile)
-    tracefile.write ("\n")
+    trace_file.write ("Script:\n")
+    pprint.pprint (script_set, trace_file)
+    trace_file.write ("\n")
   
 # System Programs
 
@@ -1763,6 +1777,9 @@ def perform_actions (signal_face, substate):
                             signal_face["name"] +
                             " & Set lamp to " + external_lamp_name +
                             ". \\\\\n")
+        if (do_events_output):
+          events_file.write (str(current_time) + "," + signal_face["name"] +
+                             ",lamp,,,," + external_lamp_name + "\n")
       case "set toggle":
         set_toggle_value (signal_face, action[1], True, "")
         
@@ -1976,7 +1993,13 @@ def add_traffic_element (type, travel_path_name):
                       cap_first_letter(this_name) + " starts on travel path " +
                       travel_path_name + " speed " +
                       format_speed(abs(traffic_element["speed"])) + ". \\\\\n")
-
+  if (do_events_output):
+    events_file.write (str(current_time) + "," +
+                       traffic_element["current lane"] + "," +
+                       type + "," + str(traffic_element["position"]) + "," +
+                       str(traffic_element["speed"]) + "," +
+                       travel_path_name + ",\n")
+                           
   traffic_elements[this_name] = traffic_element
   return
 
@@ -2079,6 +2102,14 @@ def move_traffic_element (traffic_element):
                           cap_first_letter(traffic_element["name"]) +
                           " is blocked by " +
                           blocking_traffic_element["name"] + ". \\\\\n")
+      if (do_events_output):
+        events_file.write (str(current_time) + "," +
+                           traffic_element["current lane"] + "," +
+                           traffic_element["type"] + "," +
+                           str(traffic_element["position"]) + "," +
+                           str(traffic_element["speed"]) + "," +
+                           traffic_element["travel path name"] + ",\n")
+                           
       return
     
     no_activity = False
@@ -2104,6 +2135,14 @@ def move_traffic_element (traffic_element):
                           traffic_element["current lane"] + " & " +
                           cap_first_letter(traffic_element["name"]) +
                           " exits the simulation. \\\\\n")
+      if (do_events_output):
+        events_file.write (str(current_time) + "," +
+                           traffic_element["current lane"] + "," +
+                           traffic_element["type"] + "," +
+                           str(traffic_element["position"]) + "," +
+                           str(traffic_element["speed"]) + "," +
+                           traffic_element["travel path name"] + ",\n")
+
       
       no_activity = False
     else:
@@ -2136,6 +2175,15 @@ def move_traffic_element (traffic_element):
                                     " & " +
                                     cap_first_letter(traffic_element["name"]) +
                                     " stopped. \\\\\n")
+                if (do_events_output):
+                  events_file.write (str(current_time) + "," +
+                                     traffic_element["current lane"] + "," +
+                                     traffic_element["type"] + "," +
+                                     str(traffic_element["position"]) + "," +
+                                     str(traffic_element["speed"]) + "," +
+                                     traffic_element["travel path name"] +
+                                     ",\n")
+
                 no_activity = False
             else:
               # We are trying to enter the intersection or the crosswalk
@@ -2164,6 +2212,14 @@ def move_traffic_element (traffic_element):
               traffic_element["distance remaining"] = (
                 abs(next_milestone[1] - following_milestone[1]))
               traffic_element["milestone index"] = next_milestone_index
+              if (do_events_output):
+                events_file.write (str(current_time) + "," +
+                                   traffic_element["current lane"] + "," +
+                                   traffic_element["type"] + "," +
+                                   str(traffic_element["position"]) + "," +
+                                   str(traffic_element["speed"]) + "," +
+                                   traffic_element["travel path name"] + ",\n")
+
               no_activity = False
         else:
           # Changing lanes but not into the intersection or crosswalk
@@ -2204,6 +2260,14 @@ def move_traffic_element (traffic_element):
                               " & " +
                               cap_first_letter(traffic_element["name"]) +
                               tail_text + ". \\\\\n")
+          if (do_events_output):
+            events_file.write (str(current_time) + "," +
+                               traffic_element["current lane"] + "," +
+                               traffic_element["type"] + "," +
+                               str(traffic_element["position"]) + "," +
+                               str(traffic_element["speed"]) + "," +
+                               traffic_element["travel path name"] + ",\n")
+
           no_activity = False
       else:
         # Not changing lanes
@@ -2270,8 +2334,8 @@ def timer_state (signal_face, timer_name):
     if (the_timer["name"] == timer_name):
       return the_timer["state"]
 
-# Execute an event from the script.
-def perform_script_event (the_operator, signal_face_name, the_operand):
+# Execute an action from the script.
+def perform_script_action (the_operator, signal_face_name, the_operand):
   for signal_face in signal_faces_list:
     if ((signal_face["name"] == signal_face_name) or
         (signal_face_name == "all")):
@@ -2371,17 +2435,17 @@ def find_next_timer_completion_time():
         next_timer_completion_time = the_timer["completion time"]
   return (next_timer_completion_time)
 
-# Find the time of the next event in the script.
-def find_next_script_event_time():
-  next_script_event_time = None
-  for the_event in script_set:
-    the_time = the_event[0]
-    if (next_script_event_time == None):
-      next_script_event_time = the_time
+# Find the time of the next action in the script.
+def find_next_script_action_time():
+  next_script_action_time = None
+  for the_action in script_set:
+    the_time = the_action[0]
+    if (next_script_action_time == None):
+      next_script_action_time = the_time
     else:
-      if (the_time < next_script_event_time):
-        next_script_event_time = the_time
-  return (next_script_event_time)
+      if (the_time < next_script_action_time):
+        next_script_action_time = the_time
+  return (next_script_action_time)
 
 # Find the next traffic element time.
 # TODO
@@ -2458,19 +2522,19 @@ while ((current_time < end_time) and (error_counter == 0)):
   conflicting_paths_are_clear()
   partial_conflicting_paths_are_clear()
     
-  # Run the events in the script.
+  # Run any ripe actionss in the script.
   to_remove = set()
-  for the_event in script_set:
-    the_time = the_event[0]
-    the_operator = the_event[1]
-    signal_face_name = the_event[2]
-    the_operand = the_event[3]
+  for the_action in script_set:
+    the_time = the_action[0]
+    the_operator = the_action[1]
+    signal_face_name = the_action[2]
+    the_operand = the_action[3]
     if (the_time <= current_time):
-      perform_script_event (the_operator, signal_face_name, the_operand)
-      to_remove.add(the_event)
+      perform_script_action (the_operator, signal_face_name, the_operand)
+      to_remove.add(the_action)
       no_activity = False
-  for the_event in to_remove:
-    script_set.remove(the_event)
+  for the_action in to_remove:
+    script_set.remove(the_action)
 
   # See if any vehicles or pedestrians are activating any sensors
   check_sensors()
@@ -2523,13 +2587,13 @@ while ((current_time < end_time) and (error_counter == 0)):
   # We only update the clock if there is no activity.
   if (no_activity):
     next_timer_completion_time = find_next_timer_completion_time()
-    next_script_event_time = find_next_script_event_time()
+    next_script_action_time = find_next_script_action_time()
     next_traffic_element_time = find_next_traffic_element_time()
 
-    # If there are no timers running, no script events waiting to run
+    # If there are no timers running, no script actions waiting to run
     # and no traffic elements present then we are done.
     if ((next_timer_completion_time == None) and
-        (next_script_event_time == None) and
+        (next_script_action_time == None) and
         (next_traffic_element_time == None)):
       break
 
@@ -2538,9 +2602,9 @@ while ((current_time < end_time) and (error_counter == 0)):
     if ((next_timer_completion_time != None) and
         (next_timer_completion_time < next_clock_time)):
       next_clock_time = next_timer_completion_time
-    if ((next_script_event_time != None) and
-        (next_script_event_time < next_clock_time)):
-      next_clock_time = next_script_event_time
+    if ((next_script_action_time != None) and
+        (next_script_action_time < next_clock_time)):
+      next_clock_time = next_script_action_time
     if ((next_traffic_element_time != None) and
         (next_traffic_element_time < next_clock_time)):
       next_clock_time = next_traffic_element_time
@@ -2549,8 +2613,8 @@ while ((current_time < end_time) and (error_counter == 0)):
     no_activity = True
   
 if (do_trace):
-  tracefile.write ("Ending Signal Faces:\n")
-  pprint.pprint (signal_faces_list, tracefile)
+  trace_file.write ("Ending Signal Faces:\n")
+  pprint.pprint (signal_faces_list, trace_file)
 
  # If requested, also print the maximum wait times.
 if (print_statistics and (verbosity_level >= 1)):
@@ -2566,7 +2630,7 @@ if (do_table_output):
   table_file.close()
 
 if (do_trace):
-  tracefile.close()
+  trace_file.close()
 
 if (error_counter > 0):
   print ("Encountered " + str(error_counter) + " errors.")
