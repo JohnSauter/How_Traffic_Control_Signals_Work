@@ -1,5 +1,5 @@
 Name:           How_Traffic_Control_Signals_Work
-Version:        0.6
+Version:        0.7
 Release:        1%{?dist}
 Summary:        Explain traffic control signals
 
@@ -56,6 +56,8 @@ make check VERBOSE=1
 %license COPYING
 
 %changelog
+ * Sat Dec 27 2024 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.7-1 Through lanes move at full speed in the intersection.
  * Wed Dec 25 2024 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.6-1 Vehicles and pedestrians work.
  * Mon Dec 23 2024 John Sauter <John_Sauter@systemeyescomputerstore.com>

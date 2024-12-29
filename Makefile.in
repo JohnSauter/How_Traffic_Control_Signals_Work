@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# File: Makefile.am, author: John Sauter, date: December 25, 2024.
+# File: Makefile.am, author: John Sauter, date: December 27, 2024.
 #
 # Build traffic_control_signals.pdf
 
@@ -482,10 +482,10 @@ EXTRA_DIST = fig4d_01.gif fig4d_02.gif fig4d_06.gif fig4d_07.gif \
 	fig4d_08.gif fig4d_09.gif fig4d_10.gif fig4d_11.gif \
 	fig4d_12.gif fig4d_13.gif fig4d_14.gif fig4d_15.gif \
 	fig4d_16.gif fig4d_17.gif fig4d_18.gif fig4d_19.gif \
-	fig4d_20_1.gif fig4d_20_2.gif fig4d_20_3.gif \
-	traffic_signal_3_lamps.svg fix_files.sh autogen.sh \
-	left_turn_script.txt legalcode.txt mutcd11thedition.pdf \
-	multiple_script.txt MUTCD_Ped_Signal_-_Hand_with_timer.svg \
+	fig4d_20_1.gif fig4d_20_2.gif fig4d_20_3.gif signal_ccc.svg \
+	fix_files.sh autogen.sh left_turn_script.txt legalcode.txt \
+	mutcd11thedition.pdf multiple_script.txt \
+	MUTCD_Ped_Signal_-_Hand_with_timer.svg \
 	MUTCD_Ped_Signal_-_Steady_hand.svg MUTCD_Ped_Signal_-_Walk.svg \
 	pedestrian_and_left_turn_script.txt pedestrian_script.txt \
 	references.bib Signal_Timing_Manual_Second_Edition_22097.pdf \
@@ -521,7 +521,7 @@ fig4d_*-eps-converted-to.pdf \
 MUTCD_Ped_Signal_-_Hand_with_timer.pdf \
 MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf \
-traffic_signal_3_lamps.pdf \
+signal_ccc.pdf \
 *_log.tex \
 check_output.txt \
 verify_files.sh \
@@ -1077,7 +1077,7 @@ sensor_map.tex idle_log.tex left_turn_log.tex \
 pedestrian_log.tex pedestrian_and_left_turn_log.tex multiple_log.tex \
 fig4d_02.eps fig4d_09.eps fig4d_12.eps fig4d_17.eps \
 MUTCD_Ped_Signal_-_Hand_with_timer.pdf MUTCD_Ped_Signal_-_Steady_hand.pdf \
-MUTCD_Ped_Signal_-_Walk.pdf traffic_signal_3_lamps.pdf
+MUTCD_Ped_Signal_-_Walk.pdf signal_ccc.pdf
 	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
 ${srcdir}/traffic_control_signals.tex
 	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
@@ -1095,7 +1095,7 @@ lamp_map_names.tex sensor_map.tex idle_log.tex left_turn_log.tex \
 pedestrian_log.tex pedestrian_and_left_turn_log.tex multiple_log.tex \
 fig4d_02.eps fig4d_09.eps fig4d_12.eps fig4d_17.eps \
 MUTCD_Ped_Signal_-_Hand_with_timer.pdf MUTCD_Ped_Signal_-_Steady_hand.pdf \
-MUTCD_Ped_Signal_-_Walk.pdf traffic_signal_3_lamps.pdf
+MUTCD_Ped_Signal_-_Walk.pdf signal_ccc.pdf
 	echo " " >${builddir}/traffic_control_signals.bbl
 	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
 ${srcdir}/traffic_control_signals.tex

@@ -53,7 +53,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.6 2024-12-25',
+                     version='traffic_control_signals 0.7 2024-12-27',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -1889,9 +1889,9 @@ traffic_elements = dict()
 # Subroutine to return the speed limit for a lane in feet per second.
 # Because lane positions are measured from the stop line,
 # approach lanes have negative speed, departure lanes have positive speed.
-# The crosswalk and intersection measure from the end, so they have
+# The crosswalk and intersection measure from the far end, so they have
 # negative speeds.
-def speed_limit (lane_name):
+def speed_limit (lane_name, travel_path_name):
   match lane_name:
     case "1" | "2" |"4" | "5":
       return (45 * mph_to_fps)
@@ -1904,7 +1904,16 @@ def speed_limit (lane_name):
     case "ps" | "pn" | "crosswalk" :
       return (fractions.Fraction(-35, 10))
     case "intersection":
-      return (-25 * mph_to_fps)
+      # In the intersecton the speed limit depends on
+      # the travel path.  If we are going staright through
+      # on one of the 45 mph lanes we can maintain that speed.
+      # Anything else, including turning right from lanes
+      # C or G, requires slowing to 25 mph.
+      match travel_path_name:
+        case "B5" | "C4" | "F2" | "G1":
+          return (speed_limit(travel_path_name[0], travel_path_name))
+        case _:
+          return (-25 * mph_to_fps)
   return None
 
 # Subroutine to add a traffic element to the traffic elements dictionary.
@@ -1922,6 +1931,7 @@ def add_traffic_element (type, travel_path_name):
   traffic_element["name"] = this_name
   
   traffic_element["type"] = type
+  traffic_element["travel path name"] = travel_path_name
   milestone_list = travel_paths[travel_path_name]
   traffic_element["milestones"] = milestone_list
   milestone_index = 0
@@ -1933,7 +1943,8 @@ def add_traffic_element (type, travel_path_name):
   next_milestone_index = milestone_index + 1
   next_milestone = milestone_list[next_milestone_index]
   traffic_element["distance remaining"] = abs(position - next_milestone[1])
-  traffic_element["speed"] = speed_limit(traffic_element["current lane"])
+  traffic_element["speed"] = speed_limit(traffic_element["current lane"],
+                                         traffic_element["travel path name"])
   match type:
     case "car":
       traffic_element["length"] = 15
@@ -2139,7 +2150,9 @@ def move_traffic_element (traffic_element):
                 
               traffic_element["current lane"] = next_milestone[0]
               traffic_element["position"] = next_milestone[1]
-              traffic_element["speed"] = speed_limit(next_milestone[0])
+              traffic_element["speed"] = (
+                speed_limit(next_milestone[0],
+                            traffic_element["travel path name"]))
               following_milestone_index = next_milestone_index + 1
               following_milestone = milestone_list[following_milestone_index]
               traffic_element["distance remaining"] = (
@@ -2150,7 +2163,9 @@ def move_traffic_element (traffic_element):
           # Changing lanes but not into the intersection or crosswalk
           old_lane = traffic_element["current lane"]
           traffic_element["current lane"] = next_milestone[0]
-          traffic_element["speed"] = speed_limit(next_milestone[0])
+          traffic_element["speed"] = (
+            speed_limit(next_milestone[0],
+                        traffic_element["travel path name"]))
           # A milestone that changes lanes must be followed by
           # a milestone that does not change lanes.
           following_milestone_index = next_milestone_index + 1
