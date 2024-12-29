@@ -15,7 +15,7 @@ AC_CONFIG_SRCDIR([traffic_control_signals.py])
 AM_MAINTAINER_MODE
 
 # Checks for programs.
-AM_PATH_PYTHON([3])
+AM_PATH_PYTHON([3.10])
 
 # Checks for libraries.
 

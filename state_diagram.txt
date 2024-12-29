@@ -1,5 +1,4 @@
-# File: traffic_control_signals_state_diagram.txt, author: John Sauter,
-# date: November 3, 2024.
+# File: state_diagram.txt, author: John Sauter, date: December 29, 2024.
 
 strict digraph Traffic_Control_Signals {
 fontname="Helvetica,Arial,sans-serif"
@@ -10,7 +9,8 @@ node [fontname="Helvetica,Arial,sans-serif", shape=box,
 edge [fontname="Helvetica,Arial,sans-serif"]
 
 layout=dot
-size="3.75,3.75"
+#size="3.75,3.75"
+size="5.0,5.0"
 center=true
 #concentrate=true
 pennwidth=2.0

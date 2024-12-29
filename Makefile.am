@@ -74,7 +74,7 @@ references.bib \
 Signal_Timing_Manual_Second_Edition_22097.pdf \
 traffic_control_signals.py \
 traffic_control_signals.tex \
-traffic_control_signals_state_diagram.txt 
+state_diagram.txt 
 
 # Distribute the shell script which builds the RPMs.
 EXTRA_DIST += build_RPMs.sh
@@ -98,7 +98,7 @@ EXTRA_DIST += How_Traffic_Control_Signals_Work.spec
 # by verifying that the size of the last and next-to-last runs match.
 traffic_control_signals.pdf : traffic_control_signals.tex \
 traffic_control_signals.bbl LICENSE legalcode.txt \
-traffic_control_signals_state_diagram.eps red_state_table.tex \
+state_diagram.eps red_state_table.tex \
 green_state_table.tex yellow_state_table.tex lamp_map_names.tex \
 sensor_map.tex idle_log.tex left_turn_log.tex \
 pedestrian_log.tex pedestrian_and_left_turn_log.tex multiple_log.tex \
@@ -116,7 +116,7 @@ ${srcdir}/traffic_control_signals.tex
 
 # Build the bbl file by running LaTeX without it, then running bibtex.
 traffic_control_signals.bbl : traffic_control_signals.tex references.bib \
-LICENSE legalcode.txt traffic_control_signals_state_diagram.eps \
+LICENSE legalcode.txt state_diagram.eps \
 red_state_table.tex green_state_table.tex yellow_state_table.tex \
 lamp_map_names.tex sensor_map.tex idle_log.tex left_turn_log.tex \
 pedestrian_log.tex pedestrian_and_left_turn_log.tex multiple_log.tex \
@@ -130,10 +130,9 @@ ${srcdir}/traffic_control_signals.tex
 ${builddir}/traffic_control_signals.aux
 
 # Build a chart of states of the finite state machines
-traffic_control_signals_state_diagram.eps : \
-traffic_control_signals_state_diagram.txt
-	neato -Teps ${srcdir}/traffic_control_signals_state_diagram.txt \
--o ${builddir}/traffic_control_signals_state_diagram.eps
+state_diagram.eps : state_diagram.txt
+	neato -Teps ${srcdir}/state_diagram.txt \
+-o ${builddir}/state_diagram.eps
 
 # Generate the state tables from the implementation's finite state machine.
 red_state_table.tex : traffic_control_signals.py
@@ -238,8 +237,8 @@ traffic_control_signals.brf \
 traffic_control_signals.log \
 traffic_control_signals.out \
 traffic_control_signals.pdf \
-traffic_control_signals_state_diagram.eps \
-traffic_control_signals_state_diagram-eps-converted-to.pdf \
+state_diagram.eps \
+state_diagram-eps-converted-to.pdf \
 red_state_table.tex \
 green_state_table.tex \
 yellow_state_table.tex \
