@@ -53,12 +53,13 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.7 2024-12-27',
+                     version='traffic_control_signals 0.7 2024-12-29',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
-parser.add_argument ('--log-file', metavar='log_file',
-                     help='write logging output to the specified file')
+parser.add_argument ('--table-file', metavar='table_file',
+                     help='write LaTeX table output to the specified file' +
+                     ' as a LaTex longtable.')
 parser.add_argument ('--red-state-file', metavar='red_state_file',
                      help='write the red state description as a LaTex file')
 parser.add_argument ('--yellow-state-file', metavar='yellow_state_file',
@@ -70,112 +71,114 @@ parser.add_argument ('--lamp-map-file', metavar='lamp_map_file',
                      help='write the lamp map as a LaTex table')
 parser.add_argument ('--sensor-map-file', metavar='sensor_map_file',
                      help='write the sensor map as a LaTex table')
-parser.add_argument ('--log-level', type=int, metavar='log_level',
-                     help='control the level of detail in the log: ' +
+parser.add_argument ('--table-level', type=int, metavar='table_level',
+                     help='control the level of detail in the table: ' +
                      '1 is normal, 0 none')
-parser.add_argument ('--log-start', type=decimal.Decimal, metavar='log_start',
-                     help='do not log before this time, ' +
-                     'default is -1.000')
+parser.add_argument ('--table-start', type=decimal.Decimal,
+                     metavar='table_start',
+                     help='do not include information before this time' +
+                     ' in the LaTex table, default is -1.000')
 parser.add_argument ('--duration', type=decimal.Decimal, metavar='duration',
                      help='length of time to run the simulator, ' +
                      'default is 0.000')
-parser.add_argument ('--log-caption', metavar='log_caption',
-                     help='caption of table created by log file')
+parser.add_argument ('--table-caption', metavar='table_caption',
+                     help='caption of LaTex table.')
 parser.add_argument ('--script-input', metavar='script_input',
                      help='events for the simulator to execute')
 parser.add_argument ('--waiting-limit', type=int, metavar='waiting_limit',
                      help='max wait time before getting green preference ' +
                      'for turning green; default 60 seconds.')
-parser.add_argument ('--statistics', type=int, metavar='statistics',
-                     help='statistics about the simulation ' +
-                     'default is none.')
+parser.add_argument ('--print_statistics', type=bool,
+                     metavar='print_statistics',
+                     help='print statistics about the simulation ' +
+                     'default is False.')
 parser.add_argument ('--verbose', type=int, metavar='verbosity_level',
                      help='control the amount of output from the program: ' +
                      '1 is normal, 0 suppresses summary messages')
 
-do_trace = 0
+do_trace = False
 tracefile = ""
-do_logging = 0
-logfile = ""
-do_red_state_output = 0
-do_yellow_state_output = 0
-do_green_state_output = 0
-do_lamp_map_output = 0
-do_sensor_map_output = 0
-logging_level = 0
+do_table_output = False
+table_file_name = ""
+do_red_state_output = False
+do_yellow_state_output = False
+do_green_state_output = False
+do_lamp_map_output = False
+do_sensor_map_output = False
+table_level = 0
 end_time = decimal.Decimal ('0.000')
-log_start_time  = decimal.Decimal ('-1.000')
-log_caption = "no caption"
-do_script_input = 0
+table_start_time  = decimal.Decimal ('-1.000')
+table_caption = "no caption"
+do_script_input = False
 script_input_file = ""
 waiting_limit = 60
-statistics = 0
+print_statistics = False
 verbosity_level = 1
 error_counter = 0
 
-# Verbosity_level and logging level:
+# Verbosity_level and table level:
 # 1 only errors and statistics if requested
 # 2 add lamp changes, script actions, and vehicles and pedestrians
 #   arriving, leaving and reaching milestones
 # 3 add state changes
 # 4 add toggle and sensor changes
-# 5 add lots of other items
+# 5 add lots of other items for debugging
 
 # Parse the command line.
 arguments = parser.parse_args ()
 arguments = vars(arguments)
 
 if (arguments ['trace_file'] != None):
-  do_trace = 1
+  do_trace = True
   trace_file_name = arguments ['trace_file']
   tracefile = open (trace_file_name, 'wt')
 
-if (arguments ['log_file'] != None):
-  do_logging = 1
-  log_file_name = arguments ['log_file']
-  logfile = open (log_file_name, 'wt')
+if (arguments ['table_file'] != None):
+  do_table_output = True
+  table_file_name = arguments ['table_file']
+  table_file = open (table_file_name, 'wt')
 
 if (arguments ['red_state_file'] != None):
-  do_red_state_output = 1
+  do_red_state_output = True
   red_state_output_file_name = arguments ['red_state_file']
 
 if (arguments ['yellow_state_file'] != None):
-  do_yellow_state_output = 1
+  do_yellow_state_output = True
   yellow_state_output_file_name = arguments ['yellow_state_file']
 
 if (arguments ['green_state_file'] != None):
-  do_green_state_output = 1
+  do_green_state_output = True
   green_state_output_file_name = arguments ['green_state_file']
 
 if (arguments ['lamp_map_file'] != None):
-  do_lamp_map_output = 1
+  do_lamp_map_output = True
   lamp_map_file_name = arguments ['lamp_map_file']
 
 if (arguments ['sensor_map_file'] != None):
-  do_sensor_map_output = 1
+  do_sensor_map_output = True
   sensor_map_file_name = arguments ['sensor_map_file']
 
-if ((arguments ['log_level'] != None) and (do_logging == 1)):
-  logging_level = arguments ['log_level']
+if ((arguments ['table_level'] != None) and do_table_output):
+  table_level = arguments ['table_level']
 
 if (arguments ['duration'] != None):
   end_time = arguments ['duration']
   
-if (arguments ['log_start'] != None):
-  log_start_time = arguments ['log_start']
+if (arguments ['table_start'] != None):
+  table_start_time = arguments ['table_start']
 
-if (arguments ['log_caption'] != None):
-  log_caption = arguments ['log_caption']
+if (arguments ['table_caption'] != None):
+  table_caption = arguments ['table_caption']
   
 if (arguments ['script_input'] != None):
-  do_script_input = 1
+  do_script_input = True
   script_file_name = arguments ['script_input']
   
 if (arguments ['waiting_limit'] != None):
   waiting_limit = arguments ['waiting_limit']
 
-if (arguments ['statistics'] != None):
-  statistics = arguments ['statistics']
+if (arguments ['print_statistics'] != None):
+  print_statistics = arguments ['print_statistics']
 
 if (arguments ['verbose'] != None):
   verbosity_level = int(arguments ['verbose'])
@@ -183,14 +186,14 @@ if (arguments ['verbose'] != None):
 start_time = decimal.Decimal("0.000")
 current_time = fractions.Fraction(start_time)
   
-# Write the first lines in the log file.
+# Write the first lines in the table file.
 
-if (do_logging):
-  logfile.write ("\\begin{longtable}{c | P{1.00cm} | p{9.25cm}}\n")
-  logfile.write ("  \\caption{" + log_caption + "} \\\\\n")
-  logfile.write ("  Time & Lane & Event \\endfirsthead \n")
-  logfile.write ("  \\caption{" + log_caption + " continued} \\\\\n")
-  logfile.write ("  Time & Lane & Events \\endhead \n")
+if (do_table_output):
+  table_file.write ("\\begin{longtable}{c | P{1.00cm} | p{9.25cm}}\n")
+  table_file.write ("  \\caption{" + table_caption + "} \\\\\n")
+  table_file.write ("  Time & Lane & Event \\endfirsthead \n")
+  table_file.write ("  \\caption{" + table_caption + " continued} \\\\\n")
+  table_file.write ("  Time & Lane & Events \\endhead \n")
   
 # Construct the template finite state machine.  This template
 # contains the states, actions and transitions.  All of the signal
@@ -797,7 +800,7 @@ def write_out_state (the_state, output_file_name):
   output_file.write ("\\begin{description}[style=standard]\n")
 
   for substate in the_state:
-    if (do_trace == 1):
+    if (do_trace):
       tracefile.write ("Writing out substate " + substate ["name"] + ".\n")
     substate_name = substate["name"]
     output_file.write ("\\item [Substate] " + substate_name + "\n")
@@ -839,13 +842,13 @@ def write_out_state (the_state, output_file_name):
   output_file.write ("\\end{description}\n")
   output_file.close()
 
-if (do_red_state_output == 1):
+if (do_red_state_output):
   write_out_state (red_state, red_state_output_file_name)
 
-if (do_green_state_output == 1):
+if (do_green_state_output):
   write_out_state (green_state, green_state_output_file_name)
 
-if (do_yellow_state_output == 1):
+if (do_yellow_state_output):
   write_out_state (yellow_state, yellow_state_output_file_name)
 
 # Build the finite state machines for the signal faces:
@@ -979,7 +982,7 @@ for signal_face_name in signal_face_names:
   signal_faces_list.append(signal_face)
   signal_faces_dict[signal_face_name] = signal_face
 
-if (do_trace != 0):
+if (do_trace):
   tracefile.write ("Timer durations:\n")
   pprint.pprint (timer_durations, tracefile)
   tracefile.write ("\n")
@@ -1161,7 +1164,7 @@ for travel_path_name in ("ps", "pn"):
   
   travel_paths[travel_path_name] = travel_path
     
-if (do_trace > 0):
+if (do_trace):
   tracefile.write ("Travel paths:\n")
   pprint.pprint (travel_paths, tracefile)
 
@@ -1207,7 +1210,7 @@ for signal_face in signal_faces_list:
       
   signal_face["lamp names map"] = lamp_names_map
 
-if (do_lamp_map_output != 0):
+if (do_lamp_map_output):
   lamp_map_file = open (lamp_map_file_name, 'w')
   lamp_map_file.write ("\\begin{longtable}{P{1.0cm} | P{5cm} | P{5cm}}\n")
   lamp_map_file.write ("  \\caption{Lamp Wiring}\\label{lamp_wiring} \\\\\n")
@@ -1352,7 +1355,7 @@ for signal_face in signal_faces_list:
     
   signal_face ["sensors"] = sensors
           
-if (do_sensor_map_output != 0):
+if (do_sensor_map_output):
   sensor_file = open (sensor_map_file_name, 'w')
   sensor_file.write ("\\begin{longtable}{P{1.0cm} | P{4.0cm} | P{6.0cm}}\n")
   sensor_file.write ("  \\caption{Sensor Wiring} \\\\\n")
@@ -1380,13 +1383,13 @@ if (do_sensor_map_output != 0):
   sensor_file.write ("\\hline \\end{longtable}\n")
   sensor_file.close()
   
-if (do_trace != 0):
+if (do_trace):
   tracefile.write ("Starting Signal Faces:\n")
   pprint.pprint (signal_faces_list, tracefile)
 
 # Read the script file, if one was specified.
 script_set = set()
-if (do_script_input == 1):
+if (do_script_input):
   with open (script_file_name, 'rt') as scriptfile:
     reader = csv.DictReader (scriptfile)
     for row in reader:
@@ -1397,7 +1400,7 @@ if (do_script_input == 1):
       the_event = (the_time, the_operator, signal_face_name, the_operand)
       script_set.add(the_event)
 
-  if (do_trace > 0):
+  if (do_trace):
     tracefile.write ("Script:\n")
     pprint.pprint (script_set, tracefile)
     tracefile.write ("\n")
@@ -1466,10 +1469,10 @@ def set_toggle_value (signal_face, toggle_name, new_value, source):
                  signal_face["name"] + " " + operator + toggle_name + byline +
                  ".")
             
-        if ((logging_level >= 4) and (current_time > log_start_time)):
-          logfile.write ("\\hline " + format_time(current_time) + " & " +
-                         signal_face["name"] + "& " + operator + 
-                         toggle_name + byline + ". \\\\\n")
+        if ((table_level >= 4) and (current_time > table_start_time)):
+          table_file.write ("\\hline " + format_time(current_time) + " & " +
+                            signal_face["name"] + "& " + operator + 
+                            toggle_name + byline + ". \\\\\n")
         no_activity = False
         the_toggle["value"] = new_value
 
@@ -1484,11 +1487,11 @@ def set_toggle_value (signal_face, toggle_name, new_value, source):
               print (format_time(current_time) + " signal face " +
                      signal_face["name"] + " finishes waiting: " +
                      format_time(wait_time) + ".")
-            if ((logging_level >= 5) and (current_time > log_start_time)):
-              logfile.write ("\\hline " + format_time(current_time) + " & " +
-                             signal_face ["name"] +
-                             " & finishes waiting for " +
-                             format_time(wait_time) + ".\\\\\n")
+            if ((table_level >= 5) and (current_time > table_start_time)):
+              table_file.write ("\\hline " + format_time(current_time) +
+                                " & " + signal_face ["name"] +
+                                " & finishes waiting for " +
+                                format_time(wait_time) + ".\\\\\n")
             if ("max wait time" not in signal_face):
               signal_face ["max wait time"] = wait_time
               signal_face ["max wait start"] = signal_face["wait start"]
@@ -1559,9 +1562,9 @@ def green_request_granted():
         if (verbosity_level >= 5):
           print (format_time(current_time) + " signal face " +
                  signal_face["name"] + " starts waiting.")
-        if ((logging_level >= 5) and (current_time > log_start_time)):
-          logfile.write ("\\hline " + format_time(current_time) + " & " +
-                         signal_face ["name"] + "& starts waiting. \\\\\n")
+        if ((table_level >= 5) and (current_time > table_start_time)):
+          table_file.write ("\\hline " + format_time(current_time) + " & " +
+                            signal_face ["name"] + "& starts waiting. \\\\\n")
 
   # If the list of signal faces allowed to turn green is empty,
   # allow the oldest signal face on the list of signal faces
@@ -1755,10 +1758,11 @@ def perform_actions (signal_face, substate):
           print (format_time(current_time) + " signal face " +
                  signal_face["name"] + " lamp set to " + external_lamp_name +
                  ".")
-        if ((logging_level >= 2) and (current_time > log_start_time)):
-          logfile.write ("\\hline " + format_time(current_time) + " & " +
-                         signal_face["name"] +
-                         " & Set lamp to " + external_lamp_name + ". \\\\\n")
+        if ((table_level >= 2) and (current_time > table_start_time)):
+          table_file.write ("\\hline " + format_time(current_time) + " & " +
+                            signal_face["name"] +
+                            " & Set lamp to " + external_lamp_name +
+                            ". \\\\\n")
       case "set toggle":
         set_toggle_value (signal_face, action[1], True, "")
         
@@ -1800,14 +1804,15 @@ def perform_actions (signal_face, substate):
                              " Unable to clear toggle " + toggle_name +
                              " because sensor " + full_test_sensor_name +
                              " is still active.")
-                    if ((logging_level >= 4) and
-                        (current_time > log_start_time)):
-                      logfile.write ("\\hline " + format_time(current_time) +
-                                     " & " + signal_face_name +
-                                     " & Unable to clear toggle " +
-                                     toggle_name + " because sensor " +
-                                     full_test_sensor_name +
-                                     " is still active." + "\\\\\n")
+                    if ((table_level >= 4) and
+                        (current_time > table_start_time)):
+                      table_file.write ("\\hline " +
+                                        format_time(current_time) +
+                                        " & " + signal_face_name +
+                                        " & Unable to clear toggle " +
+                                        toggle_name + " because sensor " +
+                                        full_test_sensor_name +
+                                        " is still active." + "\\\\\n")
               
         if (not new_toggle_value):
           set_toggle_value (signal_face, toggle_name, new_toggle_value, "")
@@ -1829,10 +1834,10 @@ def perform_actions (signal_face, substate):
                        signal_face["name"] + " start timer " +
                        timer_name + " duration " +
                        format_time(the_timer["remaining time"]) + ".")
-              if ((logging_level >= 5) and (current_time > log_start_time)):
-                logfile.write ("\\hline " + format_time(current_time) + " & " +
-                               signal_face ["name"] + " & Start timer " +
-                               timer_name + ". \\\\\n")
+              if ((table_level >= 5) and (current_time > table_start_time)):
+                table_file.write ("\\hline " + format_time(current_time) +
+                                  " & " + signal_face ["name"] +
+                                  " & Start timer " + timer_name + ". \\\\\n")
       case _:
         if (verbosity_level >= 1):
           print (format_time(current_time) + " signal face " +
@@ -1870,11 +1875,11 @@ def enter_state (signal_face, state_name, substate_name):
     print (format_time(current_time) + " signal face " + signal_face["name"] +
            " enters state " + state_name +
            " substate " + substate_name + ".")
-  if ((logging_level >= 3) and (current_time > log_start_time)):
-    logfile.write ("\\hline " + format_time(current_time) + " & " +
-                   signal_face["name"] + " & " +
-                   "Enter state " + state_name + " substate " +
-                   substate_name + ". \\\\\n")
+  if ((table_level >= 3) and (current_time > table_start_time)):
+    table_file.write ("\\hline " + format_time(current_time) + " & " +
+                      signal_face["name"] + " & " +
+                      "Enter state " + state_name + " substate " +
+                      substate_name + ". \\\\\n")
   state = finite_state_machine[state_name]
   for substate in state:
     if (substate["name"] == substate_name):
@@ -1965,12 +1970,12 @@ def add_traffic_element (type, travel_path_name):
            " distance to next milestone " +
            format_location(traffic_element["distance remaining"]) +
            " speed " + format_speed(traffic_element["speed"]) + ".")
-  if ((logging_level >= 2) and (current_time > log_start_time)):
-    logfile.write ("\\hline " + format_time(current_time) + " & " +
-                   traffic_element["current lane"] + " & " +
-                   cap_first_letter(this_name) + " starts on travel path " +
-                   travel_path_name + " speed " +
-                   format_speed(abs(traffic_element["speed"])) + ". \\\\\n")
+  if ((table_level >= 2) and (current_time > table_start_time)):
+    table_file.write ("\\hline " + format_time(current_time) + " & " +
+                      traffic_element["current lane"] + " & " +
+                      cap_first_letter(this_name) + " starts on travel path " +
+                      travel_path_name + " speed " +
+                      format_speed(abs(traffic_element["speed"])) + ". \\\\\n")
 
   traffic_elements[this_name] = traffic_element
   return
@@ -2068,12 +2073,12 @@ def move_traffic_element (traffic_element):
                " distance to next milestone  " +
                format_location(traffic_element["distance remaining"]) +
                " is blocked by " + blocking_traffic_element["name"] + ".")
-      if ((logging_level >= 2) and (current_time > log_start_time)):
-        logfile.write ("\\hline " + format_time(current_time) + " & " +
-                       traffic_element["current lane"] + " & " +
-                       cap_first_letter(traffic_element["name"]) +
-                       " is blocked by " + blocking_traffic_element["name"] +
-                       ". \\\\\n")
+      if ((table_level >= 2) and (current_time > table_start_time)):
+        table_file.write ("\\hline " + format_time(current_time) + " & " +
+                          traffic_element["current lane"] + " & " +
+                          cap_first_letter(traffic_element["name"]) +
+                          " is blocked by " +
+                          blocking_traffic_element["name"] + ". \\\\\n")
       return
     
     no_activity = False
@@ -2094,11 +2099,11 @@ def move_traffic_element (traffic_element):
         print (format_time(current_time) + " " +
                traffic_element["name"] +
                " in " + place_name(traffic_element) + " exits the simulation.")
-      if ((logging_level >= 2) and (current_time > log_start_time)):
-        logfile.write ("\\hline " + format_time(current_time) + " & " +
-                         traffic_element["current lane"] + " & " +
-                       cap_first_letter(traffic_element["name"]) +
-                       " exits the simulation. \\\\\n")
+      if ((table_level >= 2) and (current_time > table_start_time)):
+        table_file.write ("\\hline " + format_time(current_time) + " & " +
+                          traffic_element["current lane"] + " & " +
+                          cap_first_letter(traffic_element["name"]) +
+                          " exits the simulation. \\\\\n")
       
       no_activity = False
     else:
@@ -2125,12 +2130,12 @@ def move_traffic_element (traffic_element):
                            format_location(
                              traffic_element["distance remaining"]) +
                            " stopped.")
-                if ((logging_level >= 2) and (current_time > log_start_time)):
-                  logfile.write ("\\hline " + format_time(current_time) +
-                                 " & " + traffic_element["current lane"] +
-                                 " & " +
-                                 cap_first_letter(traffic_element["name"]) +
-                                 " stopped. \\\\\n")
+                if ((table_level >= 2) and (current_time > table_start_time)):
+                  table_file.write ("\\hline " + format_time(current_time) +
+                                    " & " + traffic_element["current lane"] +
+                                    " & " +
+                                    cap_first_letter(traffic_element["name"]) +
+                                    " stopped. \\\\\n")
                 no_activity = False
             else:
               # We are trying to enter the intersection or the crosswalk
@@ -2141,12 +2146,13 @@ def move_traffic_element (traffic_element):
                        " in " + place_name(traffic_element) +
                        " enters the " + next_milestone[0] + ".")
             
-              if ((logging_level >= 2) and (current_time > log_start_time)):
-                logfile.write ("\\hline " + format_time(current_time) +
-                               " & " + traffic_element["current lane"] +
-                               " & " +
-                               cap_first_letter(traffic_element["name"]) +
-                               " enters the " + next_milestone[0] + ". \\\\\n")
+              if ((table_level >= 2) and (current_time > table_start_time)):
+                table_file.write ("\\hline " + format_time(current_time) +
+                                  " & " + traffic_element["current lane"] +
+                                  " & " +
+                                  cap_first_letter(traffic_element["name"]) +
+                                  " enters the " + next_milestone[0] +
+                                  ". \\\\\n")
                 
               traffic_element["current lane"] = next_milestone[0]
               traffic_element["position"] = next_milestone[1]
@@ -2192,12 +2198,12 @@ def move_traffic_element (traffic_element):
                      format_location(traffic_element["distance remaining"]) +
                      " speed " + format_speed(traffic_element["speed"]) +
                      tail_text + ".")
-          if ((logging_level >= 2) and (current_time > log_start_time)):
-            logfile.write ("\\hline " + format_time(current_time) +
-                           " & " + traffic_element["current lane"] +
-                           " & " +
-                           cap_first_letter(traffic_element["name"]) +
-                           tail_text + ". \\\\\n")
+          if ((table_level >= 2) and (current_time > table_start_time)):
+            table_file.write ("\\hline " + format_time(current_time) +
+                              " & " + traffic_element["current lane"] +
+                              " & " +
+                              cap_first_letter(traffic_element["name"]) +
+                              tail_text + ". \\\\\n")
           no_activity = False
       else:
         # Not changing lanes
@@ -2213,14 +2219,14 @@ def move_traffic_element (traffic_element):
                  format_location(traffic_element["position"]) +
                  " speed " + format_speed(traffic_element["speed"]) +
                  " at a milestone.")
-        if ((logging_level >= 5) and (current_time > log_start_time)):
-          logfile.write ("\\hline " + format_time(current_time) +
-                         " & " + traffic_element["current lane"] +
-                         " & " +
-                         cap_first_letter(traffic_element["name"]) +
-                         " at position " +
-                         format_location(traffic_element["position"]) +
-                         " at a milestone. \\\\\n")
+        if ((table_level >= 5) and (current_time > table_start_time)):
+          table_file.write ("\\hline " + format_time(current_time) +
+                            " & " + traffic_element["current lane"] +
+                            " & " +
+                            cap_first_letter(traffic_element["name"]) +
+                            " at position " +
+                            format_location(traffic_element["position"]) +
+                            " at a milestone. \\\\\n")
         no_activity = False
               
   return
@@ -2248,12 +2254,12 @@ def check_sensors():
                      signal_face["name"] + "/" + sensor_name + " set to " +
                      str(sensor["value"]) + " by " + sensor["triggered by"] +
                      ".")
-            if ((logging_level >= 2) and (current_time > log_start_time)):
-              logfile.write ("\\hline " + format_time(current_time) + " & " +
-                             signal_face ["name"] + " & Sensor " +
-                             sensor_name + " set to " + str(sensor["value"]) +
-                             " by " + sensor["triggered by"] +
-                             ". \\\\\n")
+            if ((table_level >= 2) and (current_time > table_start_time)):
+              table_file.write ("\\hline " + format_time(current_time) +
+                                " & " + signal_face ["name"] + " & Sensor " +
+                                sensor_name + " set to " +
+                                str(sensor["value"]) + " by " +
+                                sensor["triggered by"] + ". \\\\\n")
             
   return
             
@@ -2286,11 +2292,11 @@ def perform_script_event (the_operator, signal_face_name, the_operand):
             print (format_time(current_time)  + " sensor " +
                    signal_face["name"] + "/" + sensor_name + " set to " +
                    str(sensor["value"]) + " by script.")
-          if ((logging_level >= 2) and (current_time > log_start_time)):
-            logfile.write ("\\hline " + format_time(current_time) + " & " +
-                           signal_face ["name"] + " & Sensor " +
-                           sensor_name + " set to " + str(sensor["value"]) +
-                           " by script. \\\\\n")
+          if ((table_level >= 2) and (current_time > table_start_time)):
+            table_file.write ("\\hline " + format_time(current_time) + " & " +
+                              signal_face ["name"] + " & Sensor " +
+                              sensor_name + " set to " + str(sensor["value"]) +
+                              " by script. \\\\\n")
             
         case "car" | "truck" | "pedestrian":
           add_traffic_element (the_operator, the_operand)
@@ -2327,10 +2333,10 @@ def update_timers():
         print (format_time(current_time) + " timer " +
                the_timer ["signal face name"] + "/" + the_timer["name"] +
                " completed.")
-      if ((logging_level >= 5) and (current_time > log_start_time)):          
-        logfile.write ("\\hline " + format_time(current_time) + " & " +
-                       the_timer ["signal face name"] + " & Timer " +
-                       the_timer ["name"] + " completed. \\\\\n")
+      if ((table_level >= 5) and (current_time > table_start_time)):          
+        table_file.write ("\\hline " + format_time(current_time) + " & " +
+                          the_timer ["signal face name"] + " & Timer " +
+                          the_timer ["name"] + " completed. \\\\\n")
 
   if ((verbosity_level >= 5) and (len(remove_timers) > 0)):
     remove_timers_list = ""
@@ -2495,10 +2501,11 @@ while ((current_time < end_time) and (error_counter == 0)):
             if (verbosity_level >= 4):
               print (format_time(current_time) + " Sensor " +
                      signal_face ["name"] + "/" + sensor_name + " is True.")
-            if ((logging_level >= 4) and (current_time > log_start_time)):
-              logfile.write ("\\hline " + format_time(current_time) +
-                             " & " + signal_face["name"] +
-                             " &  Sensor " + sensor_name + " is True. \\\\\n")
+            if ((table_level >= 4) and (current_time > table_start_time)):
+              table_file.write ("\\hline " + format_time(current_time) +
+                                " & " + signal_face["name"] +
+                                " &  Sensor " + sensor_name +
+                                " is True. \\\\\n")
             set_toggle_value (toggle_signal_face, root_toggle_name, True,
                               "sensor " + signal_face["name"] + "/" +
                               sensor_name)
@@ -2541,12 +2548,12 @@ while ((current_time < end_time) and (error_counter == 0)):
   else:
     no_activity = True
   
-if (do_trace != 0):
+if (do_trace):
   tracefile.write ("Ending Signal Faces:\n")
   pprint.pprint (signal_faces_list, tracefile)
 
  # If requested, also print the maximum wait times.
-if ((statistics >= 1) and (verbosity_level >= 1)):
+if (print_statistics and (verbosity_level >= 1)):
   for signal_face in signal_faces_list:
     if ("max wait time" in signal_face):
       print (format_time(current_time) + " signal face " +
@@ -2554,11 +2561,11 @@ if ((statistics >= 1) and (verbosity_level >= 1)):
              format_time(signal_face["max wait time"]) + " at " +
              format_time(signal_face["max wait start"]) + ".")
   
-if (do_logging == 1):
-  logfile.write ("\\hline \\end{longtable}\n")
-  logfile.close()
+if (do_table_output):
+  table_file.write ("\\hline \\end{longtable}\n")
+  table_file.close()
 
-if (do_trace == 1):
+if (do_trace):
   tracefile.close()
 
 if (error_counter > 0):

@@ -522,7 +522,7 @@ MUTCD_Ped_Signal_-_Hand_with_timer.pdf \
 MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf \
 signal_ccc.pdf \
-*_log.tex \
+*_table.tex \
 check_output.txt \
 verify_files.sh \
 *trace.txt 
@@ -1073,8 +1073,8 @@ traffic_control_signals.pdf : traffic_control_signals.tex \
 traffic_control_signals.bbl LICENSE legalcode.txt \
 state_diagram.eps red_state_table.tex \
 green_state_table.tex yellow_state_table.tex lamp_map_names.tex \
-sensor_map.tex idle_log.tex left_turn_log.tex \
-pedestrian_log.tex pedestrian_and_left_turn_log.tex multiple_log.tex \
+sensor_map.tex idle_table.tex left_turn_table.tex \
+pedestrian_table.tex pedestrian_and_left_turn_table.tex multiple_table.tex \
 fig4d_02.eps fig4d_09.eps fig4d_12.eps fig4d_17.eps \
 MUTCD_Ped_Signal_-_Hand_with_timer.pdf MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf signal_ccc.pdf
@@ -1091,8 +1091,8 @@ ${srcdir}/traffic_control_signals.tex
 traffic_control_signals.bbl : traffic_control_signals.tex references.bib \
 LICENSE legalcode.txt state_diagram.eps \
 red_state_table.tex green_state_table.tex yellow_state_table.tex \
-lamp_map_names.tex sensor_map.tex idle_log.tex left_turn_log.tex \
-pedestrian_log.tex pedestrian_and_left_turn_log.tex multiple_log.tex \
+lamp_map_names.tex sensor_map.tex idle_table.tex left_turn_table.tex \
+pedestrian_table.tex pedestrian_and_left_turn_table.tex multiple_table.tex \
 fig4d_02.eps fig4d_09.eps fig4d_12.eps fig4d_17.eps \
 MUTCD_Ped_Signal_-_Hand_with_timer.pdf MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf signal_ccc.pdf
@@ -1128,33 +1128,34 @@ sensor_map.tex : traffic_control_signals.py
 	python3 ${srcdir}/traffic_control_signals.py \
 --sensor-map=${builddir}/sensor_map.tex 
 
-# Generate the log files which summarize the finite state machines operation.
-idle_log.tex : traffic_control_signals.py
-	python3 ${srcdir}/traffic_control_signals.py --log-level 4 \
---log-file ${builddir}/idle_log.tex --duration 200  \
---log-caption "Power On to Idle State"
+# Generate the table files which detail the finite state machines operation.
+idle_table.tex : traffic_control_signals.py
+	python3 ${srcdir}/traffic_control_signals.py --table-level 4 \
+--table-file ${builddir}/idle_table.tex --duration 200  \
+--table-caption "Power On to Idle State"
 
-left_turn_log.tex : traffic_control_signals.py left_turn_script.txt
-	python3 ${srcdir}/traffic_control_signals.py --log-level 4 \
---log-file ${builddir}/left_turn_log.tex --duration 400 --log-start 199 \
---script ${srcdir}/left_turn_script.txt --log-caption "Left Turn"
+left_turn_table.tex : traffic_control_signals.py left_turn_script.txt
+	python3 ${srcdir}/traffic_control_signals.py --table-level 4 \
+--table-file ${builddir}/left_turn_table.tex --duration 400 --table-start 199 \
+--script ${srcdir}/left_turn_script.txt --table-caption "Left Turn"
 
-pedestrian_log.tex : traffic_control_signals.py pedestrian_script.txt
-	python3 ${srcdir}/traffic_control_signals.py --log-level 3 \
---log-file ${builddir}/pedestrian_log.tex --duration 400 --log-start 199 \
---script ${srcdir}/pedestrian_script.txt --log-caption "Pedestrian Crosses"
+pedestrian_table.tex : traffic_control_signals.py pedestrian_script.txt
+	python3 ${srcdir}/traffic_control_signals.py --table-level 3 \
+--table-file ${builddir}/pedestrian_table.tex --duration 400 \
+--table-start 199 --script ${srcdir}/pedestrian_script.txt \
+--table-caption "Pedestrian Crosses"
 
-pedestrian_and_left_turn_log.tex : traffic_control_signals.py \
+pedestrian_and_left_turn_table.tex : traffic_control_signals.py \
 pedestrian_and_left_turn_script.txt
-	python3 ${srcdir}/traffic_control_signals.py --log-level 3 \
---log-file ${builddir}/pedestrian_and_left_turn_log.tex --duration 400 \
---log-start 199 --script ${srcdir}/pedestrian_and_left_turn_script.txt \
---log-caption "Pedestrian then Left Turn"
+	python3 ${srcdir}/traffic_control_signals.py --table-level 3 \
+--table-file ${builddir}/pedestrian_and_left_turn_table.tex --duration 400 \
+--table-start 199 --script ${srcdir}/pedestrian_and_left_turn_script.txt \
+--table-caption "Pedestrian then Left Turn"
 
-multiple_log.tex : traffic_control_signals.py multiple_script.txt
-	python3 ${srcdir}/traffic_control_signals.py --log-level 2 \
---log-file ${builddir}/multiple_log.tex --duration 400 --log-start 199 \
---script ${srcdir}/multiple_script.txt --log-caption "Many Events"
+multiple_table.tex : traffic_control_signals.py multiple_script.txt
+	python3 ${srcdir}/traffic_control_signals.py --table-level 2 \
+--table-file ${builddir}/multiple_table.tex --duration 400 --table-start 199 \
+--script ${srcdir}/multiple_script.txt --table-caption "Many Events"
 
 fig4d_02.eps : fig4d_02.gif
 	magick ${srcdir}/fig4d_02.gif ${builddir}/fig4d_02.eps
