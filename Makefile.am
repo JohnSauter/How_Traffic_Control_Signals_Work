@@ -41,26 +41,11 @@ dist_doc_DATA = \
 
 # Also distribute these files, used to build the PDF.
 EXTRA_DIST = \
-fig4d_01.gif \
-fig4d_02.gif \
-fig4d_06.gif \
-fig4d_07.gif \
-fig4d_08.gif \
-fig4d_09.gif \
-fig4d_10.gif \
-fig4d_11.gif \
-fig4d_12.gif \
-fig4d_13.gif \
-fig4d_14.gif \
-fig4d_15.gif \
-fig4d_16.gif \
-fig4d_17.gif \
-fig4d_18.gif \
-fig4d_19.gif \
-fig4d_20_1.gif \
-fig4d_20_2.gif \
-fig4d_20_3.gif \
 signal_ccc.svg \
+signal_ccu.svg \
+signal_rrr.svg \
+signal_cccl.svg \
+signal_llll.svg \
 fix_files.sh autogen.sh \
 left_turn_script.txt \
 legalcode.txt mutcd11thedition.pdf \
@@ -103,9 +88,9 @@ state_diagram.eps red_state_table.tex \
 green_state_table.tex yellow_state_table.tex lamp_map_names.tex \
 sensor_map.tex idle_table.tex left_turn_table.tex \
 pedestrian_table.tex pedestrian_and_left_turn_table.tex multiple_table.tex \
-fig4d_02.eps fig4d_09.eps fig4d_12.eps fig4d_17.eps \
 MUTCD_Ped_Signal_-_Hand_with_timer.pdf MUTCD_Ped_Signal_-_Steady_hand.pdf \
-MUTCD_Ped_Signal_-_Walk.pdf signal_ccc.pdf
+MUTCD_Ped_Signal_-_Walk.pdf signal_ccc.pdf signal_ccu.pdf signal_rrr.pdf \
+signal_cccl.pdf signal_llll.pdf
 	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
 ${srcdir}/traffic_control_signals.tex
 	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
@@ -121,9 +106,9 @@ LICENSE legalcode.txt state_diagram.eps \
 red_state_table.tex green_state_table.tex yellow_state_table.tex \
 lamp_map_names.tex sensor_map.tex idle_table.tex left_turn_table.tex \
 pedestrian_table.tex pedestrian_and_left_turn_table.tex multiple_table.tex \
-fig4d_02.eps fig4d_09.eps fig4d_12.eps fig4d_17.eps \
 MUTCD_Ped_Signal_-_Hand_with_timer.pdf MUTCD_Ped_Signal_-_Steady_hand.pdf \
-MUTCD_Ped_Signal_-_Walk.pdf signal_ccc.pdf
+MUTCD_Ped_Signal_-_Walk.pdf signal_ccc.pdf signal_ccu.pdf signal_rrr.pdf \
+signal_cccl.pdf signal_llll.pdf
 	echo " " >${builddir}/traffic_control_signals.bbl
 	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
 ${srcdir}/traffic_control_signals.tex
@@ -185,17 +170,8 @@ multiple_table.tex : traffic_control_signals.py multiple_script.txt
 --table-file ${builddir}/multiple_table.tex --duration 400 --table-start 199 \
 --script ${srcdir}/multiple_script.txt --table-caption "Many Events"
 
-fig4d_02.eps : fig4d_02.gif
-	magick ${srcdir}/fig4d_02.gif ${builddir}/fig4d_02.eps
-
-fig4d_09.eps : fig4d_09.gif
-	magick ${srcdir}/fig4d_09.gif ${builddir}/fig4d_09.eps
-
-fig4d_12.eps : fig4d_12.gif
-	magick ${srcdir}/fig4d_12.gif ${builddir}/fig4d_12.eps
-
-fig4d_17.eps : fig4d_17.gif
-	magick ${srcdir}/fig4d_17.gif ${builddir}/fig4d_17.eps
+# Some of the diagrams have been created in inkscape.  Convert them
+# to PDF files for the document.
 
 %.pdf : %.svg ; inkscape --export-type=pdf --export-dpi=4800 \
 ${srcdir}/$(<F) -o ${builddir}/$(@F)
@@ -255,12 +231,14 @@ green_state_table.tex \
 yellow_state_table.tex \
 lamp_map_names.tex \
 sensor_map.tex \
-fig4d_*.eps \
-fig4d_*-eps-converted-to.pdf \
 MUTCD_Ped_Signal_-_Hand_with_timer.pdf \
 MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf \
 signal_ccc.pdf \
+signal_ccu.pdf \
+signal_rrr.pdf \
+signal_cccl.pdf \
+signal_llll.pdf \
 *_table.tex \
 events.csv \
 check_output.txt \
