@@ -1,0 +1,86 @@
+time,lane,type,position,speed,travel path,color
+0,A,lamp,,,,Steady Left Arrow Red
+0,ps,lamp,,,,Don't Walk
+0,B,lamp,,,,Steady Circular Red
+0,C,lamp,,,,Steady Circular Red
+0,D,lamp,,,,Steady Circular Red
+0,E,lamp,,,,Steady Left Arrow Red
+0,pn,lamp,,,,Don't Walk
+0,F,lamp,,,,Steady Circular Red
+0,G,lamp,,,,Steady Circular Red
+0,H,lamp,,,,Steady Circular Red
+0,J,lamp,,,,Steady Right Arrow Red
+60,B,lamp,,,,Steady Up Arrow Green
+60,C,lamp,,,,Steady Circular Green
+60,F,lamp,,,,Steady Up Arrow Green
+60,G,lamp,,,,Steady Circular Green
+200,D,car,528,-110/3,D6,
+210,B,car,528,-66,A6,
+211,ps,pedestrian,12,-7/2,ps,
+105591/500,A,car,450,-110/3,A6,
+212,F,car,528,-66,E3,
+213,pn,pedestrian,12,-7/2,pn,
+106591/500,E,car,450,-110/3,E3,
+106607/500,A,lamp,,,,Flashing Left Arrow Yellow (lower)
+213429/1000,B,lamp,,,,Steady Circular Yellow
+213429/1000,C,lamp,,,,Steady Circular Yellow
+213429/1000,F,lamp,,,,Steady Circular Yellow
+213429/1000,G,lamp,,,,Steady Circular Yellow
+214,H,truck,528,-110/3,H5,
+1072/5,D,car,0,0,D6,
+214429/1000,ps,pedestrian,0,0,ps,
+215,J,car,528,-110/3,J1,
+107607/500,E,lamp,,,,Flashing Left Arrow Yellow (lower)
+216429/1000,pn,pedestrian,0,0,pn,
+218429/1000,B,lamp,,,,Steady Circular Red
+218429/1000,C,lamp,,,,Steady Circular Red
+218429/1000,F,lamp,,,,Steady Circular Red
+218429/1000,G,lamp,,,,Steady Circular Red
+219429/1000,A,lamp,,,,Steady Left Arrow Green
+110107/500,E,lamp,,,,Steady Left Arrow Green
+44691/200,intersection,car,84,-110/3,A6,
+45091/200,intersection,car,72,-110/3,E3,
+112873/500,6,car,0,110/3,A6,
+226329/1000,A,lamp,,,,Steady Left Arrow Yellow (upper)
+56839/250,E,lamp,,,,Steady Left Arrow Yellow (upper)
+227419/1000,3,car,0,110/3,E3,
+1142/5,H,truck,0,0,H5,
+1147/5,J,car,0,0,J1,
+229829/1000,A,lamp,,,,Steady Left Arrow Red
+230829/1000,ps,lamp,,,,Walk
+230829/1000,crosswalk,pedestrian,72,-7/2,ps,
+28857/125,E,lamp,,,,Steady Left Arrow Red
+28982/125,pn,lamp,,,,Walk
+28982/125,crosswalk,pedestrian,72,-7/2,pn,
+237829/1000,ps,lamp,,,,Walk with Countdown
+29857/125,pn,lamp,,,,Walk with Countdown
+120073/500,6,car,528,110/3,A6,
+241819/1000,3,car,528,110/3,E3,
+251401/1000,ps,pedestrian,12,-7/2,ps,
+251401/1000,ps,pedestrian,12,-7/2,ps,
+63107/250,pn,pedestrian,12,-7/2,pn,
+63107/250,pn,pedestrian,12,-7/2,pn,
+256829/1000,ps,lamp,,,,Don't Walk
+32232/125,pn,lamp,,,,Don't Walk
+259829/1000,J,lamp,,,,Steady Right Arrow Green
+259829/1000,intersection,car,36,-110/3,J1,
+260811/1000,1,car,0,66,J1,
+32607/125,H,lamp,,,,Steady Left Arrow Green and Steady Circular Green
+32607/125,intersection,truck,84,-110/3,H5,
+263147/1000,5,truck,0,66,H5,
+268729/1000,J,lamp,,,,Steady Right Arrow Yellow
+268811/1000,1,car,528,66,J1,
+67439/250,H,lamp,,,,Steady Circular Yellow
+271147/1000,5,truck,528,66,H5,
+271729/1000,J,lamp,,,,Steady Right Arrow Red
+68189/250,H,lamp,,,,Steady Circular Red
+34282/125,D,lamp,,,,Steady Circular Green
+34282/125,intersection,car,84,-110/3,D6,
+276547/1000,6,car,0,110/3,D6,
+70789/250,D,lamp,,,,Steady Circular Yellow
+71539/250,D,lamp,,,,Steady Circular Red
+35957/125,B,lamp,,,,Steady Up Arrow Green
+35957/125,C,lamp,,,,Steady Circular Green
+35957/125,F,lamp,,,,Steady Up Arrow Green
+35957/125,G,lamp,,,,Steady Circular Green
+290947/1000,6,car,528,110/3,D6,

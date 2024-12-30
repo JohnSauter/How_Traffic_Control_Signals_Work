@@ -1,4 +1,4 @@
-# File: Makefile.am, author: John Sauter, date: December 27, 2024.
+# File: Makefile.am, author: John Sauter, date: December 30, 2024.
 #
 # Build traffic_control_signals.pdf
 
@@ -62,10 +62,32 @@ traffic_control_signals.py \
 traffic_control_signals.tex \
 state_diagram.txt 
 
-# Distribute the shell script which builds the RPMs.
-EXTRA_DIST += build_RPMs.sh
+# These files are used to build the renderer.
+EXTRA_DIST += \
+signal_ccc_Green.svg \
+signal_ccc_Red.svg \
+signal_ccc_Yellow.svg \
+signal_ccu_Green.svg \
+signal_ccu_Red.svg \
+signal_ccu_Yellow.svg \
+signal_Dark_3.svg \
+signal_Dark_4.svg \
+signal_cccl_Green.svg \
+signal_cccl_Red.svg \
+signal_cccl_Yellow.svg \
+signal_llll_Flashing_Yellow.svg \
+signal_llll_Green.svg \
+signal_llll_Red.svg \
+signal_llll_Yellow.svg \
+signal_rrr_Green.svg \
+signal_rrr_Red.svg \
+signal_rrr_Yellow.svg \
+process_events.py 
 
-# Run it if the developer types "make RPMs".
+# Distribute the shell scripts which build the RPMs and the video animation.
+EXTRA_DIST += build_RPMs.sh build_video.sh
+
+# Build the RPM if the developer types "make RPMs".
 .phoney: RPMs
 RPMs:
 	bash build_RPMs.sh
@@ -171,9 +193,12 @@ multiple_table.tex : traffic_control_signals.py multiple_script.txt
 --script ${srcdir}/multiple_script.txt --table-caption "Many Events"
 
 # Some of the diagrams have been created in inkscape.  Convert them
-# to PDF files for the document.
+# to PDF files for the document or to png files for the renderer.
 
 %.pdf : %.svg ; inkscape --export-type=pdf --export-dpi=4800 \
+${srcdir}/$(<F) -o ${builddir}/$(@F)
+
+%.png : %.svg ; inkscape --export-type=png --export-dpi=4800 \
 ${srcdir}/$(<F) -o ${builddir}/$(@F)
 
 # Buld the PDF on demand, if requested.
@@ -213,6 +238,22 @@ events.csv : traffic_control_signals.py events_script.txt
 --script ${srcdir}/events_script.txt \
 --duration 1000 --events-file events.csv
 
+# Another target is constructing an animation.
+animation : traffic_animation.mkv
+.PHONEY: animation
+
+traffic_animation.mkv : process_events.py \
+signal_ccc_Green.png signal_ccc_Red.png \
+signal_ccc_Yellow.png signal_ccu_Green.png signal_ccu_Red.png \
+signal_ccu_Yellow.png signal_Dark_3.png signal_Dark_4.png \
+signal_cccl_Green.png signal_cccl_Red.png signal_cccl_Yellow.png \
+signal_llll_Flashing_Yellow.png signal_llll_Green.png signal_llll_Red.png \
+signal_llll_Yellow.png signal_rrr_Green.png signal_rrr_Red.png \
+signal_rrr_Yellow.png MUTCD_Ped_Signal_-_Hand_with_timer.png \
+MUTCD_Ped_Signal_-_Steady_hand.png MUTCD_Ped_Signal_-_Walk.png \
+events.csv build_video.sh
+	bash build_video.sh
+
 # When removing files, also remove the followins:
 CLEANFILES = \
 _minted-traffic_control_signals \
@@ -234,13 +275,14 @@ sensor_map.tex \
 MUTCD_Ped_Signal_-_Hand_with_timer.pdf \
 MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf \
-signal_ccc.pdf \
-signal_ccu.pdf \
-signal_rrr.pdf \
-signal_cccl.pdf \
-signal_llll.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer.png \
+MUTCD_Ped_Signal_-_Steady_hand.png \
+MUTCD_Ped_Signal_-_Walk.png \
+signal_*.pdf \
+signal_*.png \
 *_table.tex \
 events.csv \
+traffic_animation.mkv \
 check_output.txt \
 verify_files.sh \
 *trace.txt 
@@ -250,6 +292,7 @@ clean-local: clean-local-check
 clean-local-check:
 	if [ -e "copied_from_srcdir" ] ; then rm -f check_expected_output.txt ; rm copied_from_srcdir ; fi
 	rm -rf autom4te.cache
+	rm -rf animation_temp
 	rm -f trace*.txt
 	rm -f *~
 
