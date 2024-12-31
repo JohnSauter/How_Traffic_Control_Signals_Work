@@ -39,6 +39,7 @@ import pprint
 import decimal
 import fractions
 import csv
+import pathlib
 import argparse
 
 parser = argparse.ArgumentParser (
@@ -54,7 +55,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='process_events 0.1 2024-12-30',
+                     version='process_events 0.1 2024-12-31',
                      help='print the version number and exit')
 parser.add_argument ('--animation-directory', metavar='animation_directory',
                      help='write animation output image files ' +
@@ -63,6 +64,10 @@ parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
 parser.add_argument ('--events-file', metavar='events_file',
                      help='read event output from the traffic simulator')
+parser.add_argument ('--start', type=decimal.Decimal, metavar='start',
+                     help='when in the simulation to start the animation')
+parser.add_argument ('--duration', type=decimal.Decimal, metavar='duration',
+                     help='how long to run the animation')
 parser.add_argument ('--verbose', type=int, metavar='verbosity_level',
                      help='control the amount of output from the program: ' +
                      '1 is normal, 0 suppresses summary messages')
@@ -73,6 +78,8 @@ do_animation_output = False
 animation_directory_name = ""
 do_events_input = False
 events_file_name = ""
+start_time = decimal.Decimal("0.000")
+duration_time = None
 verbosity_level = 1
 error_counter = 0
 
@@ -83,20 +90,31 @@ arguments = vars(arguments)
 if (arguments ['trace_file'] != None):
   do_trace = True
   trace_file_name = arguments ['trace_file']
+  trace_file_name = pathlib.Path(trace_file_name)
   trace_file = open (trace_file_name, 'wt')
 
 if (arguments ['animation_directory'] != None):
   do_animation_output = True
   animation_directory_name = arguments ['animation_directory']
+  animation_directory_name = pathlib.Path(animation_directory_name)
 
 if (arguments ['events_file'] != None):
   do_events_input = True
   events_file_name = arguments ['events_file']
 
-start_time = decimal.Decimal("0.000")
-current_time = fractions.Fraction(start_time)
-  
+if (arguments ['start'] != None):
+  start_time = arguments ['start']
 
+if (arguments ['duration'] != None):
+  duration_time = arguments ['duration']
+  
+if (arguments ['verbose'] != None):
+  verbosity_level = int(arguments ['verbose'])
+
+start_time = fractions.Fraction(start_time)
+if (duration_time != None):
+  duration_time = fractions.Fraction(duration_time)
+  
 # Read the events file, if one was specified.
 
 # The events dictionary is indexed by time.
@@ -157,8 +175,8 @@ if (do_trace):
   pprint.pprint (events, trace_file)
   trace_file.write ("\n")
   
-canvas=cv2.imread("background.png", cv2.IMREAD_UNCHANGED)
-canvas_size = canvas.shape[:2]
+background=cv2.imread("background.png", cv2.IMREAD_UNCHANGED)
+canvas_size = background.shape[:2]
 
 def place_image(canvas, overlay, x_position, y_position):
   overlay_height, overlay_width = overlay.shape[:2]
@@ -177,75 +195,96 @@ def place_image(canvas, overlay, x_position, y_position):
          x_position:x_position + overlay_width] = dst
   return
 
-# Given a lane and a color, choose the correct stoplight image
-def choose_image (lane, color):
+# Given a lane and a color, choose the correct stoplight image.
+image_cache = dict()
+def choose_lamp_image (lane, color):
+
+  if (color == "Dark"):
+    match lane:
+      case "A" | "E" | "H" :
+        image_name = ("signal_Dark_4.png")
+      case "B" | "C" | "D" | "F" | "G" | "J":
+        image_name = ("signal_Dark_3.png")
+      case "ps" | "pn":
+        image_name = ("MUTCD_Ped_Signal_-_Steady_hand.png")
+        
   match lane:
     case "A" | "E":
       root = "signal_llll"
       match color:
         case "Steady Left Arrow Red":
-          return (root + "_Red.png")
+          image_name = (root + "_Red.png")
         case "Flashing Left Arrow Yellow (lower)":
-          return (root + "_Flashing_Yellow.png")
+          image_name = (root + "_Flashing_Yellow.png")
         case "Steady Left Arrow Green":
-          return (root + "_Green.png")
+          image_name = (root + "_Green.png")
         case "Steady Left Arrow Yellow (upper)":
-          return (root + "_Yellow.png")     
+          image_name = (root + "_Yellow.png")     
         
     case "ps" | "pn":
       root = "MUTCD_Ped_Signal_-"
       match color:
         case "Don't Walk":
-          return (root + "_Steady_hand.png")
+          image_name = (root + "_Steady_hand.png")
         case "Walk":
-          return (root + "_Walk.png")
+          image_name = (root + "_Walk.png")
         case "Walk with Countdown":
-          return (root + "_Hand_with_timer.png")
+          image_name = (root + "_Hand_with_timer.png")
                          
     case "B" | "F":
       root = "signal_ccu"
       match color:
         case "Steady Circular Red":
-          return (root + "_Red.png")
+          image_name = (root + "_Red.png")
         case "Steady Circular Yellow":
-          return (root + "_Yellow.png")
+          image_name = (root + "_Yellow.png")
         case "Steady Up Arrow Green":
-          return (root + "_Green.png")
+          image_name = (root + "_Green.png")
         
     case "C" | "D" | "G" :
       root = "signal_ccc"
       match color:
         case "Steady Circular Red":
-          return (root + "_Red.png")
+          image_name = (root + "_Red.png")
         case "Steady Circular Yellow":
-          return (root + "_Yellow.png")
+          image_name = (root + "_Yellow.png")
         case "Steady Circular Green":
-          return (root + "_Green.png")
+          image_name = (root + "_Green.png")
 
     case "H":
       root = "signal_cccl"
       match color:
         case "Steady Circular Red":
-          return (root + "_Red.png")
+          image_name = (root + "_Red.png")
         case "Steady Left Arrow Green and Steady Circular Green":
-          return (root + "_Green.png")
+          image_name = (root + "_Green.png")
         case "Steady Circular Yellow":
-          return (root + "_Yellow.png")
+          image_name = (root + "_Yellow.png")
 
     case "J":
       root = "signal_rrr"
       match color:
         case "Steady Right Arrow Red":
-          return (root + "_Red.png")
+          image_name = (root + "_Red.png")
         case "Steady Right Arrow Green":
-          return (root + "_Green.png")
+          image_name = (root + "_Green.png")
         case "Steady Right Arrow Yellow":
-          return (root + "_Yellow.png")
+          image_name = (root + "_Yellow.png")
 
-  return (None)
+  image_path = pathlib.Path(image_name)
+  if (image_path in image_cache):
+    return image_cache[image_path]
 
-# Find the location to display the signal for the given lane
-def find_position(lane):
+  image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+  image_height, image_width = image.shape[:2]
+  small_image = cv2.resize(image, (int(image_width/25),
+                                   int(image_height/25)),
+                           interpolation = cv2.INTER_AREA)
+  image_cache[image_path] = small_image
+  return (small_image)
+
+# Find the location to display the signal for the given lane.
+def find_lamp_position(lane):
   row_01 = 100
   row_02 = 700
   match lane:
@@ -273,12 +312,32 @@ def find_position(lane):
       return (700, row_02)
   return
     
-# Format the clock for display
+# Subroutine to format the clock for display.
 def format_time(the_time):
   return (f'{the_time:07.3f}')
 
+# Create the lamps data structures which will record
+# the changing state of the traffic control signals
+# with the passage of time.
+
+lamps_dict = dict()
+for lamp_name in ("A", "ps", "B", "C", "D", "E", "pn", "F", "G", "H", "J"):
+  lamp = dict()
+  lamp["name"] = lamp_name
+  lamp["color"] = "Dark"
+  lamp["position"] = find_lamp_position(lamp_name)
+  lamps_dict[lamp_name] = lamp
+  
+# Generate the animation image frames.
 frame_number = 0
 event_times = sorted(events.keys())
+if (duration_time == None):
+  duration_time = latest_time - start_time
+
+if (do_trace):
+  trace_file.write ("Start: " + format_time(start_time) +
+                    " duration: " + format_time(duration_time) + ".\n")
+
 for event_time in event_times:
   events_list = events[event_time]
   for event in events_list:
@@ -287,26 +346,41 @@ for event_time in event_times:
       case "lamp":
         lane = event["lane name"]
         color = event["color"]
-        image_name = choose_image (lane, color)
-        image = cv2.imread(image_name, cv2.IMREAD_UNCHANGED)
-        image_height, image_width = image.shape[:2]
-        small_image = cv2.resize(image, (int(image_width/25),
-                                         int(image_height/25)),
-                                 interpolation = cv2.INTER_AREA)
-        x, y = find_position(lane)
-        place_image (canvas, small_image, x, y)
+        lamp = lamps_dict[lane]
+        lamp["color"] = color
       case "frame":
-        the_time = event["time"]
-        frame_number = frame_number + 1
-        root_name = "frame_" + "{:06d}".format(frame_number)
-        full_file_name = animation_directory_name + root_name + ".png"
-        if (do_animation_output):
-          cv2.imwrite (full_file_name, canvas)
-    
+        if (do_trace):
+          trace_file.write ("Frame at " + format_time(event_time) + ":\n")
+          trace_file.flush()
+          
+        if ((event_time > start_time) and
+            (event_time <= (start_time + duration_time))):
+          if (do_trace):
+            trace_file.write ("In time range.\n")
+          the_time = event["time"]
+          frame_number = frame_number + 1
+          root_name = "frame_" + "{:06d}".format(frame_number) + ".png"
+          file_path = pathlib.Path(animation_directory_name, root_name)
+          canvas = background.copy()
+          for lamp_name in lamps_dict:
+            lamp = lamps_dict[lamp_name]
+            color = lamp["color"]
+            image = choose_lamp_image (lamp_name, color)
+            x, y = lamp["position"]
+            place_image (canvas, image, x, y)
+          if (do_animation_output):
+            if (do_trace):
+              trace_file.write ("writing frame " + str(file_path) + ".\n")
+              cv2.imwrite (file_path, canvas)
+
+if (do_trace):
+  trace_file.write ("Image cache:\n")
+  pprint.pprint (image_cache, trace_file)
+  
 if (do_trace):
   trace_file.close()
 
 if (error_counter > 0):
   print ("Encountered " + str(error_counter) + " errors.")
 
-# End of file traffic_control_signals.py
+# End of file process_events.py
