@@ -5,8 +5,7 @@
 rm -rf animation_temp/
 mkdir animation_temp
 python3 process_events.py --events-file events.csv \
-	--animation animation_temp/ --start 200 --duration 60 \
-	--trace foo_trace.txt
+	--animation animation_temp/ --start 200 --duration 60 
 
 # UHD, 30 frames per second, 10 bits per color, yuv420p, x265.
 rm -f traffic_animation.mkv

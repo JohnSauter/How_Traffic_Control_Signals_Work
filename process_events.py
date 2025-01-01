@@ -55,7 +55,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='process_events 0.1 2024-12-31',
+                     version='process_events 0.9 2024-12-31',
                      help='print the version number and exit')
 parser.add_argument ('--animation-directory', metavar='animation_directory',
                      help='write animation output image files ' +
@@ -82,6 +82,9 @@ start_time = decimal.Decimal("0.000")
 duration_time = None
 verbosity_level = 1
 error_counter = 0
+
+shrink_factor = 75
+ground_height = 300
 
 # Parse the command line.
 arguments = parser.parse_args ()
@@ -133,11 +136,15 @@ if (do_events_input):
       if (the_time not in events):
         events[the_time] = list()
       events_list = events[the_time]
+      the_name = row['name']
       the_lane_name = row['lane']
       the_type = row['type']
       the_position = row['position']
       if (the_position != ""):
         the_position = fractions.Fraction(the_position)
+      the_length = row['length']
+      if (the_length != ""):
+        the_length = fractions.Fraction(the_length)
       the_speed = row['speed']
       if (the_speed != ""):
         the_speed = fractions.Fraction(the_speed)
@@ -148,7 +155,9 @@ if (do_events_input):
       the_event["time"] = the_time
       the_event["lane name"] = the_lane_name
       the_event["type"] = the_type
+      the_event["name"] = the_name
       the_event["position"] = the_position
+      the_event["length"] = the_length
       the_event["speed"] = the_speed
       the_event["travel path"] = the_travel_path_name
       the_event["color"] = the_color
@@ -178,26 +187,30 @@ if (do_trace):
 background=cv2.imread("background.png", cv2.IMREAD_UNCHANGED)
 canvas_size = background.shape[:2]
 
+# Place a small image on a large image, erasing whatever
+# was on the large image.
 def place_image(canvas, overlay, x_position, y_position):
   overlay_height, overlay_width = overlay.shape[:2]
   region_of_interest = canvas[y_position:y_position + overlay_height,
                               x_position:x_position + overlay_width]
-
+  roi_height, roi_width = region_of_interest.shape[:2]
+  
   overlay_gray = cv2.cvtColor(overlay, cv2.COLOR_BGR2GRAY)
   _, mask = cv2.threshold(overlay_gray, 10, 255, cv2.THRESH_BINARY)
   mask_inv = cv2.bitwise_not(mask)
-  
+ 
   background_bg = cv2.bitwise_and(region_of_interest,
-                                  region_of_interest, mask=mask_inv)
+                                 region_of_interest, mask=mask_inv)
   overlay_fg = cv2.bitwise_and(overlay, overlay, mask=mask)
   dst = cv2.add(background_bg, overlay_fg)
   canvas[y_position:y_position + overlay_height,
          x_position:x_position + overlay_width] = dst
   return
-
+  
 # Given a lane and a color, choose the correct stoplight image.
 image_cache = dict()
-def choose_lamp_image (lane, color):
+def choose_lamp_image (lane, color, shrink_factor):
+  global image_cache
 
   if (color == "Dark"):
     match lane:
@@ -277,39 +290,110 @@ def choose_lamp_image (lane, color):
 
   image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
   image_height, image_width = image.shape[:2]
-  small_image = cv2.resize(image, (int(image_width/25),
-                                   int(image_height/25)),
+  small_image = cv2.resize(image, (int(image_width/shrink_factor),
+                                   int(image_height/shrink_factor)),
                            interpolation = cv2.INTER_AREA)
   image_cache[image_path] = small_image
   return (small_image)
 
+# Given a type, choose the image for a moving object.
+def choose_moving_object_image (object_type):
+  global image_cache
+  
+  match object_type:
+   case "car":
+     image_name = "car.png"
+   case "truck":
+     image_name = "truck.png"
+   case "pedestrian":
+     image_name = "pedestrian.png"
+
+  image_path = pathlib.Path(image_name)
+
+  if (image_path in image_cache):
+    return image_cache[image_path]
+
+  image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+  image_height, image_width = image.shape[:2]
+  small_image = cv2.resize(image, (int(image_width/shrink_factor),
+                                   int(image_height/shrink_factor)),
+                           interpolation = cv2.INTER_AREA)
+  image_cache[image_path] = small_image
+  return (small_image)
+
+# Map ground locations to screen locations
+def map_ground_to_screen (x_feet, y_feet):
+  global ground_height
+  
+  screen_height, screen_width = background.shape[:2]
+
+  # The ground is the same shape as the screen, but is measured in feet.
+  ground_width = ground_height * (screen_width / screen_height)
+  
+  ground_center_x = ground_width / 2
+  ground_center_y = ground_height / 2
+  screen_center_x = screen_width / 2
+  screen_center_y = screen_height / 2
+  x_from_center = x_feet - ground_center_x
+  y_from_center = y_feet - ground_center_y
+  x_from_center = x_from_center * (screen_width / ground_width)
+  y_from_center = y_from_center * (screen_height / ground_height)
+  x_pixels = x_from_center + screen_center_x
+  y_pixels = y_from_center + screen_center_y
+
+  return (x_pixels, y_pixels)
+
+# map screen locations to ground locations.
+def map_screen_to_ground (x_pixels, y_pixels):
+  global ground_height
+  
+  screen_height, screen_width = background.shape[:2]
+  ground_width = ground_height * (screen_width / screen_height)
+  ground_center_x = ground_width / 2
+  ground_center_y = ground_height / 2
+  screen_center_x = screen_width / 2
+  screen_center_y = screen_height / 2
+  x_from_center = x_pixels - screen_center_x
+  y_from_center = y_pixels - screen_center_y
+  x_from_center = x_from_center * (ground_width / screen_width)
+  y_from_center = y_from_center * (ground_height / screen_height)
+  x_feet = x_from_center + ground_center_x
+  y_feet = y_from_center + ground_center_y
+  
+  return (x_feet, y_feet)
+
 # Find the location to display the signal for the given lane.
-def find_lamp_position(lane):
-  row_01 = 100
-  row_02 = 700
+def find_lamp_position (lane):
+  center_y = canvas_size[0] / 2
+  center_x = canvas_size[1] / 2
+
+  center_x, center_y = map_screen_to_ground (center_x, center_y)
+  
+  lane_width = 12
+
   match lane:
     case "A":
-      return (100, row_01)
+      return (center_x, center_y + (lane_width * (3/2)))
     case "B":
-      return (200, row_01)
+      return (center_x + lane_width, center_y + (lane_width * (3/2)))
     case "C":
-      return (300, row_01)
+      return (center_x + (2 * lane_width), center_y + (lane_width * (3/2)))
     case "D":
-      return (400, row_01)
+      return (center_x + (2.5 * lane_width), center_y)
     case "E":
-      return (500, row_01)
+      return (center_x, center_y - (lane_width * (3/2)))
     case "F":
-      return (600, row_01)
+      return (center_x - lane_width, center_y - (lane_width * (3/2)))
     case "G":
-      return (700, row_01)
+      return (center_x - (2 * lane_width), center_y - (lane_width * (3/2)))
     case "H":
-      return (800, row_01)
+      return (center_x - (2.5 * lane_width), center_y)
     case "J":
-      return (900, row_01)
+      return (center_x - (2.5 * lane_width), center_y + (lane_width * 2.0))
     case "ps":
-      return (500, row_02)
+      return (center_x + (2.5 * lane_width), center_y + (lane_width * (3/2)))
     case "pn":
-      return (700, row_02)
+      return (center_x - (3.0 * lane_width), center_y - (lane_width * (3/2)))
   return
     
 # Subroutine to format the clock for display.
@@ -327,10 +411,44 @@ for lamp_name in ("A", "ps", "B", "C", "D", "E", "pn", "F", "G", "H", "J"):
   lamp["color"] = "Dark"
   lamp["position"] = find_lamp_position(lamp_name)
   lamps_dict[lamp_name] = lamp
+
+# Create a data structure to hold information about moving objects.
+event_times = sorted(events.keys())
+moving_objects_dict = dict()
+
+for event_time in event_times:
+  events_list = events[event_time]
+  for event in events_list:
+    type = event["type"]
+    match type:
+      case "car" | "truck" | "pedestrian":
+        the_name = event["name"]
+        if (the_name not in moving_objects_dict):
+          moving_object = dict()
+          moving_objects_dict[the_name] = moving_object
+        moving_object = moving_objects_dict[the_name]
+        moving_object["name"] = the_name
+        moving_object["type"] = type
+        moving_object["position"] = event["position"]
+        moving_object["length"] = event["length"]
+        moving_object["present"] = False
+        moving_object["travel path"] = event["travel path"]
+        moving_object["lane name"] = event["lane name"]
+
+if (do_trace):
+  trace_file.write ("moving objects:\n")
+  pprint.pprint(moving_objects_dict, trace_file)
+
+def find_location (moving_object):
+  # TODO
+  lane_name = moving_object["lane name"]
+  lane = lanes_dict[name_name]
+  anchor_x, anchor_y = lane["position"]
+  location = moving_object["location"]
+  return (anchor_x, anchor_y + location)
   
 # Generate the animation image frames.
 frame_number = 0
-event_times = sorted(events.keys())
 if (duration_time == None):
   duration_time = latest_time - start_time
 
@@ -365,13 +483,23 @@ for event_time in event_times:
           for lamp_name in lamps_dict:
             lamp = lamps_dict[lamp_name]
             color = lamp["color"]
-            image = choose_lamp_image (lamp_name, color)
-            x, y = lamp["position"]
-            place_image (canvas, image, x, y)
+            image = choose_lamp_image (lamp_name, color, shrink_factor)
+            x_feet, y_feet = lamp["position"]
+            x_pixels, y_pixels = map_ground_to_screen (x_feet, y_feet)
+            place_image (canvas, image, int(x_pixels), int(y_pixels))
+          for moving_object_name in moving_objects_dict:
+            moving_object = moving_objects_dict[moving_object_name]
+            if (moving_object["present"]):
+              type = moving_object["type"]
+              x_feet, y_feet = find_location (moving_object)
+              x_pixels, y_pixels = map_ground_to_screen (x_feet, y_feet)
+              image = choose_moving_vehicle_image (type, shrink_factor)
+              place_image (canvas, image, int(x_pixels), int(y_pixels))
+              
           if (do_animation_output):
             if (do_trace):
               trace_file.write ("writing frame " + str(file_path) + ".\n")
-              cv2.imwrite (file_path, canvas)
+            cv2.imwrite (file_path, canvas)
 
 if (do_trace):
   trace_file.write ("Image cache:\n")

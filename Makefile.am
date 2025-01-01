@@ -1,4 +1,4 @@
-# File: Makefile.am, author: John Sauter, date: December 30, 2024.
+# File: Makefile.am, author: John Sauter, date: December 31, 2024.
 #
 # Build traffic_control_signals.pdf
 
@@ -82,6 +82,7 @@ signal_llll_Yellow.svg \
 signal_rrr_Green.svg \
 signal_rrr_Red.svg \
 signal_rrr_Yellow.svg \
+background.png \
 process_events.py 
 
 # Distribute the shell scripts which build the RPMs and the video animation.
@@ -251,7 +252,7 @@ signal_llll_Flashing_Yellow.png signal_llll_Green.png signal_llll_Red.png \
 signal_llll_Yellow.png signal_rrr_Green.png signal_rrr_Red.png \
 signal_rrr_Yellow.png MUTCD_Ped_Signal_-_Hand_with_timer.png \
 MUTCD_Ped_Signal_-_Steady_hand.png MUTCD_Ped_Signal_-_Walk.png \
-events.csv build_video.sh
+events.csv build_video.sh background.png
 	bash build_video.sh
 
 # When removing files, also remove the followins:

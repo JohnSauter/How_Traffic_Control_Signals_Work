@@ -207,7 +207,8 @@ if (do_table_output):
 # Write the first line in the event file.
 
 if (do_events_output):
-  events_file.write ("time,lane,type,position,speed,travel path,color\n")
+  events_file.write (
+    "time,lane,type,name,position,length,speed,travel path,color\n")
   
 # Construct the template finite state machine.  This template
 # contains the states, actions and transitions.  All of the signal
@@ -1247,7 +1248,7 @@ if (do_lamp_map_output):
 
 # Set up the mapping from the vehicle sensors to the toggles they set.
 
-# Signal_face["sensors"]is a dictionary whose indexes are sensor names.
+# Signal_face["sensors"] is a dictionary whose indexes are sensor names.
 # The value of each entry is a sensor, which is a dictionary
 # with entries name, toggles, position, length, and value.
 # Toggles is a tuple of toggle names.  If a toggle name contains a slash
@@ -1779,7 +1780,7 @@ def perform_actions (signal_face, substate):
                             ". \\\\\n")
         if (do_events_output):
           events_file.write (str(current_time) + "," + signal_face["name"] +
-                             ",lamp,,,," + external_lamp_name + "\n")
+                             ",lamp,,,,,," + external_lamp_name + "\n")
       case "set toggle":
         set_toggle_value (signal_face, action[1], True, "")
         
@@ -1996,7 +1997,9 @@ def add_traffic_element (type, travel_path_name):
   if (do_events_output):
     events_file.write (str(current_time) + "," +
                        traffic_element["current lane"] + "," +
-                       type + "," + str(traffic_element["position"]) + "," +
+                       type + "," + traffic_element["name"] + "," +
+                       str(traffic_element["position"]) + "," +
+                       str(traffic_element["length"]) + "," +
                        str(traffic_element["speed"]) + "," +
                        travel_path_name + ",\n")
                            
@@ -2106,7 +2109,9 @@ def move_traffic_element (traffic_element):
         events_file.write (str(current_time) + "," +
                            traffic_element["current lane"] + "," +
                            traffic_element["type"] + "," +
+                           traffic_element["name"] + "," +
                            str(traffic_element["position"]) + "," +
+                           str(traffic_element["length"]) + "," +
                            str(traffic_element["speed"]) + "," +
                            traffic_element["travel path name"] + ",\n")
                            
@@ -2139,7 +2144,9 @@ def move_traffic_element (traffic_element):
         events_file.write (str(current_time) + "," +
                            traffic_element["current lane"] + "," +
                            traffic_element["type"] + "," +
+                           traffic_element["name"] + "," +
                            str(traffic_element["position"]) + "," +
+                           str(traffic_element["length"]) + "," +
                            str(traffic_element["speed"]) + "," +
                            traffic_element["travel path name"] + ",\n")
 
@@ -2179,7 +2186,9 @@ def move_traffic_element (traffic_element):
                   events_file.write (str(current_time) + "," +
                                      traffic_element["current lane"] + "," +
                                      traffic_element["type"] + "," +
+                                     traffic_element["name"] + "," +
                                      str(traffic_element["position"]) + "," +
+                                     str(traffic_element["length"]) + "," +
                                      str(traffic_element["speed"]) + "," +
                                      traffic_element["travel path name"] +
                                      ",\n")
@@ -2216,7 +2225,9 @@ def move_traffic_element (traffic_element):
                 events_file.write (str(current_time) + "," +
                                    traffic_element["current lane"] + "," +
                                    traffic_element["type"] + "," +
+                                   traffic_element["name"] + "," +
                                    str(traffic_element["position"]) + "," +
+                                   str(traffic_element["length"]) + "," +
                                    str(traffic_element["speed"]) + "," +
                                    traffic_element["travel path name"] + ",\n")
 
@@ -2264,7 +2275,9 @@ def move_traffic_element (traffic_element):
             events_file.write (str(current_time) + "," +
                                traffic_element["current lane"] + "," +
                                traffic_element["type"] + "," +
+                               traffic_element["name"] + "," +
                                str(traffic_element["position"]) + "," +
+                               str(traffic_element["length"]) + "," +
                                str(traffic_element["speed"]) + "," +
                                traffic_element["travel path name"] + ",\n")
 
