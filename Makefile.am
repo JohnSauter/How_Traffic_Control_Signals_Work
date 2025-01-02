@@ -1,8 +1,8 @@
-# File: Makefile.am, author: John Sauter, date: December 31, 2024.
+# File: Makefile.am, author: John Sauter, date: January 1, 2025.
 #
 # Build traffic_control_signals.pdf
 
-#   Copyright © 2024 by John Sauter <John_Sauter@systemeyescomputerstore.com>
+#   Copyright © 2025 by John Sauter <John_Sauter@systemeyescomputerstore.com>
 
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -28,6 +28,9 @@
 # The main target is the file traffic_control_signals.pdf
 all: traffic_control_signals.pdf
 .PHONEY: all
+
+# Inkscape fails if many copies are run in parallel.
+.NOTPARALLEL:
 
 # Include the following documentation files in the distribution.
 dist_doc_DATA = \
@@ -82,6 +85,9 @@ signal_llll_Yellow.svg \
 signal_rrr_Green.svg \
 signal_rrr_Red.svg \
 signal_rrr_Yellow.svg \
+car-2897.svg \
+truck-1058.svg \
+man_walking_right.svg \
 background.png \
 process_events.py 
 
@@ -252,7 +258,8 @@ signal_llll_Flashing_Yellow.png signal_llll_Green.png signal_llll_Red.png \
 signal_llll_Yellow.png signal_rrr_Green.png signal_rrr_Red.png \
 signal_rrr_Yellow.png MUTCD_Ped_Signal_-_Hand_with_timer.png \
 MUTCD_Ped_Signal_-_Steady_hand.png MUTCD_Ped_Signal_-_Walk.png \
-events.csv build_video.sh background.png
+events.csv build_video.sh background.png car-2897.png truck-1058.png \
+man_walking_right.png
 	bash build_video.sh
 
 # When removing files, also remove the followins:
@@ -281,6 +288,10 @@ MUTCD_Ped_Signal_-_Steady_hand.png \
 MUTCD_Ped_Signal_-_Walk.png \
 signal_*.pdf \
 signal_*.png \
+car-2897.png \
+truck-1058.png \
+pedestrian.png \
+man_walking_right.png \
 *_table.tex \
 events.csv \
 traffic_animation.mkv \

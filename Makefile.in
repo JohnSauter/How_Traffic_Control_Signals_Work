@@ -14,11 +14,11 @@
 
 @SET_MAKE@
 
-# File: Makefile.am, author: John Sauter, date: December 31, 2024.
+# File: Makefile.am, author: John Sauter, date: January 1, 2025.
 #
 # Build traffic_control_signals.pdf
 
-#   Copyright © 2024 by John Sauter <John_Sauter@systemeyescomputerstore.com>
+#   Copyright © 2025 by John Sauter <John_Sauter@systemeyescomputerstore.com>
 
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -496,7 +496,8 @@ EXTRA_DIST = signal_ccc.svg signal_ccu.svg signal_rrr.svg \
 	signal_cccl_Yellow.svg signal_llll_Flashing_Yellow.svg \
 	signal_llll_Green.svg signal_llll_Red.svg \
 	signal_llll_Yellow.svg signal_rrr_Green.svg signal_rrr_Red.svg \
-	signal_rrr_Yellow.svg background.png process_events.py \
+	signal_rrr_Yellow.svg car-2897.svg truck-1058.svg \
+	man_walking_right.svg background.png process_events.py \
 	build_RPMs.sh build_video.sh \
 	How_Traffic_Control_Signals_Work.spec
 
@@ -531,6 +532,10 @@ MUTCD_Ped_Signal_-_Steady_hand.png \
 MUTCD_Ped_Signal_-_Walk.png \
 signal_*.pdf \
 signal_*.png \
+car-2897.png \
+truck-1058.png \
+pedestrian.png \
+man_walking_right.png \
 *_table.tex \
 events.csv \
 traffic_animation.mkv \
@@ -1067,6 +1072,9 @@ uninstall-am: uninstall-dist_docDATA
 all: traffic_control_signals.pdf
 .PHONEY: all
 
+# Inkscape fails if many copies are run in parallel.
+.NOTPARALLEL:
+
 # Build the RPM if the developer types "make RPMs".
 .phoney: RPMs
 RPMs:
@@ -1221,7 +1229,8 @@ signal_llll_Flashing_Yellow.png signal_llll_Green.png signal_llll_Red.png \
 signal_llll_Yellow.png signal_rrr_Green.png signal_rrr_Red.png \
 signal_rrr_Yellow.png MUTCD_Ped_Signal_-_Hand_with_timer.png \
 MUTCD_Ped_Signal_-_Steady_hand.png MUTCD_Ped_Signal_-_Walk.png \
-events.csv build_video.sh background.png
+events.csv build_video.sh background.png car-2897.png truck-1058.png \
+man_walking_right.png
 	bash build_video.sh
 
 clean-local: clean-local-check

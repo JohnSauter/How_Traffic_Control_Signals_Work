@@ -57,7 +57,7 @@ make check VERBOSE=1
 %license COPYING
 
 %changelog
- * Tue Dec 31 2024 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ * Wed Jan 01 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.9-1 Work on the animation.
  * Mon Dec 30 2024 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.8-1 Start work on the renderer.

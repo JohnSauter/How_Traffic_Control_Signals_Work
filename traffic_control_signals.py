@@ -4,7 +4,7 @@
 # traffic_control_signals.py implements the control logic for a traffic
 # signal using finite state machines.
 
-#   Copyright © 2024 by John Sauter <John_Sauter@systemeyescomputerstore.com>
+#   Copyright © 2025 by John Sauter <John_Sauter@systemeyescomputerstore.com>
 
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ parser = argparse.ArgumentParser (
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=('Implement a traffic control ' + 
                'signal using finite state machines.'),
-  epilog=('Copyright © 2024 by John Sauter' + '\n' +
+  epilog=('Copyright © 2025 by John Sauter' + '\n' +
           'License GPL3+: GNU GPL version 3 or later; ' + '\n' +
           'see <http://gnu.org/licenses/gpl.html> for the full text ' +
           'of the license.' + '\n' +
@@ -53,7 +53,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.7 2024-12-29',
+                     version='traffic_control_signals 0.9 2025-01-01',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -205,10 +205,21 @@ if (do_table_output):
   table_file.write ("  Time & Lane & Events \\endhead \n")
 
 # Write the first line in the event file.
-
 if (do_events_output):
   events_file.write (
-    "time,lane,type,name,position,length,speed,travel path,color\n")
+    "time,lane,type,name,position,length,speed,travel path,present,color\n")
+
+# Subroutine to write a traffic element event to the event file.
+def write_event (traffic_element):
+  events_file.write (str(current_time) + "," +
+                     traffic_element["current lane"] + "," +
+                     traffic_element["type"] + "," +
+                     traffic_element["name"] + "," +
+                     str(traffic_element["position"]) + "," +
+                     str(traffic_element["length"]) + "," +
+                     str(traffic_element["speed"]) + "," +
+                     traffic_element["travel path name"] + "," +
+                     str(traffic_element["present"]) + ",none\n")
   
 # Construct the template finite state machine.  This template
 # contains the states, actions and transitions.  All of the signal
@@ -1780,7 +1791,7 @@ def perform_actions (signal_face, substate):
                             ". \\\\\n")
         if (do_events_output):
           events_file.write (str(current_time) + "," + signal_face["name"] +
-                             ",lamp,,,,,," + external_lamp_name + "\n")
+                             ",lamp,,,,,,," + external_lamp_name + "\n")
       case "set toggle":
         set_toggle_value (signal_face, action[1], True, "")
         
@@ -1995,14 +2006,8 @@ def add_traffic_element (type, travel_path_name):
                       travel_path_name + " speed " +
                       format_speed(abs(traffic_element["speed"])) + ". \\\\\n")
   if (do_events_output):
-    events_file.write (str(current_time) + "," +
-                       traffic_element["current lane"] + "," +
-                       type + "," + traffic_element["name"] + "," +
-                       str(traffic_element["position"]) + "," +
-                       str(traffic_element["length"]) + "," +
-                       str(traffic_element["speed"]) + "," +
-                       travel_path_name + ",\n")
-                           
+    write_event (traffic_element)
+                       
   traffic_elements[this_name] = traffic_element
   return
 
@@ -2106,14 +2111,7 @@ def move_traffic_element (traffic_element):
                           " is blocked by " +
                           blocking_traffic_element["name"] + ". \\\\\n")
       if (do_events_output):
-        events_file.write (str(current_time) + "," +
-                           traffic_element["current lane"] + "," +
-                           traffic_element["type"] + "," +
-                           traffic_element["name"] + "," +
-                           str(traffic_element["position"]) + "," +
-                           str(traffic_element["length"]) + "," +
-                           str(traffic_element["speed"]) + "," +
-                           traffic_element["travel path name"] + ",\n")
+        write_event(traffic_element)
                            
       return
     
@@ -2141,15 +2139,7 @@ def move_traffic_element (traffic_element):
                           cap_first_letter(traffic_element["name"]) +
                           " exits the simulation. \\\\\n")
       if (do_events_output):
-        events_file.write (str(current_time) + "," +
-                           traffic_element["current lane"] + "," +
-                           traffic_element["type"] + "," +
-                           traffic_element["name"] + "," +
-                           str(traffic_element["position"]) + "," +
-                           str(traffic_element["length"]) + "," +
-                           str(traffic_element["speed"]) + "," +
-                           traffic_element["travel path name"] + ",\n")
-
+        write_event (traffic_element)
       
       no_activity = False
     else:
@@ -2183,15 +2173,7 @@ def move_traffic_element (traffic_element):
                                     cap_first_letter(traffic_element["name"]) +
                                     " stopped. \\\\\n")
                 if (do_events_output):
-                  events_file.write (str(current_time) + "," +
-                                     traffic_element["current lane"] + "," +
-                                     traffic_element["type"] + "," +
-                                     traffic_element["name"] + "," +
-                                     str(traffic_element["position"]) + "," +
-                                     str(traffic_element["length"]) + "," +
-                                     str(traffic_element["speed"]) + "," +
-                                     traffic_element["travel path name"] +
-                                     ",\n")
+                  write_event (traffic_element)
 
                 no_activity = False
             else:
@@ -2222,14 +2204,7 @@ def move_traffic_element (traffic_element):
                 abs(next_milestone[1] - following_milestone[1]))
               traffic_element["milestone index"] = next_milestone_index
               if (do_events_output):
-                events_file.write (str(current_time) + "," +
-                                   traffic_element["current lane"] + "," +
-                                   traffic_element["type"] + "," +
-                                   traffic_element["name"] + "," +
-                                   str(traffic_element["position"]) + "," +
-                                   str(traffic_element["length"]) + "," +
-                                   str(traffic_element["speed"]) + "," +
-                                   traffic_element["travel path name"] + ",\n")
+                write_event (traffic_element)
 
               no_activity = False
         else:
@@ -2272,14 +2247,7 @@ def move_traffic_element (traffic_element):
                               cap_first_letter(traffic_element["name"]) +
                               tail_text + ". \\\\\n")
           if (do_events_output):
-            events_file.write (str(current_time) + "," +
-                               traffic_element["current lane"] + "," +
-                               traffic_element["type"] + "," +
-                               traffic_element["name"] + "," +
-                               str(traffic_element["position"]) + "," +
-                               str(traffic_element["length"]) + "," +
-                               str(traffic_element["speed"]) + "," +
-                               traffic_element["travel path name"] + ",\n")
+            write_event (traffic_element)
 
           no_activity = False
       else:

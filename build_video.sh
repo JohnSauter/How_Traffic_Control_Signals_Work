@@ -1,11 +1,11 @@
-# file: build_video.sh, author: John Sauter, date: December 30, 2024.
+# file: build_video.sh, author: John Sauter, date: January 1, 2025.
 
 # Construct an animation from the event log.
 
 rm -rf animation_temp/
 mkdir animation_temp
 python3 process_events.py --events-file events.csv \
-	--animation animation_temp/ --start 200 --duration 60 
+	--animation animation_temp/ --start 200 
 
 # UHD, 30 frames per second, 10 bits per color, yuv420p, x265.
 rm -f traffic_animation.mkv
