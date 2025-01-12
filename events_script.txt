@@ -1,8 +1,6 @@
 time,operator,signal face,operand
-200.000,car,D,D6
-210.000,car,B,A6
-211.000,pedestrian,ps,ps
-212.000,car,E,E3
-213.000,pedestrian,pn,pn
-214.000,truck,H,H5
-215.000,car,J,J1
+200.000,truck,D,D6
+210.000,car,B,B5
+211.000,car,C,C4
+212.000,car,F,F2
+213.000,car,G,G1

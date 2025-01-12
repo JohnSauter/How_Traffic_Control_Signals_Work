@@ -55,7 +55,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='process_events 0.10 2025-01-05',
+                     version='process_events 0.11 2025-01-12',
                      help='print the version number and exit')
 parser.add_argument ('--animation-directory', metavar='animation_directory',
                      help='write animation output image files ' +
@@ -481,17 +481,17 @@ def find_lane_position (lane):
     
 # Find the direction of a lane.
 # Moving objects with a positive speed in this lane proceed
-# in this direction from the lane's origin.
+# in this direction to or from the lane's origin.
 def find_lane_direction (lane):
   match lane:
-    case "1" | "2" | "A" | "B" | "C":
-      return (0,1) # down
-    case "3" | "D" | "ps":
-      return (1,0) # right
-    case "4" | "5" | "E" | "F" | "G":
-      return (0,-1) # up
-    case "pn" | "6" | "H" | "J":
-      return (-1,0) # left
+    case "1" | "2" | "E" | "F" | "G":
+      return (0, 1) # down
+    case "3" | "H" | "J" | "ps":
+      return (1, 0) # right
+    case "A" | "B" | "C" | "4" | "5":
+      return (0, -1) # up
+    case "pn" | "D" | "6":
+      return (-1, 0) # left
     
   return None
     
@@ -561,6 +561,9 @@ def find_moving_object_location (event_time, moving_object):
   lane_name = moving_object["lane name"]
   travel_path = moving_object["travel path"]
 
+  # If the moving object is in the intersection, it is moving
+  # towards its destination lane.  If it is in the crosswalk
+  # it is in its lane, either ps or pn.
   match lane_name:
     case "intersection":
       lane_name = travel_path[1]

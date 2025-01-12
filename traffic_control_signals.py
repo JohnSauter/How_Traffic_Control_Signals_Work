@@ -36,6 +36,7 @@ import math
 import pprint
 import decimal
 import fractions
+import pathlib
 import csv
 import argparse
 
@@ -53,7 +54,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.10 2025-01-05',
+                     version='traffic_control_signals 0.11 2025-01-12',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -135,37 +136,43 @@ arguments = vars(arguments)
 if (arguments ['trace_file'] != None):
   do_trace = True
   trace_file_name = arguments ['trace_file']
+  trace_file_name = pathlib.Path(trace_file_name)
   trace_file = open (trace_file_name, 'wt')
 
 if (arguments ['events_file'] != None):
   do_events_output = True
   events_file_name = arguments ['events_file']
-  events_file = open (events_file_name, 'wt')
+  events_file_name = pathlib.Path(events_file_name)
 
 if (arguments ['table_file'] != None):
   do_table_output = True
   table_file_name = arguments ['table_file']
-  table_file = open (table_file_name, 'wt')
+  table_file_name = pathlib.Path(table_file_name)
 
 if (arguments ['red_state_file'] != None):
   do_red_state_output = True
   red_state_output_file_name = arguments ['red_state_file']
+  red_state_output_file_name = pathlib.Path(red_state_output_file_name)
 
 if (arguments ['yellow_state_file'] != None):
   do_yellow_state_output = True
   yellow_state_output_file_name = arguments ['yellow_state_file']
+  yellow_state_output_file_name = pathlib.Path(yellow_state_output_file_name)
 
 if (arguments ['green_state_file'] != None):
   do_green_state_output = True
   green_state_output_file_name = arguments ['green_state_file']
+  green_state_output_file_name = pathlib.Path(green_state_output_file_name)
 
 if (arguments ['lamp_map_file'] != None):
   do_lamp_map_output = True
   lamp_map_file_name = arguments ['lamp_map_file']
+  lamp_map_file_name = pathlib.Path(lamp_map_file_name)
 
 if (arguments ['sensor_map_file'] != None):
   do_sensor_map_output = True
   sensor_map_file_name = arguments ['sensor_map_file']
+  sensor_map_file_name = pathlib.Path(sensor_map_file_name)
 
 if ((arguments ['table_level'] != None) and do_table_output):
   table_level = arguments ['table_level']
@@ -182,6 +189,7 @@ if (arguments ['table_caption'] != None):
 if (arguments ['script_input'] != None):
   do_script_input = True
   script_file_name = arguments ['script_input']
+  script_file_name = pathlib.Path(script_file_name)
   
 if (arguments ['waiting_limit'] != None):
   waiting_limit = arguments ['waiting_limit']
@@ -198,6 +206,7 @@ current_time = fractions.Fraction(start_time)
 # Write the first lines in the table file.
 
 if (do_table_output):
+  table_file = open (table_file_name, 'wt')
   table_file.write ("\\begin{longtable}{c | P{1.00cm} | p{9.25cm}}\n")
   table_file.write ("  \\caption{" + table_caption + "} \\\\\n")
   table_file.write ("  Time & Lane & Event \\endfirsthead \n")
@@ -206,6 +215,7 @@ if (do_table_output):
 
 # Write the first line in the event file.
 if (do_events_output):
+  events_file = open (events_file_name, 'wt')
   events_file.write (
     "time,lane,type,name,position,length,speed,travel path,present,color\n")
 
@@ -1079,102 +1089,101 @@ for entry_lane_name in ("A", "ps", "B", "C", "D", "E", "pn",
   for exit_lane_name in ("1", "2", "3", "4", "5", "6"):
     travel_path_name = entry_lane_name + exit_lane_name
     travel_path = None
+
+    # Vehicles on approach lanes have negative positions
+    # and positive speeds as they approach the stop line.
+    # Vehicles on departure lanes have positive positions
+    # and positive speeds as they leave the stop line.
+    # Vehicles in the intersection have the speed and origin
+    # of their exit lanes, and thus negative position.
     
     match travel_path_name:
       case "A1" | "E4":
         # U turn to far lane
-        travel_path = ((adjacent_lane_name, long_lane_length),
-                       (adjacent_lane_name, short_lane_length),
-                       (entry_lane_name, short_lane_length),
+        travel_path = ((adjacent_lane_name, -long_lane_length),
+                       (adjacent_lane_name, -short_lane_length),
+                       (entry_lane_name, -short_lane_length),
                        (entry_lane_name, 0),
-                       ("intersection", lane_width*4), ("intersection", 0),
+                       ("intersection", -lane_width*4), ("intersection", 0),
                        (exit_lane_name, 0), (exit_lane_name, long_lane_length))
 
       case "A2" | "E5":
-        # U turn to near lane
-        travel_path = ((adjacent_lane_name, long_lane_length),
-                       (adjacent_lane_name, short_lane_length),
-                       (entry_lane_name, short_lane_length),
+        # U turn to near lane:
+        travel_path = ((adjacent_lane_name, -long_lane_length),
+                       (adjacent_lane_name, -short_lane_length),
+                       (entry_lane_name, -short_lane_length),
                        (entry_lane_name, 0),
-                       ("intersection", lane_width*3), ("intersection", 0),
+                       ("intersection", -lane_width*3), ("intersection", 0),
                        (exit_lane_name, 0), (exit_lane_name, long_lane_length))
 
-      case "A6":
+      case "A6" | "E3":
         # Left turn
-        travel_path = ((adjacent_lane_name, long_lane_length),
-                       (adjacent_lane_name, short_lane_length),
-                       (entry_lane_name, short_lane_length),
+        travel_path = ((adjacent_lane_name, -long_lane_length),
+                       (adjacent_lane_name, -short_lane_length),
+                       (entry_lane_name, -short_lane_length),
                        (entry_lane_name, 0),
-                       ("intersection", lane_width*7), ("intersection", 0),
-                       (exit_lane_name, 0), (exit_lane_name, long_lane_length))
-
-      case "E3":
-        # Left turn
-        travel_path = ((adjacent_lane_name, long_lane_length),
-                       (adjacent_lane_name, short_lane_length),
-                       (entry_lane_name, short_lane_length),
-                       (entry_lane_name, 0),
-                       ("intersection", lane_width*6), ("intersection", 0),
+                       ("intersection", -lane_width*7), ("intersection", 0),
                        (exit_lane_name, 0), (exit_lane_name, long_lane_length))
 
       case "B5" | "C4" | "F2" | "G1":
-        # Straight through
-        travel_path = ((entry_lane_name, long_lane_length),
-                       (entry_lane_name, 0), ("intersection", lane_width*5),
-                       (exit_lane_name, 0), (exit_lane_name, long_lane_length))
+        # Straight through 
+        travel_path = ((entry_lane_name, -long_lane_length),
+                       (entry_lane_name, 0), ("intersection", -lane_width*5),
+                       ("intersection", 0), (exit_lane_name, 0),
+                       (exit_lane_name, long_lane_length))
         
       case "D2":
-        # Left turn to far lane
-        travel_path = ((entry_lane_name, long_lane_length),
-                       (entry_lane_name, 0), ("intersection", lane_width*7),
+        # Left turn eastbound to near lane southbound
+        travel_path = ((entry_lane_name, -long_lane_length),
+                       (entry_lane_name, 0), ("intersection", -lane_width*7),
                        (exit_lane_name, 0), (exit_lane_name, long_lane_length))
 
       case "D1":
-        # Left turn to near lane
-        travel_path = ((entry_lane_name, long_lane_length),
-                       (entry_lane_name, 0), ("intersection", lane_width*8),
+        # Left turn eastbound to far lane southbound
+        travel_path = ((entry_lane_name, -long_lane_length),
+                       (entry_lane_name, 0), ("intersection", -lane_width*8),
                        (exit_lane_name, 0), (exit_lane_name, long_lane_length))
 
       case "D6":
-        # Straight through
-        travel_path = ((entry_lane_name, long_lane_length),
-                       (entry_lane_name, 0), ("intersection", lane_width*7),
+        # Straight through eastbound
+        travel_path = ((entry_lane_name, -long_lane_length),
+                       (entry_lane_name, 0), ("intersection", -lane_width*7),
                        (exit_lane_name, 0), (exit_lane_name, long_lane_length))
         
       case "D5":
-        # Right turn to far lane
-        travel_path = ((entry_lane_name, long_lane_length),
-                       (entry_lane_name, 0), ("intersection", lane_width*4),
+        # Right turn eastbound to far lane northbound
+        travel_path = ((entry_lane_name, -long_lane_length),
+                       (entry_lane_name, 0), ("intersection", -lane_width*4),
                        (exit_lane_name, 0), (exit_lane_name, long_lane_length))
 
       case "D4":
-        # Right turn to near lane
-        travel_path = ((entry_lane_name, long_lane_length),
-                       (entry_lane_name, 0), ("intersection", lane_width*3),
+        # Right turn eastbound to near lane northbound
+        travel_path = ((entry_lane_name, -long_lane_length),
+                       (entry_lane_name, 0), ("intersection", -lane_width*3),
                        (exit_lane_name, 0), (exit_lane_name, long_lane_length))
 
       case "H5":
-        # Left turn to ner lane
-        travel_path = ((entry_lane_name, long_lane_length),
-                       (entry_lane_name, 0), ("intersection", lane_width*7),
+        # Left turn westbound to near lane northbound
+        travel_path = ((entry_lane_name, -long_lane_length),
+                       (entry_lane_name, 0), ("intersection", -lane_width*7),
                        (exit_lane_name, 0), (exit_lane_name, long_lane_length))
 
       case "H4":
-        # Left turn to far lane
-        travel_path = ((entry_lane_name, long_lane_length),
-                       (entry_lane_name, 0), ("intersection", lane_width*8),
+        # Left turn westbound to far lane northbound
+        travel_path = ((entry_lane_name, -long_lane_length),
+                       (entry_lane_name, 0), ("intersection", -lane_width*8),
                        (exit_lane_name, 0), (exit_lane_name, long_lane_length))
 
       case "J1":
-        # Right turn to near lane
-        travel_path = ((entry_lane_name, long_lane_length),
-                       (entry_lane_name, 0), ("intersection", lane_width*3),
+        # Right turn westbound to near lane southbound
+        travel_path = ((entry_lane_name, -long_lane_length),
+                       (entry_lane_name, 0), ("intersection", -lane_width*3),
                        (exit_lane_name, 0), (exit_lane_name, long_lane_length))
 
       case "J2":
-        # Right turn to far lane
-        travel_path = ((entry_lane_name, long_lane_length),
-                       (entry_lane_name, 0), ("intersection", lane_width*4),
+        # Right turn westbound to far lane southbound
+        travel_path = ((entry_lane_name, -long_lane_length),
+                       (entry_lane_name, 0), ("intersection", -lane_width*4),
                        (exit_lane_name, 0), (exit_lane_name, long_lane_length))
 
     travel_paths[travel_path_name] = travel_path
@@ -1920,36 +1929,46 @@ def enter_state (signal_face, state_name, substate_name):
 traffic_elements = dict()
 
 # Subroutine to return the speed limit for a lane in feet per second.
-# Because lane positions are measured from the stop line,
-# approach lanes have negative speed, departure lanes have positive speed.
-# The intersection measures from the far end, so it has negative speed.
-# The crosswalk has the same stop line as its beginning, so it has positive
-# speed.
+
+# Vehicles on approach lanes have negative positions
+# and positive speeds as they approach the stop line.
+# Vehicles on departure lanes have positive positions
+# and positive speeds as they leave the stop line.
+# A vehicle in the intersection has the speed and origin of its exit lane
+# and thus a positive speed and a negative position.
+# A pedestrian in the north crosswalk has positive speed since he is
+# moving east; in the south crosswalk negative speed since he is moving west.
+
 def speed_limit (lane_name, travel_path_name):
   match lane_name:
-    case "1" | "2" |"4" | "5":
+    case "1" | "2" | "B" | "C" | "4" | "5" | "F" | "G":
       return (45 * mph_to_fps)
-    case "B" | "C" | "F" | "G":
-      return (-45 * mph_to_fps)
-    case "3" | "6":
+    case "A" | "D" | "3" | "E" | "6" | "H" | "J":
       return (25 * mph_to_fps)
-    case "A" | "D" | "E" | "H" | "J":
-      return (-25 * mph_to_fps)
-    case "ps" | "pn":
+    case "ps":
       return (fractions.Fraction(-35, 10))
+    case "pn":
+      return (fractions.Fraction(35, 10))
     case "crosswalk":
-      return (fractions.Fraction(35,10))
+      return (speed_limit(travel_path_name, travel_path_name))
     case "intersection":
       # In the intersecton the speed limit depends on
-      # the travel path.  If we are going staright through
+      # the travel path.  If we are going straight through
       # on one of the 45 mph lanes we can maintain that speed.
       # Anything else, including turning right from lanes
       # C or G, requires slowing to 25 mph.
       match travel_path_name:
         case "B5" | "C4" | "F2" | "G1":
-          return (speed_limit(travel_path_name[0], travel_path_name))
+          return (speed_limit(travel_path_name[1], travel_path_name))
         case _:
-          return (-25 * mph_to_fps)
+          return_speed = speed_limit(travel_path_name[1], travel_path_name)
+          match return_speed:
+            case 45:
+              return (25)
+            case -45:
+              return (-25)
+            case _:
+              return (return_speed)
   return None
 
 # Subroutine to add a traffic element to the traffic elements dictionary.
