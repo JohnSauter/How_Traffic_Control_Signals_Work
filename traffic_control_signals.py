@@ -53,7 +53,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.9 2025-01-01',
+                     version='traffic_control_signals 0.10 2025-01-05',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -1058,7 +1058,7 @@ for signal_face in signal_faces_list:
       signal_face["waiting limit"] = waiting_limit / 2;
 
 # Construct the travel paths.  A traffic element appears at the first
-# milestone, then proceeds each following milestone.  When it reaches
+# milestone, then proceeds to each following milestone.  When it reaches
 # the last milestone it vanishes from the simulation.
 approach_sensor_distance = 365
 long_lane_length = 528
@@ -1181,12 +1181,11 @@ for entry_lane_name in ("A", "ps", "B", "C", "D", "E", "pn",
 
 for travel_path_name in ("ps", "pn"):
   entry_lane_name = travel_path_name
-  travel_path = ((entry_lane_name, lane_width),
+  travel_path = ((entry_lane_name, int(lane_width/2)),
                  (entry_lane_name, 0),
-                 ("crosswalk", lane_width*6),
                  ("crosswalk", 0),
-                 (entry_lane_name, lane_width),
-                 (entry_lane_name, lane_width))
+                 ("crosswalk", -lane_width*6),
+                 ("crosswalk", int(-lane_width*6.5)))
   
   travel_paths[travel_path_name] = travel_path
     
@@ -1923,8 +1922,9 @@ traffic_elements = dict()
 # Subroutine to return the speed limit for a lane in feet per second.
 # Because lane positions are measured from the stop line,
 # approach lanes have negative speed, departure lanes have positive speed.
-# The crosswalk and intersection measure from the far end, so they have
-# negative speeds.
+# The intersection measures from the far end, so it has negative speed.
+# The crosswalk has the same stop line as its beginning, so it has positive
+# speed.
 def speed_limit (lane_name, travel_path_name):
   match lane_name:
     case "1" | "2" |"4" | "5":
@@ -1935,8 +1935,10 @@ def speed_limit (lane_name, travel_path_name):
       return (25 * mph_to_fps)
     case "A" | "D" | "E" | "H" | "J":
       return (-25 * mph_to_fps)
-    case "ps" | "pn" | "crosswalk" :
+    case "ps" | "pn":
       return (fractions.Fraction(-35, 10))
+    case "crosswalk":
+      return (fractions.Fraction(35,10))
     case "intersection":
       # In the intersecton the speed limit depends on
       # the travel path.  If we are going staright through

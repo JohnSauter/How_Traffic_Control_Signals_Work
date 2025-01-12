@@ -55,7 +55,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='process_events 0.9 2025-01-01',
+                     version='process_events 0.10 2025-01-05',
                      help='print the version number and exit')
 parser.add_argument ('--animation-directory', metavar='animation_directory',
                      help='write animation output image files ' +
@@ -195,7 +195,8 @@ background=cv2.imread("background.png")
 canvas_size = background.shape[0:2]
 
 # Place a small image on a large image, removing what was below
-# except for transparent areas.
+# except for transparent areas.  The center of the small image is placed
+# at the indicated location on the large image.
 def place_image(name, canvas, overlay, x_position, y_position):
 
   overlay_height, overlay_width = overlay.shape[:2]
@@ -208,44 +209,44 @@ def place_image(name, canvas, overlay, x_position, y_position):
                       str(y_position) + ":" +
                       str(y_position + overlay_height) +
                       "):\n")
-    
+
+  # Calculate the area in the large image that will be replaced
+  # by the small image.
+  x_center = x_position
+  y_center = y_position
+  x_size = overlay_width
+  y_size = overlay_height
+  x_min = x_center - int(x_size/2)
+  y_min = y_center - int(y_size/2)
+  x_max = x_min + x_size
+  y_max = y_min + y_size
+  
   # if the any part of the overlay is off the canvas, do nothing.
   canvas_height, canvas_width = canvas.shape[:2]
-  if ((x_position < 0) or (x_position >= canvas_width)):
+  if ((x_min < 0) or (x_max >= canvas_width)):
     
     if (do_trace):
       trace_file.write ("Image not placed: x out of range.\n")
       pprint.pprint ((canvas, overlay, x_position, y_position), trace_file)
       
     return
-  if ((y_position < 0) or (y_position >= canvas_height)):
+  if ((y_min < 0) or (y_max >= canvas_height)):
 
     if (do_trace):
       trace_file.write ("Image not placed: y out of range.\n")
       pprint.pprint ((canvas, overlay, x_position, y_position), trace_file)
     return
 
-  if ((x_position + overlay_width) >= canvas_width):
-    
-    if (do_trace):
-      trace_file.write ("Image not placed: x+width out of range.\n")
-      pprint.pprint ((canvas, overlay, x_position, y_position), trace_file)
-
-    return
-  if ((y_position + overlay_height) >= canvas_height):
-    
-    if (do_trace):
-      trace_file.write ("Image not placed: y+height out of range.\n")
-      pprint.pprint ((canvas, overlay, x_position, y_position), trace_file)
-
-    return
-
   # Replace the pixels in the area overlapped by the image being placed
   # by the pixels in the image being placed.  However, if there is
   # transparency in the image being placed, let the previous contents
-  # show through.
-  for y in range(overlay_height):
-    for x in range(overlay_width):
+  # show through.  This is imprecise because the pixel color values
+  # are companded in sRGB, but it is close enough for our purposes,
+  # and converting to linear to do the alpha blending properly would
+  # be time-consuming.
+  # The large image is assumed not to have an alpha channel.
+  for y in range(y_size):
+    for x in range(x_size):
       
       # Elements 0 to 2 are the color channels
       overlay_color = overlay[y, x, 0:3]
@@ -256,15 +257,15 @@ def place_image(name, canvas, overlay, x_position, y_position):
       overlay_alpha = overlay[y, x, 3] / 255
 
       # Get the color from the corresponding pixel in the canvas.
-      canvas_color = canvas[y + y_position, x + x_position]
+      canvas_color = canvas[y + y_min, x + x_min]
 
       # Compute the desired color by combining the new image with
       # the old, taking into account the transparency.
-      composite_color = (canvas_color * (1 - overlay_alpha) +
+      composite_color = (canvas_color * (1.0 - overlay_alpha) +
                          (overlay_color * overlay_alpha))
 
       # Store the new color in the appropriate place in the canvas.
-      canvas[y + y_position, x + x_position] = composite_color
+      canvas[y + y_min, x + x_min] = composite_color
       
   if (do_trace):
     trace_file.write ("Image placed.\n")
@@ -442,39 +443,39 @@ def find_lane_position (lane):
 
   match lane:
     case "1":
-      return (center_x - (2.0 * lane_width), center_y + (1.5 * lane_width))
+      return (center_x - (2.0 * lane_width), center_y + (2.5 * lane_width))
     case "2":
-      return (center_x - (1.0 * lane_width), center_y + (1.5 * lane_width))
+      return (center_x - (1.0 * lane_width), center_y + (2.5 * lane_width))
     case "A":
-      return (center_x - (0.0 * lane_width), center_y + (1.5 * lane_width))
+      return (center_x - (0.0 * lane_width), center_y + (2.5 * lane_width))
     case "B":
-      return (center_x + (1.0 * lane_width), center_y + (1.5 * lane_width))
+      return (center_x + (1.0 * lane_width), center_y + (2.5 * lane_width))
     case "C":
-      return (center_x + (2.0 * lane_width), center_y + (1.5 * lane_width))
+      return (center_x + (2.0 * lane_width), center_y + (2.5 * lane_width))
     case "3":
-      return (center_x + (2.5 * lane_width), center_y - (1.0 * lane_width))
+      return (center_x + (3.5 * lane_width), center_y - (2.0 * lane_width))
     case "D":
-      return (center_x + (2.5 * lane_width), center_y + (0.0 * lane_width))
+      return (center_x + (3.5 * lane_width), center_y - (0.5 * lane_width))
     case "4":
-      return (center_x + (2.0 * lane_width), center_y - (1.5 * lane_width))
+      return (center_x + (2.0 * lane_width), center_y - (2.5 * lane_width))
     case "5":
-      return (center_x + (1.0 * lane_width), center_y - (1.5 * lane_width))
+      return (center_x + (1.0 * lane_width), center_y - (2.5 * lane_width))
     case "E":
-      return (center_x + (0.0 * lane_width), center_y - (1.5 * lane_width))
+      return (center_x + (0.0 * lane_width), center_y - (2.5 * lane_width))
     case "F":
-      return (center_x - (1.0 * lane_width), center_y - (1.5 * lane_width))
+      return (center_x - (1.0 * lane_width), center_y - (2.5 * lane_width))
     case "G":
-      return (center_x - (2.0 * lane_width), center_y - (1.5 * lane_width))
+      return (center_x - (2.0 * lane_width), center_y - (2.5 * lane_width))
     case "6":
-      return (center_x - (2.5 * lane_width), center_y - (1.0 * lane_width))
+      return (center_x - (3.5 * lane_width), center_y - (1.0 * lane_width))
     case "H":
-      return (center_x - (2.5 * lane_width), center_y + (0.0 * lane_width))
+      return (center_x - (3.5 * lane_width), center_y + (0.0 * lane_width))
     case "J":
-      return (center_x - (3.0 * lane_width), center_y + (1.0 * lane_width))
+      return (center_x - (3.5 * lane_width), center_y + (1.5 * lane_width))
     case "ps":
-      return (center_x + (2.5 * lane_width), center_y + (1.5 * lane_width))
+      return (center_x + (4.0 * lane_width), center_y + (3.5 * lane_width))
     case "pn":
-      return (center_x - (3.0 * lane_width), center_y - (1.5 * lane_width))
+      return (center_x - (4.0 * lane_width), center_y - (3.5 * lane_width))
     
   return None
     
@@ -485,11 +486,11 @@ def find_lane_direction (lane):
   match lane:
     case "1" | "2" | "A" | "B" | "C":
       return (0,1) # down
-    case "3" | "D" | "pn":
+    case "3" | "D" | "ps":
       return (1,0) # right
     case "4" | "5" | "E" | "F" | "G":
       return (0,-1) # up
-    case "ps" | "6" | "H" | "J":
+    case "pn" | "6" | "H" | "J":
       return (-1,0) # left
     
   return None
