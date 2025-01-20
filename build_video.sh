@@ -1,4 +1,4 @@
-# file: build_video.sh, author: John Sauter, date: January 1, 2025.
+# file: build_video.sh, author: John Sauter, date: January 20, 2025.
 
 # Construct an animation from the event log.
 

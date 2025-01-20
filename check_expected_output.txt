@@ -75,7 +75,7 @@
 060.000 signal face F Set toggle Partial Conflicting Paths are Clear by system program Partial Conflicting Paths are Clear.
 060.000 signal face G Set toggle Partial Conflicting Paths are Clear by system program Partial Conflicting Paths are Clear.
 060.000 signal face B enters state Green substate Minimum Green.
-060.000 signal face B lamp set to Steady Up Arrow Green.
+060.000 signal face B lamp set to Steady Circular Green.
 060.000 signal face B Clear toggle Cleared.
 060.000 signal face B Clear toggle Request Partial Clearance.
 060.000 signal face B Set toggle Traffic Flowing.
@@ -85,7 +85,7 @@
 060.000 signal face C Clear toggle Request Partial Clearance.
 060.000 signal face C Set toggle Traffic Flowing.
 060.000 signal face F enters state Green substate Minimum Green.
-060.000 signal face F lamp set to Steady Up Arrow Green.
+060.000 signal face F lamp set to Steady Circular Green.
 060.000 signal face F Clear toggle Cleared.
 060.000 signal face F Clear toggle Request Partial Clearance.
 060.000 signal face F Set toggle Traffic Flowing.
@@ -809,7 +809,7 @@
 388.100 signal face ps enters state Red substate Going Green 1.
 388.100 signal face ps Set toggle Request Green.
 388.100 signal face B enters state Green substate Minimum Green.
-388.100 signal face B lamp set to Steady Up Arrow Green.
+388.100 signal face B lamp set to Steady Circular Green.
 388.100 signal face B Clear toggle Cleared.
 388.100 signal face B Clear toggle Request Partial Clearance.
 388.100 signal face B Set toggle Traffic Flowing.
@@ -821,7 +821,7 @@
 388.100 signal face pn enters state Red substate Going Green 1.
 388.100 signal face pn Set toggle Request Green.
 388.100 signal face F enters state Green substate Minimum Green.
-388.100 signal face F lamp set to Steady Up Arrow Green.
+388.100 signal face F lamp set to Steady Circular Green.
 388.100 signal face F Clear toggle Cleared.
 388.100 signal face F Clear toggle Request Partial Clearance.
 388.100 signal face F Set toggle Traffic Flowing.
@@ -1456,7 +1456,7 @@
 569.600 signal face F Set toggle Partial Conflicting Paths are Clear by system program Partial Conflicting Paths are Clear.
 569.600 signal face G Set toggle Partial Conflicting Paths are Clear by system program Partial Conflicting Paths are Clear.
 569.600 signal face B enters state Green substate Minimum Green.
-569.600 signal face B lamp set to Steady Up Arrow Green.
+569.600 signal face B lamp set to Steady Circular Green.
 569.600 signal face B Clear toggle Cleared.
 569.600 signal face B Clear toggle Request Partial Clearance.
 569.600 signal face B Set toggle Traffic Flowing.
@@ -1466,7 +1466,7 @@
 569.600 signal face C Clear toggle Request Partial Clearance.
 569.600 signal face C Set toggle Traffic Flowing.
 569.600 signal face F enters state Green substate Minimum Green.
-569.600 signal face F lamp set to Steady Up Arrow Green.
+569.600 signal face F lamp set to Steady Circular Green.
 569.600 signal face F Clear toggle Cleared.
 569.600 signal face F Clear toggle Request Partial Clearance.
 569.600 signal face F Set toggle Traffic Flowing.
@@ -1771,7 +1771,7 @@
 661.400 signal face F Set toggle Partial Conflicting Paths are Clear by system program Partial Conflicting Paths are Clear.
 661.400 signal face G Set toggle Partial Conflicting Paths are Clear by system program Partial Conflicting Paths are Clear.
 661.400 signal face B enters state Green substate Minimum Green.
-661.400 signal face B lamp set to Steady Up Arrow Green.
+661.400 signal face B lamp set to Steady Circular Green.
 661.400 signal face B Clear toggle Cleared.
 661.400 signal face B Clear toggle Request Partial Clearance.
 661.400 signal face B Set toggle Traffic Flowing.
@@ -1781,7 +1781,7 @@
 661.400 signal face C Clear toggle Request Partial Clearance.
 661.400 signal face C Set toggle Traffic Flowing.
 661.400 signal face F enters state Green substate Minimum Green.
-661.400 signal face F lamp set to Steady Up Arrow Green.
+661.400 signal face F lamp set to Steady Circular Green.
 661.400 signal face F Clear toggle Cleared.
 661.400 signal face F Clear toggle Request Partial Clearance.
 661.400 signal face F Set toggle Traffic Flowing.

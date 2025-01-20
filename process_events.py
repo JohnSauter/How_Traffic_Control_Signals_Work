@@ -33,6 +33,8 @@
 #import datetime
 #from jdcal import gcal2jd, jd2gcal
 import numpy as np
+import os
+os.environ["OPENCV_IO_MAX_IMAGE_PIXELS"] = pow(2,40).__str__()
 import cv2
 import math
 import pprint
@@ -55,7 +57,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='process_events 0.11 2025-01-12',
+                     version='process_events 0.12 2025-01-20',
                      help='print the version number and exit')
 parser.add_argument ('--animation-directory', metavar='animation_directory',
                      help='write animation output image files ' +
@@ -83,8 +85,10 @@ duration_time = None
 verbosity_level = 1
 error_counter = 0
 
-shrink_factor = 30
 ground_height = 143
+lane_width  = 12
+frames_per_second = 30
+
 
 # Parse the command line.
 arguments = parser.parse_args ()
@@ -117,7 +121,7 @@ if (arguments ['verbose'] != None):
 start_time = fractions.Fraction(start_time)
 if (duration_time != None):
   duration_time = fractions.Fraction(duration_time)
-  
+
 # Read the events file, if one was specified.
 
 # The events dictionary is indexed by time.
@@ -172,7 +176,7 @@ if (do_events_input):
       events_list.append(the_event)
 
 # Place markers in the timeline for where we will output a frame.
-current_time = fractions.Fraction(1, 30)
+current_time = fractions.Fraction(1, frames_per_second)
 end_time = fractions.Fraction(latest_time) + fractions.Fraction(1)
                
 while (current_time <= end_time):
@@ -184,7 +188,7 @@ while (current_time <= end_time):
   event["time"] = current_time
   events_list.append(event)
   
-  current_time = current_time + fractions.Fraction(1, 30)
+  current_time = current_time + fractions.Fraction(1, frames_per_second)
 
 if (do_trace):
   trace_file.write ("Events:\n")
@@ -194,48 +198,116 @@ if (do_trace):
 background=cv2.imread("background.png")
 canvas_size = background.shape[0:2]
 
+# Map ground locations and sizes to screen locations and sizes.
+def map_ground_to_screen (x_feet, y_feet):
+  global ground_height
+  global background
+  
+  screen_height, screen_width = background.shape[:2]
+
+  # The ground is the same shape as the screen, but is measured in feet.
+  ground_width = ground_height * (screen_width / screen_height)
+  
+  ground_center_x = ground_width / 2
+  ground_center_y = ground_height / 2
+  screen_center_x = screen_width / 2
+  screen_center_y = screen_height / 2
+  x_from_center = x_feet - ground_center_x
+  y_from_center = y_feet - ground_center_y
+  x_from_center = x_from_center * (screen_width / ground_width)
+  y_from_center = y_from_center * (screen_height / ground_height)
+  x_pixels = x_from_center + screen_center_x
+  y_pixels = y_from_center + screen_center_y
+
+  return (int(x_pixels), int(y_pixels))
+
+# Map screen locations and sizes to ground locations and sizes.
+def map_screen_to_ground (x_pixels, y_pixels):
+  global ground_height
+  global background
+  
+  screen_height, screen_width = background.shape[:2]
+  ground_width = ground_height * (screen_width / screen_height)
+  ground_center_x = ground_width / 2
+  ground_center_y = ground_height / 2
+  screen_center_x = screen_width / 2
+  screen_center_y = screen_height / 2
+  x_from_center = x_pixels - screen_center_x
+  y_from_center = y_pixels - screen_center_y
+  x_from_center = x_from_center * (ground_width / screen_width)
+  y_from_center = y_from_center * (ground_height / screen_height)
+  x_feet = x_from_center + ground_center_x
+  y_feet = y_from_center + ground_center_y
+  
+  return (x_feet, y_feet)
+
+
 # Place a small image on a large image, removing what was below
 # except for transparent areas.  The center of the small image is placed
 # at the indicated location on the large image.
-def place_image(name, canvas, overlay, x_position, y_position):
+def place_image(name, canvas, image_info, orientation, x_feet, y_feet):
 
-  overlay_height, overlay_width = overlay.shape[:2]
+  overlay_name, overlay_image, desired_width, desired_height = image_info
 
   if (do_trace):
-    trace_file.write ("Placing image of " + name + " at (" +
-                      str(x_position) + ":" +
-                      str(x_position + overlay_width) +
-                      "," +
-                      str(y_position) + ":" +
-                      str(y_position + overlay_height) +
-                      "):\n")
+    trace_file.write ("Placing image " + str(overlay_name) + " size (" +
+                      format_position(desired_width) + ", " +
+                      format_position(desired_height) + ") at (" +
+                      format_position(x_feet) + ", " +
+                      format_position(y_feet) + ").\n")
 
-  # Calculate the area in the large image that will be replaced
-  # by the small image.
-  x_center = x_position
-  y_center = y_position
-  x_size = overlay_width
-  y_size = overlay_height
-  x_min = x_center - int(x_size/2)
-  y_min = y_center - int(y_size/2)
-  x_max = x_min + x_size
-  y_max = y_min + y_size
+  # re-size the overlay image to the desired size in pixels
+  original_height, original_width = overlay_image.shape[0:2]
+  target_width, target_height = map_ground_to_screen (desired_width,
+                                                      desired_height)
+  small_image = cv2.resize(overlay_image, (int(target_width),
+                                           int(target_height)),
+                           interpolation=cv2.INTER_AREA)
+  if (do_trace):
+    trace_y_size = small_image.shape[0]
+    trace_x_size = small_image.shape[1]
+    trace_file.write (" reduced from (" + str(original_width) + ", " +
+                      str(original_height) + ") to (" + str(trace_x_size) +
+                      ", " + str(trace_y_size) + ").\n")
+                    
+  # Calculate the area in the large image that will be replaced.
   
-  # if the any part of the overlay is off the canvas, do nothing.
-  canvas_height, canvas_width = canvas.shape[:2]
-  if ((x_min < 0) or (x_max >= canvas_width)):
-    
-    if (do_trace):
-      trace_file.write ("Image not placed: x out of range.\n")
-      pprint.pprint ((canvas, overlay, x_position, y_position), trace_file)
-      
-    return
-  if ((y_min < 0) or (y_max >= canvas_height)):
+  match orientation:
+    case "center":
+      anchor_x = int(target_width / 2)
+      anchor_y = int(target_height / 2)
+    case "up":
+      anchor_x = int(target_width / 2)
+      anchor_y = 0
+    case "down":
+      anchor_x = int(target_width / 2)
+      anchor_y = target_height
+    case "left":
+      anchor_x = 0
+      anchor_y = int(target_height / 2)
+    case "right":
+      anchor_x = int(target_width)
+      anchor_y = int(target_height / 2)
+    case _:
+      anchor_x = int(target_width / 2)
+      anchor_y = int(target_height / 2)
 
-    if (do_trace):
-      trace_file.write ("Image not placed: y out of range.\n")
-      pprint.pprint ((canvas, overlay, x_position, y_position), trace_file)
-    return
+  x_position, y_position = map_ground_to_screen (x_feet, y_feet)
+  
+  x_min = x_position - anchor_x
+  y_min = y_position - anchor_y
+  x_max = x_min + target_width
+  y_max = y_min + target_height
+
+  if (do_trace):
+    trace_file.write (" anchor at (" + str(x_position) + ", " +
+                      str(y_position) + ").\n")
+    trace_file.write (" extent (" + str(x_min) + ", " + str(y_min) + ") to (" +
+                      str(x_max) + ", " + str(y_max) + ").\n")
+    
+  pixel_changed = False
+  pixel_off_canvas = False
+  canvas_height, canvas_width = canvas.shape[:2]
 
   # Replace the pixels in the area overlapped by the image being placed
   # by the pixels in the image being placed.  However, if there is
@@ -245,36 +317,63 @@ def place_image(name, canvas, overlay, x_position, y_position):
   # and converting to linear to do the alpha blending properly would
   # be time-consuming.
   # The large image is assumed not to have an alpha channel.
-  for y in range(y_size):
-    for x in range(x_size):
+  # Don't write any pixels that are off the canvas.
+  
+  for y in range(target_height):
+    if (((y + y_min) >= 0) and ((y + y_min) < canvas_height)):
+      for x in range(target_width):
+        if (((x + x_min) >= 0) and ((x + x_min) < canvas_width)):
       
-      # Elements 0 to 2 are the color channels
-      overlay_color = overlay[y, x, 0:3]
+          # Elements 0 to 2 are the color channels
+          overlay_blue = small_image[y, x, 0]
+          overlay_green = small_image[y, x, 1]
+          overlay_red = small_image[y, x, 2]
 
-      # Element 3 is the alpha channel, 0 to 255, where 0 means transparent
-      # and 255 means opaque.  Values inbetween are semi-transparent.
-      # We convert the alpha value to the range 0 to 1.
-      overlay_alpha = overlay[y, x, 3] / 255
-
-      # Get the color from the corresponding pixel in the canvas.
-      canvas_color = canvas[y + y_min, x + x_min]
-
-      # Compute the desired color by combining the new image with
-      # the old, taking into account the transparency.
-      composite_color = (canvas_color * (1.0 - overlay_alpha) +
-                         (overlay_color * overlay_alpha))
-
-      # Store the new color in the appropriate place in the canvas.
-      canvas[y + y_min, x + x_min] = composite_color
+          # Element 3 is the alpha channel, 0 to 255, where 0 means transparent
+          # and 255 means opaque.  Values inbetween are semi-transparent.
+          # We convert the alpha value to the range 0 to 1.
+          overlay_alpha = small_image[y, x, 3] / 255.0
+          overlay_beta = 1.0 - overlay_alpha
       
+          # Compute the desired color by combining the new color with
+          # the old, taking into account the transparency.
+          
+          canvas_blue = canvas[y + y_min, x + x_min, 0]
+          canvas_green = canvas[y + y_min, x + x_min, 1]
+          canvas_red = canvas[y + y_min, x + x_min, 2]
+          composite_blue = ((canvas_blue * overlay_beta) +
+                            (overlay_blue * overlay_alpha))
+          composite_green = ((canvas_green * overlay_beta) +
+                             (overlay_green * overlay_alpha))
+
+          composite_red = ((canvas_red * overlay_beta) +
+                           (overlay_red * overlay_alpha))
+
+          # Store the new color in the appropriate place in the canvas.
+          canvas[y + y_min, x + x_min, 0] = composite_blue
+          canvas[y + y_min, x + x_min, 1] = composite_green
+          canvas[y + y_min, x + x_min, 2] = composite_red
+          pixel_changed = True
+        else:
+          pixel_off_canvas = True
+    else:
+      pixel_off_canvas = True
+
   if (do_trace):
-    trace_file.write ("Image placed.\n")
+    if (pixel_changed):
+      if (pixel_off_canvas):
+        trace_file.write (" Image partly placed.\n")
+      else:
+        trace_file.write (" Image fully placed.\n")
+    else:
+      trace_file.write (" Image not placed.\n")
     
   return
   
 # Given a lane and a color, choose the correct stoplight image.
 image_cache = dict()
-def choose_lamp_image (lane, color, shrink_factor):
+
+def choose_lamp_image (lane, color):
   global image_cache
 
   if (color == "Dark"):
@@ -310,13 +409,13 @@ def choose_lamp_image (lane, color, shrink_factor):
           image_name = (root + "_Hand_with_timer.png")
                          
     case "B" | "F":
-      root = "signal_ccu"
+      root = "signal_ccc"
       match color:
         case "Steady Circular Red":
           image_name = (root + "_Red.png")
         case "Steady Circular Yellow":
           image_name = (root + "_Yellow.png")
-        case "Steady Up Arrow Green":
+        case "Steady Circular Green":
           image_name = (root + "_Green.png")
         
     case "C" | "D" | "G" :
@@ -351,127 +450,128 @@ def choose_lamp_image (lane, color, shrink_factor):
 
   image_path = pathlib.Path(image_name)
   if (image_path in image_cache):
-    return image_cache[image_path]
+    image = image_cache[image_path]
+  else:
+    if (do_trace):
+      trace_file.write ("Reading image " + str(image_path) + ".\n")
+    image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+    if (do_trace):
+      trace_height, trace_width = image.shape[0:2]
+      trace_file.write (" size (" + str(trace_width) + ", " +
+                        str(trace_height) + ").\n")
+    image_cache[image_path] = image
 
-  image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
-  image_height, image_width = image.shape[:2]
-  small_image = cv2.resize(image, (int(image_width/shrink_factor),
-                                   int(image_height/shrink_factor)),
-                           interpolation = cv2.INTER_AREA)
-  image_cache[image_path] = small_image
-  return (small_image)
-
+  image_height, image_width = image.shape[0:2]
+  match lane:
+    case "ps" | "pn":
+      desired_width = lane_width
+    case _:
+      desired_width = lane_width / 3
+      
+  desired_height = desired_width * (image_height / image_width)
+  return (image_path, image, desired_width, desired_height)
+  
 # Given a type, choose the image for a moving object.
-def choose_moving_object_image (object_type, shrink_factor):
+def choose_moving_object_image (object_type, orientation, length):
   global image_cache
   
   match object_type:
    case "car":
-     image_name = "car-2897.png"
+     match orientation:
+       case "right"| "left":
+         image_name = "car-38800411-right.png"
+       case "up" | "down" | "unknown":
+         image_name = "car-38800411-up.png"
+         
    case "truck":
-     image_name = "truck-1058.png"
+     match orientation:
+       case "right" | "left":
+         image_name = "truck-51893967-right.png"
+       case "up" | "down" | "unknown":
+         image_name = "truck-51893967-up.png"
+         
    case "pedestrian":
      image_name = "man_walking_right.png"
 
   image_path = pathlib.Path(image_name)
 
   if (image_path in image_cache):
-    return image_cache[image_path]
+    image = image_cache[image_path]
+  else:
+    if (do_trace):
+      trace_file.write ("Reading image " + str(image_path) + ".\n")
+    image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+    if (do_trace):
+      trace_height, trace_width = image.shape[0:2]
+      trace_file.write (" size (" + str(trace_width) + ", " +
+                        str(trace_height) + ").\n")
+    image_cache[image_path] = image
 
-  image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
-  image_height, image_width = image.shape[:2]
-  small_image = cv2.resize(image, (int(image_width/shrink_factor),
-                                   int(image_height/shrink_factor)),
-                           interpolation = cv2.INTER_AREA)
-  image_cache[image_path] = small_image
-  return (small_image)
+  match orientation:
+    case "left":
+      flipped_image = cv2.flip (image, 1)
+    case "down":
+      flipped_image = cv2.flip (image, 0)
+    case _:
+      flipped_image = image
+        
+  image_height, image_width = flipped_image.shape[0:2]
+  match orientation:
+    case "left" | "right":
+      shrink_factor = length / image_width
+    case "up" | "down":
+      shrink_factor = length / image_height
+    case "unknown":
+      shrink_factor = fractions.Fraction (1, 30)
+        
+  return (image_path, flipped_image, image_width * shrink_factor,
+          image_height * shrink_factor)
 
-# Map ground locations to screen locations
-def map_ground_to_screen (x_feet, y_feet):
-  global ground_height
-  global background
-  
-  screen_height, screen_width = background.shape[:2]
-
-  # The ground is the same shape as the screen, but is measured in feet.
-  ground_width = ground_height * (screen_width / screen_height)
-  
-  ground_center_x = ground_width / 2
-  ground_center_y = ground_height / 2
-  screen_center_x = screen_width / 2
-  screen_center_y = screen_height / 2
-  x_from_center = x_feet - ground_center_x
-  y_from_center = y_feet - ground_center_y
-  x_from_center = x_from_center * (screen_width / ground_width)
-  y_from_center = y_from_center * (screen_height / ground_height)
-  x_pixels = x_from_center + screen_center_x
-  y_pixels = y_from_center + screen_center_y
-
-  return (x_pixels, y_pixels)
-
-# map screen locations to ground locations.
-def map_screen_to_ground (x_pixels, y_pixels):
-  global ground_height
-  global background
-  
-  screen_height, screen_width = background.shape[:2]
-  ground_width = ground_height * (screen_width / screen_height)
-  ground_center_x = ground_width / 2
-  ground_center_y = ground_height / 2
-  screen_center_x = screen_width / 2
-  screen_center_y = screen_height / 2
-  x_from_center = x_pixels - screen_center_x
-  y_from_center = y_pixels - screen_center_y
-  x_from_center = x_from_center * (ground_width / screen_width)
-  y_from_center = y_from_center * (ground_height / screen_height)
-  x_feet = x_from_center + ground_center_x
-  y_feet = y_from_center + ground_center_y
-  
-  return (x_feet, y_feet)
 
 # Find the starting location for a lane.  The traffic signal
-# for this lane is placed here.
+# for this lane is placed at an offset from this location.
+# This is the place where moving objects stop if they cannot
+# enter the intersection.
 def find_lane_position (lane):
   global canvas_size
+  global lane_width
   
   center_y = canvas_size[0] / 2
   center_x = canvas_size[1] / 2
 
   center_x, center_y = map_screen_to_ground (center_x, center_y)
   
-  lane_width = 12
-
   match lane:
     case "1":
-      return (center_x - (2.0 * lane_width), center_y + (2.5 * lane_width))
+      return (center_x - (2.0 * lane_width), center_y + (4.0 * lane_width))
     case "2":
-      return (center_x - (1.0 * lane_width), center_y + (2.5 * lane_width))
+      return (center_x - (1.0 * lane_width), center_y + (4.0 * lane_width))
     case "A":
-      return (center_x - (0.0 * lane_width), center_y + (2.5 * lane_width))
+      return (center_x - (0.0 * lane_width), center_y + (4.0 * lane_width))
     case "B":
-      return (center_x + (1.0 * lane_width), center_y + (2.5 * lane_width))
+      return (center_x + (1.0 * lane_width), center_y + (4.0 * lane_width))
     case "C":
-      return (center_x + (2.0 * lane_width), center_y + (2.5 * lane_width))
+      return (center_x + (2.0 * lane_width), center_y + (4.0 * lane_width))
     case "3":
-      return (center_x + (3.5 * lane_width), center_y - (2.0 * lane_width))
+      return (center_x + (2.0 * lane_width), center_y - (2.0 * lane_width))
     case "D":
-      return (center_x + (3.5 * lane_width), center_y - (0.5 * lane_width))
+      return (center_x + (5.0 * lane_width), center_y - (0.5 * lane_width))
     case "4":
-      return (center_x + (2.0 * lane_width), center_y - (2.5 * lane_width))
+      return (center_x + (2.0 * lane_width), center_y - (4.0 * lane_width))
     case "5":
-      return (center_x + (1.0 * lane_width), center_y - (2.5 * lane_width))
+      return (center_x + (1.0 * lane_width), center_y - (4.0 * lane_width))
     case "E":
-      return (center_x + (0.0 * lane_width), center_y - (2.5 * lane_width))
+      return (center_x + (0.0 * lane_width), center_y - (4.0 * lane_width))
     case "F":
-      return (center_x - (1.0 * lane_width), center_y - (2.5 * lane_width))
+      return (center_x - (1.0 * lane_width), center_y - (4.0 * lane_width))
     case "G":
-      return (center_x - (2.0 * lane_width), center_y - (2.5 * lane_width))
+      return (center_x - (2.0 * lane_width), center_y - (4.0 * lane_width))
     case "6":
-      return (center_x - (3.5 * lane_width), center_y - (1.0 * lane_width))
+      return (center_x - (5.0 * lane_width), center_y - (1.0 * lane_width))
     case "H":
-      return (center_x - (3.5 * lane_width), center_y + (0.0 * lane_width))
+      return (center_x - (5.0 * lane_width), center_y + (0.0 * lane_width))
     case "J":
-      return (center_x - (3.5 * lane_width), center_y + (1.5 * lane_width))
+      return (center_x - (5.0 * lane_width), center_y + (1.5 * lane_width))
     case "ps":
       return (center_x + (4.0 * lane_width), center_y + (3.5 * lane_width))
     case "pn":
@@ -494,10 +594,33 @@ def find_lane_direction (lane):
       return (-1, 0) # left
     
   return None
+
+# Find the offset of the traffic signal relative to the
+# origin of the lane.
+def find_signal_offset (lane):
+  match lane:
+    case "A" | "B" | "C":
+      return (0, -lane_width * 2.0)
+    case "D":
+      return (-lane_width, -lane_width * 0.5)
+    case "E" | "F" | "G":
+      return (0, lane_width * 1.0)
+    case "H" | "J":
+      return (lane_width * 1.5, -lane_width * 0.5)
+    case "pn":
+      return (-lane_width, -lane_width * 0.5)
+    case "ps":
+      return (lane_width, -lane_width * 0.5)
     
-# Subroutine to format the clock for display.
+  return None
+  
+# Subroutine to format the time for display.
 def format_time(the_time):
   return (f'{the_time:07.3f}')
+
+# Subroutine to format a position or distance for display.
+def format_position(the_position):
+  return (f'{the_position:07.3f}')
 
 # Create the lanes data structures which will record
 # the changing state of the traffic control signal
@@ -511,6 +634,7 @@ for lane_name in ("A", "ps", "B", "C", "D", "E", "pn", "F", "G", "H", "J"):
   lane["name"] = lane_name
   lane["color"] = "Dark"
   lane["position"] = find_lane_position(lane_name)
+  lane["signal offset"] = find_signal_offset(lane_name)
   lane["direction"] = find_lane_direction(lane_name)
   lanes_dict[lane_name] = lane
 
@@ -555,7 +679,7 @@ def find_moving_object_location (event_time, moving_object):
   global lanes_dict
 
   if (do_trace):
-    trace_file.write ("Finding the location of:\n")
+    trace_file.write ("Finding the location of moving object:\n")
     pprint.pprint (moving_object, trace_file)
     
   lane_name = moving_object["lane name"]
@@ -585,9 +709,35 @@ def find_moving_object_location (event_time, moving_object):
   y = anchor_y + (direction_y * the_position)
 
   if (do_trace):
-    trace_file.write ("found at " + str(x) + "," + str(y) + ".\n")
+    trace_file.write ("found at " + format_position(x) + "," +
+                      format_position(y) + ".\n")
     
   return (x, y)
+
+# Determine the orientation of a moving object.
+def find_moving_object_orientation (moving_object):
+  global lanes_dict
+  lane_name = moving_object["lane name"]
+  match lane_name:
+    case "intersection":
+      travel_path = moving_object["travel path"]
+      lane_name = travel_path[1]
+    case "crosswalk":
+      return "unknown"
+  
+  lane = lanes_dict[lane_name]
+  match lane["direction"]:
+    case (1, 0):
+      return "right"
+    case (-1, 0):
+      return "left"
+    case (0, 1):
+      return "down"
+    case (0, -1):
+      return "up"
+    case _:
+      return "unknown"
+  return
   
 # Update the states of the lamps and moving objeects,
 # and generate the animation image frames.
@@ -637,15 +787,20 @@ for event_time in event_times:
           root_name = "frame_" + "{:06d}".format(frame_number) + ".png"
           file_path = pathlib.Path(animation_directory_name, root_name)
           canvas = background.copy()
+          
+          # Draw the signals in their current state.
           for lane_name in lanes_dict:
             lane = lanes_dict[lane_name]
             color = lane["color"]
             if (color != "Blank"):
-              image = choose_lamp_image (lane_name, color, shrink_factor)
+              image_info = choose_lamp_image (lane_name, color)
               x_feet, y_feet = lane["position"]
-              x_pixels, y_pixels = map_ground_to_screen (x_feet, y_feet)
-              place_image (lane_name, canvas, image, int(x_pixels),
-                           int(y_pixels))
+              x_feet = x_feet + lane["signal offset"][0]
+              y_feet = y_feet + lane["signal offset"][1]
+              place_image (lane_name, canvas, image_info, "up",
+                           x_feet, y_feet)
+              
+          # Draw the moving objects: pedestrians and vehicles.
           for moving_object_name in moving_objects_dict:
             moving_object = moving_objects_dict[moving_object_name]
             if (moving_object["present"]):
@@ -654,12 +809,15 @@ for event_time in event_times:
               x_feet, y_feet = find_moving_object_location (event_time,
                                                             moving_object)
               x_pixels, y_pixels = map_ground_to_screen (x_feet, y_feet)
-              image = choose_moving_object_image (type, shrink_factor)
-              place_image (name, canvas, image, int(x_pixels), int(y_pixels))
+              the_orientation = find_moving_object_orientation(moving_object)
+              image_info = choose_moving_object_image (type, the_orientation,
+                                                  moving_object["length"])
+              place_image (name, canvas, image_info, the_orientation,
+                           x_feet, y_feet)
               
           if (do_animation_output):
             if (do_trace):
-              trace_file.write ("writing frame " + str(file_path) + ".\n")
+              trace_file.write ("Writing frame " + str(file_path) + ".\n")
             cv2.imwrite (file_path, canvas)
 
 if (do_trace):

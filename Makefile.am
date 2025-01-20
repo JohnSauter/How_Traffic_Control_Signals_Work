@@ -1,4 +1,4 @@
-# File: Makefile.am, author: John Sauter, date: January 1, 2025.
+# File: Makefile.am, author: John Sauter, date: January 20, 2025.
 #
 # Build traffic_control_signals.pdf
 
@@ -85,8 +85,10 @@ signal_llll_Yellow.svg \
 signal_rrr_Green.svg \
 signal_rrr_Red.svg \
 signal_rrr_Yellow.svg \
-car-2897.svg \
-truck-1058.svg \
+car-38800411-right.svg \
+car-38800411-up.svg \
+truck-51893967-up.svg \
+truck-51893967-right.svg \
 man_walking_right.svg \
 background.png \
 process_events.py 
@@ -258,7 +260,8 @@ signal_llll_Flashing_Yellow.png signal_llll_Green.png signal_llll_Red.png \
 signal_llll_Yellow.png signal_rrr_Green.png signal_rrr_Red.png \
 signal_rrr_Yellow.png MUTCD_Ped_Signal_-_Hand_with_timer.png \
 MUTCD_Ped_Signal_-_Steady_hand.png MUTCD_Ped_Signal_-_Walk.png \
-events.csv build_video.sh background.png car-2897.png truck-1058.png \
+events.csv build_video.sh background.png car-38800411-right.png \
+car-38800411-up.png truck-51893967-up.png truck-51893967-right.png \
 man_walking_right.png
 	bash build_video.sh
 
@@ -288,8 +291,10 @@ MUTCD_Ped_Signal_-_Steady_hand.png \
 MUTCD_Ped_Signal_-_Walk.png \
 signal_*.pdf \
 signal_*.png \
-car-2897.png \
-truck-1058.png \
+car-38800411-right.png \
+car-38800411-up.png \
+truck-51893967-right.png \
+truck-51893967-up.png \
 pedestrian.png \
 man_walking_right.png \
 *_table.tex \

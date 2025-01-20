@@ -54,7 +54,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.11 2025-01-12',
+                     version='traffic_control_signals 0.12 2025-01-20',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -1224,7 +1224,7 @@ for signal_face in signal_faces_list:
       lamp_names_map["Flashing Left Arrow Yellow"] = (
         "Flashing Left Arrow Yellow (lower)")
     case "B" | "F":
-      lamp_names_map["Steady Circular Green"] = "Steady Up Arrow Green"
+      lamp_names_map["Steady Circular Green"] = "Steady Circular Green"
     case "H":
       lamp_names_map["Steady Circular Green"] = ("Steady Left Arrow Green" +
                                                  " and Steady Circular Green")
