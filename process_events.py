@@ -57,7 +57,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='process_events 0.12 2025-01-20',
+                     version='process_events 0.13 2025-01-26',
                      help='print the version number and exit')
 parser.add_argument ('--animation-directory', metavar='animation_directory',
                      help='write animation output image files ' +
@@ -70,6 +70,9 @@ parser.add_argument ('--start', type=decimal.Decimal, metavar='start',
                      help='when in the simulation to start the animation')
 parser.add_argument ('--duration', type=decimal.Decimal, metavar='duration',
                      help='how long to run the animation')
+parser.add_argument('--FPS', type=decimal.Decimal, metavar='FPS',
+                    help='number of frames per second in the animation, ' +
+                    'default is 30')
 parser.add_argument ('--verbose', type=int, metavar='verbosity_level',
                      help='control the amount of output from the program: ' +
                      '1 is normal, 0 suppresses summary messages')
@@ -87,8 +90,6 @@ error_counter = 0
 
 ground_height = 143
 lane_width  = 12
-frames_per_second = 30
-
 
 # Parse the command line.
 arguments = parser.parse_args ()
@@ -115,9 +116,22 @@ if (arguments ['start'] != None):
 if (arguments ['duration'] != None):
   duration_time = arguments ['duration']
   
+if (arguments ['FPS'] != None):
+  frames_per_second = arguments ['FPS']
+else:
+  frames_per_second = 30
+  
 if (arguments ['verbose'] != None):
   verbosity_level = int(arguments ['verbose'])
 
+# Subroutine to format the time for display.
+def format_time(the_time):
+  return (f'{the_time:07.3f}')
+
+# Subroutine to format a position or distance for display.
+def format_position(the_position):
+  return (f'{the_position:07.3f}')
+  
 start_time = fractions.Fraction(start_time)
 if (duration_time != None):
   duration_time = fractions.Fraction(duration_time)
@@ -172,23 +186,128 @@ if (do_events_input):
       the_event["travel path"] = the_travel_path_name
       the_event["present"] = the_presence
       the_event["color"] = the_color
+      the_event["source"] = "script"
       
       events_list.append(the_event)
 
+# Run the animation for one second after the last event
+# unless the duraiton is specified.
+if (duration_time == None):
+  duration_time = latest_time - start_time + 1
+end_time = start_time + duration_time
+
 # Place markers in the timeline for where we will output a frame.
-current_time = fractions.Fraction(1, frames_per_second)
-end_time = fractions.Fraction(latest_time) + fractions.Fraction(1)
-               
-while (current_time <= end_time):
-  if (current_time not in events):
-    events[current_time] = list()
-  events_list = events[current_time]
+frame_interval = fractions.Fraction(1, frames_per_second)
+
+event_time = start_time
+while (event_time <= end_time):
+  if (event_time not in events):
+    events[event_time] = list()
+  events_list = events[event_time]
   event = dict()
   event["type"] = "frame"
-  event["time"] = current_time
+  event["time"] = event_time
+  event["source"] = "framer"
   events_list.append(event)
-  
-  current_time = current_time + fractions.Fraction(1, frames_per_second)
+  event_time = event_time + frame_interval
+
+# Cause the flashing lights to flash.
+# Make a list of flashing lights
+current_flashers = dict()
+completed_flashers = list()
+event_times = sorted(events.keys())
+for event_time in event_times:
+  events_list = events[event_time]
+  for event in events_list:
+    type = event["type"]
+    if (type == "lamp"):
+      lane_name = event["lane name"]
+      the_color = event["color"]
+      # If we are changing the color of an existing flasher, we have found
+      # the end time of the flashing.
+      if (lane_name in current_flashers):
+        flasher = current_flashers[lane_name]
+        if (the_color != flasher["color"]):
+          flasher["stop time"] = event_time
+          completed_flashers.append(flasher)
+          del current_flashers[lane_name]
+      if (do_trace):
+        trace_file.write ("Time " + format_time(event_time) + " lane " +
+                          lane_name + " color " + the_color + ".\n")
+      if (the_color[0:8] == "Flashing"):
+        if (do_trace):
+          trace_file.write ("We have a flasher.\n")
+        flasher = dict()
+        flasher["start time"] = event_time
+        flasher["lane name"] = lane_name
+        flasher["color"] = the_color
+        current_flashers[lane_name] = flasher
+          
+# Go through the list of flashing lights inserting color changes.
+
+# The cycle time is between 55 and 60 flashes per minute.
+# Split the difference and convert to seconds.
+flash_cycle_time = (fractions.Fraction(60) /
+                    ((fractions.Fraction(60) + fractions.Fraction(55)) /
+                     fractions.Fraction(2)))
+# The iluminated time is one half to two thirds of the cycle.  Split the
+# difference.
+flash_light_time = flash_cycle_time * ((fractions.Fraction(1, 2) +
+                                        fractions.Fraction(2, 3)) /
+                                       fractions.Fraction(2))
+
+if (do_trace):
+  trace_file.write ("Flashing: cycle " + format_time(flash_cycle_time) +
+                    ", liggt " + format_time(flash_light_time) + "\n")
+  pprint.pprint(completed_flashers, trace_file)
+
+# The flashing light is iluminated at the start time.
+# At the stop time the light is changed to a different color.  
+for flasher in completed_flashers:
+  flasher_start_time = flasher["start time"]
+  flasher_stop_time = flasher["stop time"]
+  event_time = flasher_start_time
+  while (event_time < flasher_stop_time):
+    if (do_trace):
+      trace_file.write ("Top of flasher loop: now " +
+                        format_time(event_time) + " start " +
+                        format_time(flasher_start_time) + " stop " +
+                        format_time(flasher_stop_time) + "\n")
+    go_dark_time = event_time + flash_light_time
+    if (go_dark_time >= flasher_stop_time):
+      break
+    # Make the lamp dark
+    event = dict()
+    event["type"] = "lamp"
+    event["lane name"] = flasher["lane name"]
+    event["color"] = "Dark"
+    event["source"] = "flasher"
+    event["time"] = go_dark_time
+    if (go_dark_time not in events):
+      events[go_dark_time] = list()
+    events_list = events[go_dark_time]
+    events_list.append(event)
+    if (do_trace):
+      trace_file.write ("Going dark: " + format_time(go_dark_time) + " lane " +
+                        event["lane name"] + ".\n")
+    # at the end of the interval, make it light again
+    go_light_time = event_time + flash_cycle_time
+    if (go_light_time >= flasher_stop_time):
+      break
+    event = dict()
+    event["type"] = "lamp"
+    event["lane name"] = flasher["lane name"]
+    event["color"] = flasher["color"]
+    event["source"] = "flasher"
+    event["time"] = go_light_time
+    if (go_light_time not in events):
+      events[go_light_time] = list()
+    events_list = events[go_light_time]
+    events_list.append(event)
+    if (do_trace):
+      trace_file.write ("Going light: " + format_time(go_light_time) +
+                        " lane " + event["lane name"] + ".\n")
+    event_time = go_light_time
 
 if (do_trace):
   trace_file.write ("Events:\n")
@@ -198,7 +317,7 @@ if (do_trace):
 background=cv2.imread("background.png")
 canvas_size = background.shape[0:2]
 
-# Map ground locations and sizes to screen locations and sizes.
+# Subroutine to map ground locations and sizes to screen locations and sizes.
 def map_ground_to_screen (x_feet, y_feet):
   global ground_height
   global background
@@ -221,7 +340,7 @@ def map_ground_to_screen (x_feet, y_feet):
 
   return (int(x_pixels), int(y_pixels))
 
-# Map screen locations and sizes to ground locations and sizes.
+# Subroutine to map screen locations and sizes to ground locations and sizes.
 def map_screen_to_ground (x_pixels, y_pixels):
   global ground_height
   global background
@@ -243,7 +362,7 @@ def map_screen_to_ground (x_pixels, y_pixels):
 
 
 # Place a small image on a large image, removing what was below
-# except for transparent areas.  The center of the small image is placed
+# except for transparent areas.  The anchor point of the small image is placed
 # at the indicated location on the large image.
 def place_image(name, canvas, image_info, orientation, x_feet, y_feet):
 
@@ -370,7 +489,7 @@ def place_image(name, canvas, image_info, orientation, x_feet, y_feet):
     
   return
   
-# Given a lane and a color, choose the correct stoplight image.
+# Subroutine to choose the correct stoplight image given its lane and color.
 image_cache = dict()
 
 def choose_lamp_image (lane, color):
@@ -471,7 +590,7 @@ def choose_lamp_image (lane, color):
   desired_height = desired_width * (image_height / image_width)
   return (image_path, image, desired_width, desired_height)
   
-# Given a type, choose the image for a moving object.
+# SUbroutine to choose the image for a moving object.
 def choose_moving_object_image (object_type, orientation, length):
   global image_cache
   
@@ -528,10 +647,11 @@ def choose_moving_object_image (object_type, orientation, length):
           image_height * shrink_factor)
 
 
-# Find the starting location for a lane.  The traffic signal
+# Subroutine to find the starting location for a lane.  The traffic signal
 # for this lane is placed at an offset from this location.
 # This is the place where moving objects stop if they cannot
-# enter the intersection.
+# enter the intersection and where moving objects leaving
+# the intersection enter the lane.
 def find_lane_position (lane):
   global canvas_size
   global lane_width
@@ -553,7 +673,7 @@ def find_lane_position (lane):
     case "C":
       return (center_x + (2.0 * lane_width), center_y + (4.0 * lane_width))
     case "3":
-      return (center_x + (2.0 * lane_width), center_y - (2.0 * lane_width))
+      return (center_x + (2.0 * lane_width), center_y + (0.5 * lane_width))
     case "D":
       return (center_x + (5.0 * lane_width), center_y - (0.5 * lane_width))
     case "4":
@@ -595,7 +715,7 @@ def find_lane_direction (lane):
     
   return None
 
-# Find the offset of the traffic signal relative to the
+# Subroutine to find the offset of the traffic signal relative to the
 # origin of the lane.
 def find_signal_offset (lane):
   match lane:
@@ -614,14 +734,6 @@ def find_signal_offset (lane):
     
   return None
   
-# Subroutine to format the time for display.
-def format_time(the_time):
-  return (f'{the_time:07.3f}')
-
-# Subroutine to format a position or distance for display.
-def format_position(the_position):
-  return (f'{the_position:07.3f}')
-
 # Create the lanes data structures which will record
 # the changing state of the traffic control signal
 # for that lane with the passage of time and hold
@@ -674,7 +786,7 @@ if (do_trace):
   trace_file.write ("moving objects:\n")
   pprint.pprint(moving_objects_dict, trace_file)
 
-# Determine the present location of a moving object.
+# Subroutine to determine the present location of a moving object.
 def find_moving_object_location (event_time, moving_object):
   global lanes_dict
 
@@ -714,7 +826,7 @@ def find_moving_object_location (event_time, moving_object):
     
   return (x, y)
 
-# Determine the orientation of a moving object.
+# Subroutine to determine the orientation of a moving object.
 def find_moving_object_orientation (moving_object):
   global lanes_dict
   lane_name = moving_object["lane name"]
@@ -742,12 +854,11 @@ def find_moving_object_orientation (moving_object):
 # Update the states of the lamps and moving objeects,
 # and generate the animation image frames.
 frame_number = 0
-if (duration_time == None):
-  duration_time = latest_time - start_time
 
 if (do_trace):
   trace_file.write ("Start: " + format_time(start_time) +
-                    " duration: " + format_time(duration_time) + ".\n")
+                    " duration: " + format_time(duration_time) +
+                    " end: " + format_time(end_time) + ".\n")
 
 for event_time in event_times:
   events_list = events[event_time]
@@ -759,6 +870,9 @@ for event_time in event_times:
         the_color = event["color"]
         lane = lanes_dict[lane_name]
         lane["color"] = the_color
+        if (do_trace):
+          trace_file.write ("Lamp: " + format_time(event_time) + " lane " +
+                           lane_name + " color " + the_color + ".\n")
         
       case "car" | "truck" | "pedestrian":
         moving_object_name = event["name"]
@@ -778,8 +892,7 @@ for event_time in event_times:
           trace_file.write ("Frame at " + format_time(event_time) + ":\n")
           trace_file.flush()
           
-        if ((event_time > start_time) and
-            (event_time <= (start_time + duration_time))):
+        if ((event_time >= start_time) and (event_time <= end_time)):
           if (do_trace):
             trace_file.write ("In time range.\n")
           the_time = event["time"]
