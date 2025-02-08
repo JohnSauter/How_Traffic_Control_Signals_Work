@@ -54,7 +54,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.14 2025-02-02',
+                     version='traffic_control_signals 0.15 2025-02-08',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -1075,60 +1075,140 @@ long_lane_length = 528
 short_lane_length = 450
 lane_width = 12
 
-# Subroutine to find the origin of a lane.
-# This is the place where traffic elements stop if they cannot
+# Subroutine to find the top and bottom of a lane.
+# The top is the place where traffic elements stop if they cannot
 # enter the intersection from their entrance lane and where traffic elements
 # leaving the intersection enter their exit lane.
-def find_lane_origin (lane_name):
+# The bottom is the other end of the lane, where vehicles enter or leave
+# the simulation.
+def find_lane_info (lane_name):
   global lane_width
+  global long_lane_length
+  global short_lane_length
   
   center_y = 0
   center_x = 0
 
   match lane_name:
     case "1":
-      return (center_x - (2.0 * lane_width), center_y + (4.0 * lane_width))
+      top_x = center_x - (2.0 * lane_width)
+      top_y = center_y + (4.0 * lane_width)
+      bottom_x = top_x
+      bottom_y = top_y + long_lane_length
+      
     case "2":
-      return (center_x - (1.0 * lane_width), center_y + (4.0 * lane_width))
+      top_x = center_x - (1.0 * lane_width)
+      top_y = center_y + (4.0 * lane_width)
+      bottom_x = top_x
+      bottom_y = top_y + long_lane_length
+      
     case "A":
-      return (center_x - (0.0 * lane_width), center_y + (4.0 * lane_width))
+      top_x = center_x - (0.0 * lane_width)
+      top_y = center_y + (4.0 * lane_width)
+      bottom_x = top_x
+      bottom_y = top_y + short_lane_length
+      
     case "B":
-      return (center_x + (1.0 * lane_width), center_y + (4.0 * lane_width))
+      top_x = center_x + (1.0 * lane_width)
+      top_y = center_y + (4.0 * lane_width)
+      bottom_x = top_x
+      bottom_y = top_y + long_lane_length
+      
     case "C":
-      return (center_x + (2.0 * lane_width), center_y + (4.0 * lane_width))
+      top_x = center_x + (2.0 * lane_width)
+      top_y = center_y + (4.0 * lane_width)
+      bottom_x = top_x
+      bottom_y = top_y + long_lane_length
+      
     case "3":
-      return (center_x + (2.0 * lane_width), center_y + (0.5 * lane_width))
+      top_x = center_x + (5.0 * lane_width)
+      top_y = center_y + (0.5 * lane_width)
+      bottom_x = top_x + long_lane_length
+      bottom_y = top_y
+      
     case "D":
-      return (center_x + (5.0 * lane_width), center_y - (0.5 * lane_width))
+      top_x = center_x + (5.0 * lane_width)
+      top_y = center_y - (0.5 * lane_width)
+      bottom_x = top_x + long_lane_length
+      bottom_y = top_y
+      
     case "4":
-      return (center_x + (2.0 * lane_width), center_y - (4.0 * lane_width))
+      top_x = center_x + (2.0 * lane_width)
+      top_y = center_y - (4.0 * lane_width)
+      bottom_x = top_x
+      bottom_y = top_y - long_lane_length
+      
     case "5":
-      return (center_x + (1.0 * lane_width), center_y - (4.0 * lane_width))
+      top_x = center_x + (1.0 * lane_width)
+      top_y = center_y - (4.0 * lane_width)
+      bottom_x = top_x
+      bottom_y = top_y - long_lane_length
+      
     case "E":
-      return (center_x + (0.0 * lane_width), center_y - (4.0 * lane_width))
+      top_x = center_x + (0.0 * lane_width)
+      top_y = center_y - (4.0 * lane_width)
+      bottom_x = top_x
+      bottom_y = top_y - short_lane_length
+      
     case "F":
-      return (center_x - (1.0 * lane_width), center_y - (4.0 * lane_width))
+      top_x = center_x - (1.0 * lane_width)
+      top_y = center_y - (4.0 * lane_width)
+      bottom_x = top_x
+      bottom_y = top_y - long_lane_length
+      
     case "G":
-      return (center_x - (2.0 * lane_width), center_y - (4.0 * lane_width))
+      top_x = center_x - (2.0 * lane_width)
+      top_y = center_y - (4.0 * lane_width)
+      bottom_x = top_x
+      bottom_y = top_y - long_lane_length
+      
     case "6":
-      return (center_x - (5.0 * lane_width), center_y - (1.0 * lane_width))
+      top_x = center_x - (5.0 * lane_width)
+      top_y = center_y - (1.0 * lane_width)
+      bottom_x = top_x - long_lane_length
+      bottom_y = top_y
+      
     case "H":
-      return (center_x - (5.0 * lane_width), center_y + (0.0 * lane_width))
+      top_x = center_x - (5.0 * lane_width)
+      top_y = center_y + (0.0 * lane_width)
+      bottom_x = top_x - long_lane_length
+      bottom_y = top_y
+      
     case "J":
-      return (center_x - (5.0 * lane_width), center_y + (1.5 * lane_width))
+      top_x = center_x - (5.0 * lane_width)
+      top_y = center_y + (1.5 * lane_width)
+      bottom_x = top_x - long_lane_length
+      bottom_y = top_y
+      
     case "ps":
-      return (center_x + (4.0 * lane_width), center_y + (3.5 * lane_width))
+      top_x = center_x + (4.0 * lane_width)
+      top_y = center_y + (3.5 * lane_width)
+      bottom_x = top_x - (8.0 * lane_width)
+      bottom_y = top_y
+      
     case "pn":
-      return (center_x - (4.0 * lane_width), center_y - (3.5 * lane_width))
+      top_x = center_x - (4.0 * lane_width)
+      top_y = center_y - (3.5 * lane_width)
+      bottom_x = top_x + (8.0 * lane_width)
+      bottom_y = top_y
+
+    case _:
+      top_x = None
+      top_y = None
+      bottom_x = None
+      bottom_y = None
     
-  return None
+  return (top_x, top_y, bottom_x, bottom_y)
 
 travel_paths = dict()
 for entry_lane_name in ("A", "ps", "B", "C", "D", "E", "pn",
                         "F", "G", "H", "J"):
   
-  entry_lane_origin_x, entry_lane_origin_y = (
-    find_lane_origin(entry_lane_name))
+  entry_lane_info = find_lane_info(entry_lane_name)
+  entry_start_x = entry_lane_info[2]
+  entry_start_y = entry_lane_info[3]
+  entry_intersection_x = entry_lane_info[0]
+  entry_intersection_y = entry_lane_info[1]
   
   adjacent_lane_name = None
   match entry_lane_name:
@@ -1138,221 +1218,46 @@ for entry_lane_name in ("A", "ps", "B", "C", "D", "E", "pn",
       adjacent_lane_name = "F"
 
   if (adjacent_lane_name != None):
-    adjacent_lane_origin_x, adjacent_lane_origin_y = (
-      find_lane_origin(adjacent_lane_name))
+    adjacent_lane_info = find_lane_info(adjacent_lane_name)
+    adjacent_start_x = adjacent_lane_info[2]
+    adjacent_start_y = adjacent_lane_info[3]
   
   for exit_lane_name in ("1", "2", "3", "4", "5", "6"):
 
-    exit_lane_origin_x, exit_lane_origin_y = find_lane_origin(exit_lane_name)
+    exit_lane_info = find_lane_info(exit_lane_name)
+    exit_intersection_x = exit_lane_info[0]
+    exit_intersection_y = exit_lane_info[1]
+    exit_end_x = exit_lane_info[2]
+    exit_end_y = exit_lane_info[3]
     
     travel_path_name = entry_lane_name + exit_lane_name
     travel_path = None
 
     match travel_path_name:
-      case "A1" | "A2" :
-        # Northbound U turn to far or near lane
+      case "A6" | "A1" | "A2" | "E3" | "E4" | "E5":
+        # Northbound and southbound left or U turn
 
         travel_path = (
-          (adjacent_lane_name, adjacent_lane_origin_x,
-           adjacent_lane_origin_y + long_lane_length),
-                       
-          (adjacent_lane_name, adjacent_lane_origin_x,
-           adjacent_lane_origin_y + short_lane_length),
+          (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
+          (adjacent_lane_name, adjacent_start_x, entry_start_y),
+          (entry_lane_name, entry_start_x, entry_start_y),
+          (entry_lane_name, entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_end_x, exit_end_y))
 
-          (entry_lane_name, entry_lane_origin_x,
-           entry_lane_origin_y + short_lane_length),
-          
-          (entry_lane_name, entry_lane_origin_x, entry_lane_origin_y),
-          
-          ("intersection", entry_lane_origin_x, entry_lane_origin_y),
-
-          ("intersection", ((entry_lane_origin_x + exit_lane_origin_x)/2),
-           (entry_lane_origin_y - lane_width)),
-
-          (exit_lane_name, exit_lane_origin_x, exit_lane_origin_y),
-
-          (exit_lane_name, exit_lane_origin_x,
-           exit_lane_origin_y + long_lane_length))
-
-      case "E4" | "E5":
-        # Southbound U turn to far or near lane
-
-        travel_path = (
-          (adjacent_lane_name, adjacent_lane_origin_x,
-           adjacent_lane_origin_y - long_lane_length),
-                       
-          (adjacent_lane_name, adjacent_lane_origin_x,
-           adjacent_lane_origin_y - short_lane_length),
-
-          (entry_lane_name, entry_lane_origin_x,
-           entry_lane_origin_y - short_lane_length),
-          
-          (entry_lane_name, entry_lane_origin_x, entry_lane_origin_y),
-          
-          ("intersection", entry_lane_origin_x, entry_lane_origin_y),
-
-          ("intersection", ((entry_lane_origin_x + exit_lane_origin_x)/2),
-           (entry_lane_origin_y + lane_width)),
-
-          (exit_lane_name, exit_lane_origin_x, exit_lane_origin_y),
-
-          (exit_lane_name, exit_lane_origin_x,
-           exit_lane_origin_y - long_lane_length))
-
-      case "A6":
-        # Northbound left turn
+      case "B5" | "C4" | "F2" | "G1" | "D2" | "D1" | "D6" | "D5" | "D4" | \
+           "H3" | "H5" | "H4" | "J1" | "J2" :
+        # Remaining vehicle travel paths
         
         travel_path = (
-          (adjacent_lane_name, adjacent_lane_origin_x,
-           adjacent_lane_origin_y + long_lane_length),
-                       
-          (adjacent_lane_name, adjacent_lane_origin_x,
-           adjacent_lane_origin_y + short_lane_length),
-
-          (entry_lane_name, entry_lane_origin_x,
-           entry_lane_origin_y + short_lane_length),
-          
-          (entry_lane_name, entry_lane_origin_x, entry_lane_origin_y),
-          
-          ("intersection", entry_lane_origin_x, entry_lane_origin_y),
-
-          (exit_lane_name, exit_lane_origin_x, exit_lane_origin_y),
-
-          (exit_lane_name, exit_lane_origin_x - long_lane_length,
-           exit_lane_origin_y))
-
-      case "E3":
-        # Southbound left turn
-        travel_path = (
-          (adjacent_lane_name, adjacent_lane_origin_x,
-           adjacent_lane_origin_y - long_lane_length),
-                       
-          (adjacent_lane_name, adjacent_lane_origin_x,
-           adjacent_lane_origin_y - short_lane_length),
-
-          (entry_lane_name, entry_lane_origin_x,
-           entry_lane_origin_y - short_lane_length),
-          
-          (entry_lane_name, entry_lane_origin_x, entry_lane_origin_y),
-          
-          ("intersection", entry_lane_origin_x, entry_lane_origin_y),
-
-          (exit_lane_name, exit_lane_origin_x, exit_lane_origin_y),
-
-          (exit_lane_name, exit_lane_origin_x + long_lane_length,
-           exit_lane_origin_y))
-
-      case "B5" | "C4":
-        # Northbound straight through
-        
-        travel_path = (
-          (entry_lane_name, entry_lane_origin_x,
-           entry_lane_origin_y + long_lane_length),
-          
-          (entry_lane_name, entry_lane_origin_x, entry_lane_origin_y),
-          
-          ("intersection", entry_lane_origin_x, entry_lane_origin_y),
-
-          (exit_lane_name, exit_lane_origin_x, exit_lane_origin_y),
-
-          (exit_lane_name, exit_lane_origin_x,
-           exit_lane_origin_y - long_lane_length))
-
-      case "F2" | "G1":
-        # Southbound straight through
-        travel_path = (
-          (entry_lane_name, entry_lane_origin_x,
-           entry_lane_origin_y - long_lane_length),
-          
-          (entry_lane_name, entry_lane_origin_x, entry_lane_origin_y),
-          
-          ("intersection", entry_lane_origin_x, entry_lane_origin_y),
-
-          (exit_lane_name, exit_lane_origin_x, exit_lane_origin_y),
-
-          (exit_lane_name, exit_lane_origin_x,
-           exit_lane_origin_y + long_lane_length))
-
-
-      case "D2" | "D1":
-        # Left turn westbound to far or near lane southbound
-
-        travel_path = (
-          (entry_lane_name, entry_lane_origin_x + long_lane_length,
-           entry_lane_origin_y),
-
-          (entry_lane_name, entry_lane_origin_x, entry_lane_origin_y),
-
-          ("intersection", entry_lane_origin_x, entry_lane_origin_y),
-
-          (exit_lane_name, exit_lane_origin_x, exit_lane_origin_y),
-
-          (exit_lane_name, exit_lane_origin_x,
-           exit_lane_origin_y + long_lane_length))
-        
-      case "D6":
-        # Straight through westbound
-        
-        travel_path = (
-          (entry_lane_name, entry_lane_origin_x + long_lane_length,
-           entry_lane_origin_y),
-
-          (entry_lane_name, entry_lane_origin_x, entry_lane_origin_y),
-
-          ("intersection", entry_lane_origin_x, entry_lane_origin_y),
-
-          (exit_lane_name, exit_lane_origin_x, exit_lane_origin_y),
-
-          (exit_lane_name, exit_lane_origin_x - long_lane_length,
-           exit_lane_origin_y))
-        
-      case "D5" | "D4":
-        # Right turn westbound to far or near lane northbound
-        
-        travel_path = (
-          (entry_lane_name, entry_lane_origin_x + long_lane_length,
-           entry_lane_origin_y),
-
-          (entry_lane_name, entry_lane_origin_x, entry_lane_origin_y),
-
-          ("intersection", entry_lane_origin_x, entry_lane_origin_y),
-
-          (exit_lane_name, exit_lane_origin_x, exit_lane_origin_y),
-
-          (exit_lane_name, exit_lane_origin_x,
-           exit_lane_origin_y - long_lane_length))
-        
-      case "H5" | "H4":
-        # Left turn eastbound to far or near lane northbound
-        
-        travel_path = (
-          (entry_lane_name, entry_lane_origin_x - long_lane_length,
-           entry_lane_origin_y),
-
-          (entry_lane_name, entry_lane_origin_x, entry_lane_origin_y),
-
-          ("intersection", entry_lane_origin_x, entry_lane_origin_y),
-
-          (exit_lane_name, exit_lane_origin_x, exit_lane_origin_y),
-
-          (exit_lane_name, exit_lane_origin_x,
-           exit_lane_origin_y - long_lane_length))
-        
-      case "J1" | "J2":
-        # Right turn eastbound to far or near lane southbound
-
-        travel_path = (
-          (entry_lane_name, entry_lane_origin_x - long_lane_length,
-           entry_lane_origin_y),
-
-          (entry_lane_name, entry_lane_origin_x, entry_lane_origin_y),
-
-          ("intersection", entry_lane_origin_x, entry_lane_origin_y),
-
-          (exit_lane_name, exit_lane_origin_x, exit_lane_origin_y),
-
-          (exit_lane_name, exit_lane_origin_x,
-           exit_lane_origin_y + long_lane_length))
+          (entry_lane_name, entry_start_x, entry_start_y),
+          (entry_lane_name, entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_end_x, exit_end_y))
 
     travel_paths[travel_path_name] = travel_path
 
@@ -1435,10 +1340,7 @@ if (do_lamp_map_output):
 # The value of each entry is a sensor, which is a dictionary
 # with entries name, toggles, position, length, and value.
 # Toggles is a tuple of toggle names.  If a toggle name contains a slash
-# it refers to a different signal face.  Position is the distance from
-# the stop line to the center of the sensor.  Length is the length of
-# the sensor.  Value is True or False.  Only the Traffic Approaching
-# and Traffic Present sensors have sizes and positions in the lane.
+# it refers to a different signal face.
 
 # Specify which toggles are set by which sensors.
 for signal_face in signal_faces_list:
@@ -1532,21 +1434,57 @@ for signal_face in signal_faces_list:
     # for the Traffic Approaching and Traffic Present sensors,
     # the size and placement varies between lanes.  These
     # sensors are activated by vehicles and pedestrians.
+    lane_info = find_lane_info(signal_face["name"])
+    sensor_length = 6
+    sensor_width = 10
+    
     match sensor_name:
       case "Traffic Approaching":
+        sensor_position = 365
         match signal_face["name"]:
-          case "A" | "B" | "C" | "E" | "F" | "G":
-            sensor["position"] = 365
-            sensor["length"] = 6
+          case "A" | "B" | "C":
+            sensor["x min"] = lane_info[0] - (sensor_width / 2.0)
+            sensor["y min"] = lane_info[1] + sensor_position - sensor_length
+            sensor["x max"] = lane_info[0] + (sensor_width / 2.0)
+            sensor["y max"] = lane_info[1] + sensor_position
+            
+          case "E" | "F" | "G":
+            sensor["x min"] = lane_info[0] - (sensor_width / 2.0)
+            sensor["y min"] = lane_info[1] - sensor_position - sensor_length
+            sensor["x max"] = lane_info[0] + (sensor_width / 2.0)
+            sensor["y max"] = lane_info[1] - sensor_position
             
       case "Traffic Present":
         match signal_face["name"]:
           case "ps" | "pn":
-            sensor["position"] = 1
-            sensor["length"] = 2
-          case _:
-            sensor["position"] = 3
-            sensor["length"] = 6
+            sensor["x min"] = lane_info[0]
+            sensor["y min"] = lane_info[1]
+            sensor["x max"] = lane_info[0] + 2
+            sensor["y max"] = lane_info[1] + 1
+            
+          case "A" | "B" | "C":
+            sensor["x min"] = lane_info[0] - (sensor_width / 2.0)
+            sensor["y min"] = lane_info[1]
+            sensor["x max"] = lane_info[0] + (sensor_width / 2.0)
+            sensor["y max"] = lane_info[1] + sensor_length
+            
+          case "D":
+            sensor["x min"] = lane_info[0] 
+            sensor["y min"] = lane_info[1] - (sensor_width / 2.0)
+            sensor["x max"] = lane_info[0] + sensor_length
+            sensor["y max"] = lane_info[1] + (sensor_width / 2.0)
+
+          case "E" | "F" | "G":
+            sensor["x min"] = lane_info[0] - (sensor_width / 2.0)
+            sensor["y min"] = lane_info[1] - sensor_length
+            sensor["x max"] = lane_info[0] + (sensor_width / 2.0)
+            sensor["y max"] = lane_info[1]
+
+          case "H" | "J":
+            sensor["x min"] = lane_info[0] - sensor_length
+            sensor["y min"] = lane_info[1] - (sensor_width / 2.0)
+            sensor["x max"] = lane_info[0]
+            sensor["y max"] = lane_info[1] + (sensor_width / 2.0)
     
     sensor["value"] = False
     sensors [sensor_name] = sensor
@@ -2123,6 +2061,38 @@ def speed_limit (lane_name, travel_path_name, was_stopped):
     
   return None
 
+# The traffic element has reached the next milestone.  Make it the current
+# milestone.
+def new_milestone (traffic_element):
+  this_milestone_index = traffic_element["milestone index"]
+  milestones_list = traffic_element["milestones"]
+  next_milestone_index = this_milestone_index + 1
+  next_milestone = milestones_list[next_milestone_index]
+  traffic_element["current lane"] = next_milestone[0]
+  start_x = next_milestone[1]
+  start_y = next_milestone[2]
+  traffic_element["start x"] = start_x
+  traffic_element["start y"] = start_y
+  following_milestone_index = next_milestone_index + 1
+  following_milestone = milestones_list[following_milestone_index]
+  target_x = following_milestone[1]
+  target_y = following_milestone[2]
+  traffic_element["target x"] = target_x
+  traffic_element["target y"] = target_y
+  distance_between_milestones = math.sqrt(((start_x-target_x)**2) +
+                                          ((start_y-target_y)**2))
+  traffic_element["distance between milestones"] = distance_between_milestones
+  traffic_element["speed"] = speed_limit(traffic_element["current lane"],
+                                         traffic_element["travel path name"],
+                                         traffic_element["was stopped"])
+  traffic_element["angle"] = math.atan2 (start_x - target_x,
+                                         start_y - target_y)
+  traffic_element["position x"] = start_x
+  traffic_element["position y"] = start_y
+  traffic_element["distance remaining"] = distance_between_milestones
+  traffic_element["milestone index"] = next_milestone_index
+  return
+
 # Subroutine to add a traffic element to the traffic elements dictionary.
 # A traffic element starts at its first milestone.
 next_traffic_element_number = 0
@@ -2142,25 +2112,10 @@ def add_traffic_element (type, travel_path_name):
   milestone_list = travel_paths[travel_path_name]
   traffic_element["milestones"] = milestone_list
   milestone_index = 0
-  traffic_element["milestone index"] = milestone_index
-  milestone = milestone_list[milestone_index]
-  traffic_element["current lane"] = milestone[0]
-  start_x = milestone[1]
-  start_y = milestone[2]
-  traffic_element["start x"] = start_x
-  traffic_element["start y"] = start_y
-  next_milestone_index = milestone_index + 1
-  next_milestone = milestone_list[next_milestone_index]
-  target_x = next_milestone[1]
-  target_y = next_milestone[2]
-  traffic_element["target x"] = target_x
-  traffic_element["target y"] = target_y
-  distance_between_milestones = math.sqrt(((start_x-target_x)**2) +
-                                          ((start_y-target_y)**2))
-  traffic_element["distance between milestones"] = distance_between_milestones
-  traffic_element["speed"] = speed_limit(traffic_element["current lane"],
-                                         traffic_element["travel path name"],
-                                         False)
+  traffic_element["milestone index"] = -1
+  traffic_element["was stopped"] = False
+  new_milestone (traffic_element)
+  
   match type:
     case "car":
       traffic_element["length"] = 15
@@ -2168,23 +2123,21 @@ def add_traffic_element (type, travel_path_name):
       traffic_element["length"] = 40
     case "pedestrian":
       traffic_element["length"] = 3
-      
+
   traffic_element["current time"] = current_time
-  traffic_element["position x"] = start_x
-  traffic_element["position y"] = start_y
-  traffic_element["distance remaining"] = distance_between_milestones
   traffic_element["present"] = True
   traffic_element["blocker"] = None
-  traffic_element["was stopped"] = False
 
   if (verbosity_level >= 2):
     print (format_time(current_time) + " " + this_name +
            " starts on travel path " + travel_path_name +
            " in lane " + traffic_element["current lane"] +
-           " at position " + format_location(traffic_element["position"]) +
-           " distance to next milestone " +
+           " at position (" + format_location(traffic_element["position x"]) +
+           ", " + format_location(traffic_element["position y"]) +
+           ") distance to next milestone " +
            format_location(traffic_element["distance remaining"]) +
-           " speed " + format_speed(traffic_element["speed"]) + ".")
+           " speed " + format_speed(traffic_element["speed"]) +
+           " angle " + str(traffic_element["angle"]) + ".")
   if ((table_level >= 2) and (current_time > table_start_time)):
     table_file.write ("\\hline " + format_time(current_time) + " & " +
                       traffic_element["current lane"] + " & " +
@@ -2231,10 +2184,10 @@ def move_traffic_element (traffic_element):
   target_y = traffic_element["target y"]
   delta_x = current_position_x - target_x
   delta_y = current_position_y - target_y
-  direction = math.atan2 (delta_x, delta_y)
   distance_remaining = traffic_element["distance remaining"]
+  total_distance = traffic_element["distance between milestones"]
   
-  if (delta_time > 0):
+  if ((delta_time > 0) and (total_distance > 0)):
     current_speed = traffic_element["speed"]
     distance_moved = delta_time * current_speed
     old_position_x = current_position_x
@@ -2245,7 +2198,6 @@ def move_traffic_element (traffic_element):
     if (distance_remaining <= 0):
       distance_remaining = 0
     traffic_element["distance remaining"] = distance_remaining
-    total_distance = traffic_element["distance between milestones"]
     fraction_moved = 1.0 - (distance_remaining / total_distance)
     start_x = traffic_element["start x"]
     start_y = traffic_element["start y"]
@@ -2295,23 +2247,29 @@ def move_traffic_element (traffic_element):
     
     no_activity = False
   if (distance_remaining == 0):
-    # We have reached this milestone.
+    # We have reached the next milestone.
+    this_milestone_index = traffic_element["milestone index"]
+    next_milestone_index = this_milestone_index + 1
+    following_milestone_index = next_milestone_index + 1
+    milestone_list = traffic_element["milestones"]
     if ((verbosity_level >= 5) and (traffic_element["speed"] != 0)):        
       print (format_time(current_time) + " " + traffic_element["name"] +
              " in " + place_name(traffic_element) + " at position (" +
              format_location(traffic_element["position x"]) + ", " +
              format_location(traffic_element["position y"]) +
-             ") (a milestone) speed " +
+             ") (milestone " + str(next_milestone_index) + " of " +
+             str(len(milestone_list)) + ") speed " +
              format_speed(traffic_element["speed"]) + ".")
-    this_milestone_index = traffic_element["milestone index"]
-    next_milestone_index = this_milestone_index + 1
-    milestone_list = traffic_element["milestones"]
-    if (next_milestone_index >= len(milestone_list)):
+    if (following_milestone_index >= len(milestone_list)):
+      # We have reached the last milestone.
       traffic_element["present"] = False
       if (verbosity_level >= 2):
         print (format_time(current_time) + " " +
                traffic_element["name"] +
-               " in " + place_name(traffic_element) + " exits the simulation.")
+               " in " + place_name(traffic_element) +
+               " exits the simulation at position (" +
+               format_location(traffic_element["position x"]) + ", " +
+               format_location(traffic_element["position y"]) + ").")
       if ((table_level >= 2) and (current_time > table_start_time)):
         table_file.write ("\\hline " + format_time(current_time) + " & " +
                           traffic_element["current lane"] + " & " +
@@ -2322,9 +2280,11 @@ def move_traffic_element (traffic_element):
       
       no_activity = False
     else:
-      # There is a milestone after this one.
+      # There is a milestone after the next one.
       this_milestone = milestone_list[this_milestone_index]
       next_milestone = milestone_list[next_milestone_index]
+      following_milestone = milestone_list[following_milestone_index]
+      
       # Check for changing lanes
       current_lane = traffic_element["current lane"]
       if (next_milestone[0] != current_lane):
@@ -2360,13 +2320,15 @@ def move_traffic_element (traffic_element):
 
                 no_activity = False
             else:
-              # We are trying to enter the intersection or the crosswalk
-              # and the light is green.
+              # We are entering the intersection or the crosswalk.
               if (verbosity_level >= 2):
                 print (format_time(current_time) + " " +
                        traffic_element["name"] +
                        " in " + place_name(traffic_element) +
-                       " enters the " + next_milestone[0] + ".")
+                       " enters the " + next_milestone[0] +
+                       " at position (" +
+                       format_location(traffic_element["position x"]) + ", " +
+                       format_location(traffic_element["position y"]) + ").")
             
               if ((table_level >= 2) and (current_time > table_start_time)):
                 table_file.write ("\\hline " + format_time(current_time) +
@@ -2375,32 +2337,8 @@ def move_traffic_element (traffic_element):
                                   cap_first_letter(traffic_element["name"]) +
                                   " enters the " + next_milestone[0] +
                                   ". \\\\\n")
-                
-              traffic_element["current lane"] = next_milestone[0]
-              start_x = next_milestone[1]
-              start_y = next_milestone[2]
-              traffic_element["start x"] = start_x
-              traffic_element["start y"] = start_y
-              traffic_element["speed"] = (
-                speed_limit(next_milestone[0],
-                            traffic_element["travel path name"],
-                            traffic_element["was stopped"]))
-                
-              following_milestone_index = next_milestone_index + 1
-              following_milestone = milestone_list[following_milestone_index]
-              target_x = following_milestone[1]
-              target_y = following_milestone[2]
-              traffic_element["target x"] = target_x
-              traffic_element["target y"] = target_y
-              distance_between_milestones = (math.sqrt (
-                ((start_x-target_x)**2) + ((start_y-target_y)**2)))
-              traffic_element["distance between milestones"] = (
-                distance_between_milestones)
-              traffic_element["speed"] = (speed_limit(
-                traffic_element["current lane"],
-                traffic_element["travel path name"],
-                traffic_element["was stopped"]))
-              traffic_element["milestone index"] = next_milestone_index
+              
+              new_milestone (traffic_element)  
               if (do_events_output):
                 write_event (traffic_element)
                 
@@ -2408,43 +2346,21 @@ def move_traffic_element (traffic_element):
         else:
           # Changing lanes but not into the intersection or crosswalk
           old_lane = traffic_element["current lane"]
-          traffic_element["current lane"] = next_milestone[0]
-          start_x = next_milestone[1]
-          start_y = next_milestone[2]
-          traffic_element["start x"] = start_x
-          traffic_element["start y"] = start_y
-          traffic_element["speed"] = (
-            speed_limit(next_milestone[0],
-                        traffic_element["travel path name"],
-                        traffic_element["was stopped"]))
-          following_milestone_index = next_milestone_index + 1
-          following_milestone = milestone_list[following_milestone_index]
-          target_x = following_milestone[1]
-          target_y = following_milestone[2]
-          traffic_element["target x"] = target_x
-          traffic_element["target y"] = target_y
-                                          
-          traffic_element["position x"] = start_x
-          traffic_element["position y"] = start_y
-          traffic_element["distance remaining"] = (math.sqrt (
-            (((start_x - target_x)**2) + ((start_y - target_y)**2))))
-          traffic_element["milestone index"] = next_milestone_index
-
+          new_milestone (traffic_element)
+          
           match old_lane:
             case "intersection" | "crosswalk":
               tail_text = " leaves the " + old_lane
             case _:
-              tail_text = (" at position (" +
-                           format_location(traffic_element["position x"]) +
-                           ", " +
-                           format_location(traffic_element["position y"]) +
-                           ") leaves lane " + old_lane)
+              tail_text = " leaves lane " + old_lane
               
           if (verbosity_level >= 2):
               print (format_time(current_time) + " " +
                      traffic_element["name"] +
-                     " in " + place_name(traffic_element) +
-                     " distance to next milestone " +
+                     " in " + place_name(traffic_element) + " at position (" +
+                     format_location(traffic_element["position x"]) + ", " +
+                     format_location(traffic_element["position y"]) + 
+                     ") distance to next milestone " +
                      format_location(traffic_element["distance remaining"]) +
                      " speed " + format_speed(traffic_element["speed"]) +
                      tail_text + ".")
@@ -2460,22 +2376,8 @@ def move_traffic_element (traffic_element):
           no_activity = False
       else:
         # Not changing lanes
-        start_x = next_milestone[1]
-        start_y = next_milestone[2]
-        traffic_element["start x"] = start_x
-        traffic_element["start y"] = start_y
-        traffic_element["position x"] = start_x
-        traffic_element["position y"] = start_y
-        traffic_element["milestone index"] = next_milestone_index
-        following_milestone_index = next_milestone_index + 1
-        following_milestone = milestone_list[following_milestone_index]
-        target_x = following_milestone[1]
-        target_y = following_milestone[2]
-        traffic_element["target x"] = target_x
-        traffic_element["target y"] = target_y
-        traffic_element["distance remaining"] = (math.sqrt (
-          (((start_x - target_x)**2) + ((start_y - target_y)**2))))
-        
+        new_milestone (traffic_element)
+
         if (verbosity_level >= 5):
           print (format_time(current_time) + " " +
                  traffic_element["name"] +

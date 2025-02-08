@@ -1,5 +1,5 @@
 Name:           How_Traffic_Control_Signals_Work
-Version:        0.14
+Version:        0.15
 Release:        1%{?dist}
 Summary:        Explain traffic control signals
 
@@ -57,6 +57,8 @@ make check VERBOSE=1
 %license COPYING
 
 %changelog
+ * Sat Feb 08 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.15-1 Continue work on conversion to two-dimensional.
  * Sun Feb 02 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.14-1 Make milestones two-dimensional.
  * Sat Jan 25 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
