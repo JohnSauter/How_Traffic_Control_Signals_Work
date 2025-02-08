@@ -38,6 +38,7 @@ import decimal
 import fractions
 import pathlib
 import csv
+import shapely
 import argparse
 
 parser = argparse.ArgumentParser (
@@ -1430,6 +1431,7 @@ for signal_face in signal_faces_list:
     sensor["name"] = sensor_name
     sensor["toggles"] = sensor_map[sensor_name]
     sensor["controlled by script"] = False
+    sensor["lane name"] = signal_face["name"]
 
     # for the Traffic Approaching and Traffic Present sensors,
     # the size and placement varies between lanes.  These
@@ -1444,13 +1446,15 @@ for signal_face in signal_faces_list:
         match signal_face["name"]:
           case "A" | "B" | "C":
             sensor["x min"] = lane_info[0] - (sensor_width / 2.0)
-            sensor["y min"] = lane_info[1] + sensor_position - sensor_length
+            sensor["y min"] = (lane_info[1] +
+                               approach_sensor_distance - sensor_length)
             sensor["x max"] = lane_info[0] + (sensor_width / 2.0)
-            sensor["y max"] = lane_info[1] + sensor_position
+            sensor["y max"] = lane_info[1] + approach_sensor_distance
             
           case "E" | "F" | "G":
             sensor["x min"] = lane_info[0] - (sensor_width / 2.0)
-            sensor["y min"] = lane_info[1] - sensor_position - sensor_length
+            sensor["y min"] = (lane_info[1] -
+                               approach_sensor_distance - sensor_length)
             sensor["x max"] = lane_info[0] + (sensor_width / 2.0)
             sensor["y max"] = lane_info[1] - sensor_position
             
@@ -1485,6 +1489,11 @@ for signal_face in signal_faces_list:
             sensor["y min"] = lane_info[1] - (sensor_width / 2.0)
             sensor["x max"] = lane_info[0]
             sensor["y max"] = lane_info[1] + (sensor_width / 2.0)
+
+    if ("x min" in sensor):
+      sensor_shape = shapely.geometry.box (sensor["x min"], sensor["y min"],
+                                         sensor["x max"], sensor["y max"])
+      sensor["shape"] = sensor_shape
     
     sensor["value"] = False
     sensors [sensor_name] = sensor
@@ -2061,6 +2070,20 @@ def speed_limit (lane_name, travel_path_name, was_stopped):
     
   return None
 
+# rebuild the shape of a traffic element after it has moved.
+def rebuild_shape (traffic_element):
+  start_x = traffic_element["position x"]
+  start_y = traffic_element["position y"]
+  min_x = start_x - (traffic_element["width"] / 2.0)
+  min_y = start_y
+  max_x = start_x + (traffic_element["width"] / 2.0)
+  max_y = start_y + traffic_element["length"]
+  box = shapely.geometry.box(min_x, min_y, max_x, max_y)
+  box = shapely.affinity.rotate (box, traffic_element["angle"],
+                                 origin=(start_x, start_y), use_radians=True)
+  traffic_element["shape"] = box
+  return
+
 # The traffic element has reached the next milestone.  Make it the current
 # milestone.
 def new_milestone (traffic_element):
@@ -2090,6 +2113,15 @@ def new_milestone (traffic_element):
   traffic_element["position x"] = start_x
   traffic_element["position y"] = start_y
   traffic_element["distance remaining"] = distance_between_milestones
+  min_x = start_x - (traffic_element["width"] / 2.0)
+  min_y = start_y
+  max_x = start_x + (traffic_element["width"] / 2.0)
+  max_y = start_y + traffic_element["length"]
+  box = shapely.geometry.box(min_x, min_y, max_x, max_y)
+  box = shapely.affinity.rotate (box, traffic_element["angle"],
+                                 origin=(start_x, start_y), use_radians=True)
+  traffic_element["shape"] = box
+  
   traffic_element["milestone index"] = next_milestone_index
   return
 
@@ -2114,20 +2146,23 @@ def add_traffic_element (type, travel_path_name):
   milestone_index = 0
   traffic_element["milestone index"] = -1
   traffic_element["was stopped"] = False
-  new_milestone (traffic_element)
-  
+
   match type:
     case "car":
       traffic_element["length"] = 15
+      traffic_element["width"] = 5.8
     case "truck":
       traffic_element["length"] = 40
+      traffic_element["width"] = 8.5
     case "pedestrian":
       traffic_element["length"] = 3
+      traffic_element["width"] = 2
 
   traffic_element["current time"] = current_time
   traffic_element["present"] = True
   traffic_element["blocker"] = None
-
+  new_milestone (traffic_element)
+  
   if (verbosity_level >= 2):
     print (format_time(current_time) + " " + this_name +
            " starts on travel path " + travel_path_name +
@@ -2148,13 +2183,30 @@ def add_traffic_element (type, travel_path_name):
     write_event (traffic_element)
                        
   traffic_elements[this_name] = traffic_element
+
+  if (do_trace):
+    trace_file.write ("New traffic element:\n")
+    pprint.pprint (traffic_element, trace_file)
+    
   return
 
 # Subroutine to test for overlap of a traffic element
 # with either a sensor or another traffic element.
 def check_overlap (object_A, object_B):
-  # TODO
-  return (False)
+  if ("shape" not in object_A):
+    return (False)
+  if ("shape" not in object_B):
+    return (False)
+  shape_A = object_A["shape"]
+  shape_B = object_B["shape"]
+  if (shape_A.intersects(shape_B)):
+    if (do_trace):
+      trace_file.write ("These objects intersect:\n")
+      pprint.pprint (object_A, trace_file)
+      pprint.pprint (object_B, trace_file)
+    return (True)
+  else:
+    return (False)
 
 # Check a traffic element to see if the last move
 # caused it to overlap another traffic element.
@@ -2207,6 +2259,7 @@ def move_traffic_element (traffic_element):
     position_y = start_y + (fraction_moved * (target_y - start_y))
     traffic_element["position x"] = position_x
     traffic_element["position y"] = position_y
+    rebuild_shape (traffic_element)
     traffic_element["current time"] = current_time
     if (verbosity_level >= 5):  
       print (format_time(current_time) + " " + traffic_element["name"] +
@@ -2338,7 +2391,12 @@ def move_traffic_element (traffic_element):
                                   " enters the " + next_milestone[0] +
                                   ". \\\\\n")
               
-              new_milestone (traffic_element)  
+              new_milestone (traffic_element)
+
+              if (do_trace):
+                trace_file.write ("Entering " + next_milestone[0] + ":\n")
+                pprint.pprint (traffic_element, trace_file)
+                
               if (do_events_output):
                 write_event (traffic_element)
                 
@@ -2370,6 +2428,10 @@ def move_traffic_element (traffic_element):
                               " & " +
                               cap_first_letter(traffic_element["name"]) +
                               tail_text + ". \\\\\n")
+          if (do_trace):
+            trace_file.write ("Changing lane from " + old_lane + ":\n")
+            pprint.pprint (traffic_element, trace_file)
+            
           if (do_events_output):
             write_event (traffic_element)
 
@@ -2397,6 +2459,10 @@ def move_traffic_element (traffic_element):
                             format_location(traffic_element["position y"]) +
                             ") at a milestone. \\\\\n")
         no_activity = False
+
+        if (do_trace):
+          trace_file.write ("Reached milestone:\n")
+          pprint.pprint (traffic_element, trace_file)
               
   return
 
@@ -2407,14 +2473,13 @@ def check_sensors():
     sensors = signal_face["sensors"]
     for sensor_name in sensors:
       sensor = sensors[sensor_name]
-      if ("position" in sensor):
+      if ("shape" in sensor):
         triggered = False
         for traffic_element_name in traffic_elements:
           traffic_element = traffic_elements[traffic_element_name]
-          if (signal_face_name == traffic_element["current lane"]):
-            if (check_overlap (traffic_element, sensor)):
-              triggered = True
-              sensor["triggered by"] = traffic_element["name"]
+          if (check_overlap (traffic_element, sensor)):
+            triggered = True
+            sensor["triggered by"] = traffic_element["name"]
         if (not sensor["controlled by script"]):
           if (sensor["value"] != triggered):
             sensor["value"] = triggered
