@@ -1,5 +1,5 @@
 % File: traffic_control_signals.tex, author: John Sauter,
-% date: January 20, 2025.
+% date: February 9, 2025.
 
 % Copyright © 2025 by John Sauter.
 % Licensed under the Creative Commons Attribution-ShareAlike 4.0 International
@@ -196,12 +196,12 @@
   pdfcontacturl={https://www.systemeyescomputerstore.com},
   pdfcopyright={Copyright {\copyright} 2025 by John Sauter},
   pdfurl={https://www.systemeyescomputerstore.com/traffic\%5Fsignals/traffic\%5Fsignals.pdf},
-  pdfdate={2025-01-20},
+  pdfdate={2025-02-09},
   pdflicenseurl={https://creativecommons.org/licenses/by-sa/4.0},
   pdfmetalang={en-US}
 }
 
-\date{2025-01-20}
+\date{2025-02-09}
 \maketitle
 \begin{abstract}
   Traffic control signals allow vehicles and pedestrians to move through
@@ -487,7 +487,13 @@ intersection along a particular lane will exit the intersection on a
 different lane; for example the travel path B5 means that the vehicle enters
 the intersection on lane B and exits on lane 5.
 A line connecting those two lanes is the vehicle's
-travel path.  For pedestrians, the travel path is the crosswalk.
+travel path.
+
+For pedestrians, the travel paths are from the east or west
+side of the crosswalk to the other side.  We call the corners
+psw, pse, pnw, and pne.  The travel paths are therefore pswpse, psepsw,
+pnwpne, and pnepnw.
+
 When two travel paths cross we say that the travel paths conflict.
 When that happens only one of the travel paths may have a green light.
 Since the traffic control signal only controls whether or not a vehicle
@@ -501,16 +507,16 @@ follows:
   \caption{Travel Path Conflicts continued} \\
   in & out & conflicts with \endhead
   \hline
-  A & 6, 2, 1 & D6, D1, D2, F2, G1, G6, H5, H4, H3, J1, ps \\
-  B & 5 & D2, D1, D6, E5, E3, H5, H4, H3, ps, pn \\
-  C & 3, 4 & D1, D2, D3, D4, D6, E4, H4, H3, ps, pn \\
+  A & 6, 2, 1 & D6, D1, D2, F2, G1, G6, H5, H4, H3, J1, psw, pse \\
+  B & 5 & D2, D1, D6, E5, E3, H5, H4, H3, psw, pse, pnw, pne \\
+  C & 3, 4 & D1, D2, D3, D4, D6, E4, H4, H3, psw, pse, pnw, pne \\
   D & 3, 4, 5, 6, 1, 2 & A2, A1, A6, B5, C4, C3, E3, E4, E5, F2, G1, G6, H3,
-  H4, H5, J1, J2, pn, ps \\
-  E & 5, 4, 3 & B5, C4, D2, D1, D6, D4, H5, H4, pn \\
-  F & 2 & A2, A1, A6, D1, D2, D6, H4, H4, H3, J2, pn, ps \\
-  G & 6, 1 & A6, A1, A2, D2, D1, D6, H5, H4, H3, J1, pn, ps \\
-  H & 5, 4 & A6, B5, C4, D4, D6, D1, D2, E3, E5, E4, F2, G1, pn \\
-  J & 1, 2 & A1, A2, D2, D1, F2, G1 \\
+  H4, H5, J1, J2, pnw, pne, psw, pse \\
+  E & 5, 4, 3 & B5, C4, D2, D1, D6, D4, H5, H4, pnw, pne  \\
+  F & 2 & A2, A1, A6, D1, D2, D6, H4, H4, H3, J2, pnw, pne, psw, pse \\
+  G & 6, 1 & A6, A1, A2, D2, D1, D6, H5, H4, H3, J1, pnw, pne, psw, pse \\
+  H & 5, 4 & A6, B5, C4, D4, D6, D1, D2, E3, E5, E4, F2, G1, pnw, pne \\
+  J & 1, 2 & A1, A2, D2, D1, F2, G1, pse, psw \\
 \end{longtable}
 
 Since, again, the traffic control signal only controls entry to the
@@ -524,17 +530,15 @@ conflict table and add the pedestrian crosswalks as follows:
   \caption{Signal Face Conflict Table continued} \\
   signal face & conflicts with signal faces \endhead
   \hline
-  A & ps, D, F, G, H, J \\
-  ps & A, B, C, D, F, G, J \\
-  B & ps, D, E, pn, H \\
-  C & ps, D, E, pn, H \\
-  D & A, ps, B, C, E, pn, F, G, H, J \\
-  E & B, C, D, pn, H \\
-  pn & B, C, D, E, F, G, H \\
-  F & A, ps, D, pn, H, J \\
-  G & A, ps, D, pn, H, J \\
-  H & A, B, C, D, E, pn, F, G \\
-  J & A, ps, D, F, G \\
+  A & pse, psw, D, F, G, H, J \\
+  pse and psw & A, B, C, D, F, G, J \\
+  B and C & pse, psw, D, E, pne, pnw, H \\
+  D & A, pse, psw, B, C, E, pne, pnw, F, G, H, J \\
+  E & B, C, D, pne, pnw, H \\
+  pne and pnw & B, C, D, E, F, G, H \\
+  F and G & A, pse, psw, D, pne, pnw, , H, J \\
+  H & A, B, C, D, E, pne, pnw, F, G \\
+  J & A, pse, psw, D, F, G \\
 \end{longtable}
 
 We also need a table named Partial Signal Face Conflicts.  It is the same
@@ -619,7 +623,8 @@ to turn red.
 
 In our example, signal faces A, D, E, H and J have their Passage times
 set to 2.3 seconds; signal faces B, C, F, and G to 2.6 seconds; and
-signal faces ps and pn set to 0, disabling gap detection for pedestrians.
+signal faces pse, psw, pne, and pnw set to 0, disabling gap detection
+for pedestrians.
 
 \subsubsection{Red Clearance Time}
 An important characteristic of any intersection is the time required
@@ -629,8 +634,8 @@ and the last vehicle to enter the intersection from that lane has left the
 intersection, so that a conflicting travel path can be given a green light.
 
 In our example, signal faces A, D, E, H, and J have their Red Clearance
-times set to 1.5 seconds; and signal faces ps, B, C, pn, F, and G to 0.4
-seconds.
+times set to 1.5 seconds; and signal faces pse, psw, B, C, pne, pnw,
+F, and G to 0.4 seconds.
 
 \subsubsection{Green Limit Time}
 If we have been green for Green Limit time, we turn red even if there is
@@ -650,7 +655,7 @@ crossing the street.
 
 In our example, signal faces A, B, C, E, F, and G have their Yellow Change
 times set to 4.3 seconds; signal faces D, H, and J to 3.0 seconds;
-and signal faces ps and pn to 15.0 seconds.
+and signal faces pse, psw, pne, and pnw to 15.0 seconds.
 
 \subsection{Toggles}
 
@@ -759,7 +764,8 @@ by the signal face.
 In our example, signal faces A and E have their Traffic Approaching
 sensors set at the entrance to the left turn lane.  Signal faces
 B, C, F, and G have their sensors set at the edge of the diagram.
-Signal faces D, H, and J do not have traffic approaching sensors,
+Signal faces psw, pse, pnw, pne, D, H, and J do not have traffic
+approaching sensors,
 so their toggles are set by the Traffic Present sensor.
 
 \subsubsection{Traffic Flowing}
@@ -978,6 +984,12 @@ if signal face B turned red while C remained green.  We accomodate this
 by connecting the sensors for lanes B and C to both signal face B
 and C, and likewise for F and G.
 
+Similarly, if pedestrians can cross the crosswalk in one direction,
+it is customary to also allow crossing in the opposite direction,
+even if the sensor has not been triggered.  Thus we connect the sensors
+for lanes psw and pse to both signal faces psw and pse, and the sensors
+for lanes pnw and pne to both signal faces pnw and pne.
+
 \input {sensor_map.tex}
 
 \section{Scenarios}
@@ -1059,13 +1071,14 @@ This table of events details the progression from power on to the idle state.
 A pedestrian who wishes to cross the boulevard on the south side
 presses his button.  Assuming we are in the idle condition
 with signal faces
-B, C, F and G green and A, ps, D, E, pn, H, and J red and clear.
+B, C, F and G green and A, psw, pse, D, E, pnw, pne, H, and J red and clear.
 
-Signal face ps will proceed to substate Going Green 1 where it will set
+Signal faces psw and pse will proceed to substate Going Green 1 where
+they will set
 toggle Request Green.  The Request Green Granted system program will act
 as described above to set the Request Green Granted toggle since no other
-signal faces are waiting to turn green.  Signal face ps will then
-proceed to substate Going Green 2 where it will set toggle Request Partial
+signal faces are waiting to turn green.  Signal faces psw and pse will then
+proceed to substate Going Green 2 where they will set toggle Request Partial
 Clearance.  System program Partial Conflicting Paths are Clear will set
 the Clearance Requested toggles in signal faces B, C, F, and G,
 but not in signal faces A, D and J because they are aleady clear.
@@ -1080,21 +1093,25 @@ to substate Travel Path is Clear and set toggle Cleared.
 
 The Conflicting Paths are Clear system program will notice that
 signal faces A, B, C, D, F, G, and J are all clear and set the
-Conflicting Paths are Clear toggle in signal face ps.  Similarly,
+Conflicting Paths are Clear toggle in signal faces psw amd pse.  Similarly,
 the Partial Conflicting Paths are Clear system program will set the
 Partial Conflicting Paths are Clear toggle.
 
-Signal face ps will transition to state Green substate Minimum Green.
-This will cause the pedestrian sign to display a walking man, the equivalent
-of green.  Assuming there is no other traffic, signal face ps will remain green
+Signal faces psw and pse will transition to state Green substate Minimum Green.
+This will cause the pedestrian signs to display a walking man, the equivalent
+of green.  Assuming there is no other traffic, signal faces pse and psw
+will remain green
 until the Red Limit timers complete on signal faces B, C, F, and G.
-This will cause signal face ps to follow the progression described above
-for signal paths B, C, F, and G.  Signal face ps  will transition to state
-Yellow
-substate Going Red, where it will display the hand with a countdown timer
+This will cause signal faces pse and psw to follow the progression described
+above
+for signal paths B, C, F, and G.  Signal faces pse and psw will transition
+to state Yellow
+substate Going Red, where they will display the hand with a countdown timer
 showing how many seconds are left in the Yellow Change timer.  When the Yellow
-Change timer is complete signal face ps will transition to the Red state,
-substate Waiting for Clearance.  When its Red Clearance timer completes it will
+Change timer is complete signal faces psw and pse will transition to the
+Red state,
+substate Waiting for Clearance.  When their Red Clearance timers completes
+they will
 transition to substate Travel Path is Clear and set the Cleared toggle.
 
 Signal faces B, C, F, and G will then proceed as described above
@@ -1113,13 +1130,13 @@ Signal face A requests permission to turn green, which it receives right
 away because no other signal face is requesting permisison to turn green.
 
 Signal face A then causes the Partial Clearance Requested system program
-to set the Clearance Requested toggle in signal faces ps, D, H, and J.
+to set the Clearance Requested toggle in signal faces psw, pse, D, H, and J.
 
-Signal faces ps, D, H, and J are already clear, so system program Partial
+Signal faces psw, pse, D, H, and J are already clear, so system program Partial
 Conflicting Paths are Clear sets toggle Partial Conflicting Paths are Clear
 in signal face A.
 Notice that signal faces F and G are not clear, so toggle Conflicting Paths
-are Clear does not get set.
+are Clear does not get set in signal face A..
 
 Signal face A proceeds to state Yellow substate Flashing 1.  The red light
 at lane A turns to a yellow flashing light, telling the vehicle operator
@@ -1129,9 +1146,9 @@ When the Left Flashing Yellow Waiting timer completes, if there is still
 traffic for
 signal face A it proceeds to substate Going Green where it sets the
 toggle Request Clearance, causing system program Clearance Requested to
-set the Clearance Requested toggle in signal faces ps, D, F, G, H, and J.
+set the Clearance Requested toggle in signal faces psw, pse, D, F, G, H, and J.
 
-Signal faces ps, D, H and J are already clear.  Signal faces F and G turn
+Signal faces psw, pse, D, H and J are already clear.  Signal faces F and G turn
 yellow, then red, then become clear.
 
 When signal faces F and G become clear system program Conflicting Paths
@@ -1155,13 +1172,14 @@ Building upon the previous two scenarios, suppose after the pedestrian
 has pushed his button and begun to cross, a vehicle arrives at lane A.
 Signal face A will be be given permission to turn green right away, since no
 other signal faces are waiting to turn green.  It will then request
-that signal faces ps, D, H and J turn red.  Signal faces D and J
-will already be clear because signal face ps is green, and signal face
-H has never been green, so signal face A is waiting only for signal face ps.
+that signal faces psw, pse, D, H and J turn red.  Signal faces D and J
+will already be clear because signal faces pse and psw is green,
+and signal face H has never been green, so signal face A is waiting
+only for signal faces psw and pse.
 
-When signal face ps is clear signal face A will turn green because
-signal faces F and G are clear due to signal face ps, so the left turn
-is protected rather than permissive.
+When signal faces psw and pse are clear signal face A will turn green because
+signal faces F and G are clear due to signal faces psw and pse,
+so the left turn is protected rather than permissive.
 
 Signal faces B, C, F and G will want to turn green and so signal faces
 F and G will ask signal face A to turn red.  Signal faces B and C
@@ -1177,30 +1195,35 @@ previously.
 \subsection{Multiple Arrivals}
 
 Suppose we are in the Idle condition when traffic arrives in quick succession
-at signal faces A, ps, D, E, pn, H, and J in that order.
+at signal faces A, psw, D, E, pne, H, and J in that order.
 
 Signal face A turns left flashing yellow immediately since lanes
 F and G are allowing traffic to flow.
 
-Signal face ps now receives permission to turn green.  It asks
+Signal faces psw and pse now receive permission to turn green.  They ask
 signal faces A, B, C, F, and G to turn red.
-While signal face ps is waiting for signal faces A, B, C, F, and G to clear,
-signal faces D, E, pn, H, and J request permission to turn green.
-Signal face D conflicts with ps, but E does not so it is allowed to
+While signal faces psw and pse are waiting for signal faces
+A, B, C, F, and G to clear,
+signal faces D, E, pne, pnw, H, and J request permission to turn green.
+Signal face D conflicts with psw and pse, but E does not so it is allowed to
 turn left flashing yellow out of order and immediately does so
-since it does not conflict with A or ps.  Signal face H conflicts
-with pn and signal face J conflicts with ps, so they have permission
-to turn green but cannot do so immediately.
+since it does not conflict with A, psw, or pse.
 
-When signal faces F and G are clear, signal faces A and E change from flashing
+Note: Check on signal faces H and J.
+
+When signal faces F and G are clear, signal face A changes from flashing
 left arrow yellow to steady left arrow green, since the left turn is now
-protected rather than permissive.
+protected rather than permissive.  Similarly, when signal faces B and C
+are clear, signal face E changes from flashing left arrow yellow to
+steady left arrow green.
 
-When signal faces A and E become clear signal faces ps and pn changes from
+When signal faces A and E become clear signal faces psw, pse, pnw and pne
+change from
 Don't Walk to Walk.  Signal faces H and J are now permitted to turn green
-out of order so they ask ps and pn to turn red.
+out of order so they ask psw, pse, pnw and pne to turn red.
 
-When signal faces ps and pn are clear, signal faces H and J turn green
+When signal faces psw, pse, pnw, and pne are clear,
+signal faces H and J turn green
 and signal face D finally gets permission to turn green.  When signal faces
 H and J are clear, signal face D turns green.
 
@@ -1211,7 +1234,7 @@ and we are back to the idle state.
 
 To summarize, if traffic arrives in quick succession on signal faces
 A, ps, D, E, pn, H and J, traffic will flow through signal face
-A and E, then through ps and pn, then H and J, and finally D.
+A and E, then through psw, pse, pnw, and pne, then H and J, and finally D.
 
 The following table shows the most important events in this screnrioario.
 
@@ -1232,10 +1255,10 @@ is approaching it instead sets the Preempt Green toggle, as follows:
   From Direction & Preempt Red & Preempt Green \endfirsthead
   \caption{Emergency Vehicle Control continued} \\
   From Direction & Preempt Red & Preempt Green \endhead
-  \hline West & A, ps, B, C, D, E, pn, F, G & H, J \\
-  \hline South & ps, D, E, pn, F, G, H, J & A, B, C \\
-  \hline East & A, ps, B, C, E, pn, F, G, H, J & D \\
-  \hline North & A, ps, B, C, D, pn, H, J & E, F, G \\
+  \hline West & A, psw, pse, B, C, D, E, pnw, pne, F, G & H, J \\
+  \hline South & psw, pse, D, E, pnw, pne, F, G, H, J & A, B, C \\
+  \hline East & A, psw, pne, B, C, E, pnw, pne, F, G, H, J & D \\
+  \hline North & A, psw, pne, B, C, D, pnw, pne, H, J & E, F, G \\
   \hline
 \end{longtable}
 
@@ -1262,7 +1285,7 @@ signal face and the state of the toggle corresponding to each vehicle detector.
 
 The operator can choose to also see the state and substate of each signal
 face, the state of each timer, the time until completion of each
-running timer, and the state of each toggle.
+running timer, and the state of each toggle and sensor.
 
 \subsubsection{Manual}
 
@@ -1312,7 +1335,7 @@ to highly trusted personnel.
 
 \section{Central Control}
 
-The signaling procedure described here takes only the traffic at a singal
+The signaling procedure described here takes only the traffic at a single
 intersection into account.  Where there are many intersections close
 together it will be worthwhile to control them all as a single system.
 In such a control system a central controller will provide overall
@@ -1355,31 +1378,32 @@ A realistic simulation must be based on the sizes and speeds of real objects.
   This is 363 feet to stop from 45 miles per hour in a comfortable 11 seconds,
   plus space for five cars or two trucks waiting for the light to change.
   The other travel lanes extend beyond the simulation.}
-\item[Car size]{Cars are 15 feet in length.}
-\item[Truck Size]{Trucks are 40 feet in length.}
+\item[Car size]{Cars are 15 feet long and 5.8 feet wide}
+\item[Truck Size]{Trucks are 40 feet long and 8.5 feet wide.}
 \item[Intersection]{The example intersection is 36 feet from north to south
   and 65.5 feet from east to west.}
 \item[speed limits]{The speed limit on lanes B, C, D, F, and G is
   45 miles per hour; on lanes A, D, E, H, and J 25 miles per hour,
-  on ps and pn, 3.5 feet per second.}
+  on the pedestrian crosswalks, 3.5 feet per second.}
 \item[Traffic Approaching Sensors]{The Traffic Approaching sensors are placed
   365 feet behind the stop line to give the vehicle operator time to stop
   if the light turns yellow just as the vehicle reaches that point.
-Only lanes B, C, F, and G have these sensors.}
+  Only lanes B, C, F, and G have these sensors.}
 \item[Minimum Green]{The minomum green interval for lanes B, C, F, and G
   is 12 seconds; for lanes D, H, and J 7 seconds; for lanes A and E 5 seconds;
   for lanes ps and pn 6 seconds.}
 \item[Passage Time]{The passage time for lanes B, C, F, and G is 3.5
   seconds; for lanes A, D, E, H, and J is 1.9 seconds;
-  for lanes ps and pn is 1 second.}
+  for the pedestrian signals is 1 second.}
 \item[Maximum Green]{The maximum green interval for lanes B, C, F, and G
   is 60 seconds; for lanes D, H, and J 40 seconds; for lanes A and E
-  20 seconds; for lanes ps and pn 10 seconds.}
+  20 seconds; for the pedestrian signals 10 seconds.}
 \item[Yellow Change]{The yellow change interval is 5 seconds on lanes
   B, C, F and G; 4 seconds on A and E; 3.5 seconds on lanes D, H and J;
-  19 seconds on lanes pn and ps.}
+  19 seconds on the pedestrian signals.}
 \item[Red Clearance]{The red clearance interval is 1 second on lanes A, B, C,
-  E, F, G and J; 1.5 seconds on lanes D, and G; 3 seconds on lanes ps and pn.}
+  E, F, G and J; 1.5 seconds on lanes D, and G; 3 seconds on
+  the pedestrian signals.}
 \end{description}
 
 \section{dummy}
