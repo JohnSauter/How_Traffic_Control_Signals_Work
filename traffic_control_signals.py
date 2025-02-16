@@ -55,7 +55,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.15 2025-02-09',
+                     version='traffic_control_signals 0.16 2025-02-15',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -216,21 +216,27 @@ if (do_table_output):
 
 # Write the first line in the event file.
 if (do_events_output):
-  events_file = open (events_file_name, 'wt')
-  events_file.write (
-    "time,lane,type,name,position,length,speed,travel path,present,color\n")
+  events_file = open (events_file_name, 'w')
+  events_file.write ("time,lane,type,color,name,position_x,position_y," +
+                     "destination_x,destination_y,orientation,length,speed," +
+                     "travel path,present\n")
 
 # Subroutine to write a traffic element event to the event file.
 def write_event (traffic_element):
   events_file.write (str(current_time) + "," +
                      traffic_element["current lane"] + "," +
                      traffic_element["type"] + "," +
+                     "unspecified" + "," +
                      traffic_element["name"] + "," +
-                     str(traffic_element["position"]) + "," +
+                     str(traffic_element["position x"]) + "," +
+                     str(traffic_element["position y"]) + "," +
+                     str(traffic_element["target x"]) + "," +
+                     str(traffic_element["target y"]) + "," +
+                     str(traffic_element["angle"]) + "," +
                      str(traffic_element["length"]) + "," +
                      str(traffic_element["speed"]) + "," +
                      traffic_element["travel path name"] + "," +
-                     str(traffic_element["present"]) + ",none\n")
+                     str(traffic_element["present"]) + "\n")
   
 # Construct the template finite state machine.  This template
 # contains the states, actions and transitions.  All of the signal
@@ -1077,6 +1083,7 @@ approach_sensor_distance = 365
 long_lane_length = 528
 short_lane_length = 450
 lane_width = 12
+crosswalk_width = 6
 
 # Subroutine to find the top and bottom of a lane.
 # The top is the place where traffic elements stop if they cannot
@@ -1404,27 +1411,41 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
         
-      case "pswpse" | "pnwpse":
-        # pedestrian crossing westbound
+      case "pswpse" | "pnwpne":
+        # pedestrian crossing westbound:
+        # Pedestrians cross in both
+        # directions without conflict.  We model this by having westbound
+        # pedestrians walk on the north side of the crosswalk.
         
         travel_path = (
-          (entry_lane_name, entry_start_x, entry_start_y),
-          (entry_lane_name, entry_intersection_x, entry_intersection_y),
-          ("crosswalk", entry_intersection_x - epsilon, entry_intersection_y),
-          ("crosswalk", exit_intersection_x + epsilon, exit_intersection_y),
-          (exit_lane_name, exit_intersection_x, exit_intersection_y),
-          (exit_lane_name, exit_end_x, exit_end_y))
+          (entry_lane_name, entry_start_x,
+           entry_start_y - (crosswalk_width / 2.0)),
+          (entry_lane_name, entry_intersection_x,
+           entry_intersection_y - (crosswalk_width / 2.0)),
+          ("crosswalk", entry_intersection_x - epsilon,
+           entry_intersection_y - (crosswalk_width / 2.0)),
+          ("crosswalk", exit_intersection_x + epsilon,
+           exit_intersection_y - (crosswalk_width / 2.0)),
+          (exit_lane_name, exit_intersection_x,
+           exit_intersection_y - (crosswalk_width / 2.0)),
+          (exit_lane_name, exit_end_x, exit_end_y - (crosswalk_width / 2.0)))
 
       case "psepsw" | "pnepnw":
         # Pedestrian crossing eastbound
+        # Eastbound pedestrians walk on the south side of the crosswalk.
 
         travel_path = (
-          (entry_lane_name, entry_start_x, entry_start_y),
-          (entry_lane_name, entry_intersection_x, entry_intersection_y),
-          ("crosswalk", entry_intersection_x + epsilon, entry_intersection_y),
-          ("crosswalk", exit_intersection_x - epsilon, exit_intersection_y),
-          (exit_lane_name, exit_intersection_x, exit_intersection_y),
-          (exit_lane_name, exit_end_x, exit_end_y))
+          (entry_lane_name, entry_start_x,
+           entry_start_y + (crosswalk_width / 2.0)),
+          (entry_lane_name, entry_intersection_x,
+           entry_intersection_y + (crosswalk_width / 2.0)),
+          ("crosswalk", entry_intersection_x + epsilon,
+           entry_intersection_y + (crosswalk_width / 2.0)),
+          ("crosswalk", exit_intersection_x - epsilon,
+           exit_intersection_y + (crosswalk_width / 2.0)),
+          (exit_lane_name, exit_intersection_x,
+           exit_intersection_y + (crosswalk_width / 2.0)),
+          (exit_lane_name, exit_end_x, exit_end_y - (crosswalk_width / 2.0)))
         
       case _:
         travel_path = None
@@ -1649,15 +1670,15 @@ for signal_face in signal_faces_list:
         match signal_face["name"]:
           case "psw" | "pnw":
             sensor["x min"] = lane_info[0] - 2
-            sensor["y min"] = lane_info[1] - 1
+            sensor["y min"] = lane_info[1]
             sensor["x max"] = lane_info[0]
-            sensor["y max"] = lane_info[1] + 1
+            sensor["y max"] = lane_info[1] + (crosswalk_width / 2.0)
             
           case "pse" | "pne":
             sensor["x min"] = lane_info[0]
-            sensor["y min"] = lane_info[1] - 1
+            sensor["y min"] = lane_info[1] - (crosswalk_width / 2.0)
             sensor["x max"] = lane_info[0] + 2
-            sensor["y max"] = lane_info[1] + 1
+            sensor["y max"] = lane_info[1]
             
           case "A" | "B" | "C":
             sensor["x min"] = lane_info[0] - (sensor_width / 2.0)
@@ -2105,7 +2126,7 @@ def perform_actions (signal_face, substate):
                             ". \\\\\n")
         if (do_events_output):
           events_file.write (str(current_time) + "," + signal_face["name"] +
-                             ",lamp,,,,,,," + external_lamp_name + "\n")
+                             ",lamp," + external_lamp_name + "\n")
       case "set toggle":
         set_toggle_value (signal_face, action[1], True, "")
         
@@ -2305,8 +2326,11 @@ def new_milestone (traffic_element):
   traffic_element["speed"] = speed_limit(traffic_element["current lane"],
                                          traffic_element["travel path name"],
                                          traffic_element["was stopped"])
-  traffic_element["angle"] = math.atan2 (target_x - start_x,
-                                         start_y - target_y)
+  # If the distance to the next milestone is zero the angle is indeterminate,
+  # so don't change it.
+  if (distance_between_milestones > 0):
+    traffic_element["angle"] = math.atan2 (target_x - start_x,
+                                           start_y - target_y)
   traffic_element["position x"] = start_x
   traffic_element["position y"] = start_y
   traffic_element["distance remaining"] = distance_between_milestones
@@ -2360,8 +2384,8 @@ def add_traffic_element (type, travel_path_name):
       traffic_element["length"] = 40
       traffic_element["width"] = 8.5
     case "pedestrian":
-      traffic_element["length"] = 3
-      traffic_element["width"] = 2
+      traffic_element["length"] = 2
+      traffic_element["width"] = (crosswalk_width / 3.0)
 
   traffic_element["current time"] = current_time
   traffic_element["present"] = True
