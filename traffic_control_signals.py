@@ -55,7 +55,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.16 2025-02-15',
+                     version='traffic_control_signals 0.17 2025-02-17',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -1079,6 +1079,8 @@ for signal_face in signal_faces_list:
 # Construct the travel paths.  A traffic element appears at the first
 # milestone, then proceeds to each following milestone.  When it reaches
 # the last milestone it vanishes from the simulation.
+car_length = 15
+truck_length = 40
 approach_sensor_distance = 365
 long_lane_length = 528
 short_lane_length = 450
@@ -1255,41 +1257,75 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
     exit_end_y = exit_lane_info[3]
     
     travel_path_name = entry_lane_name + exit_lane_name
-    epsilon = lane_width / 1200.0
     
     match travel_path_name:
-      case "A6" | "A1" | "A2":
-        # Northbound left or U turn
+      case "A6":
+        # Northbound left turn
 
         travel_path = (
           (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
           (adjacent_lane_name, adjacent_start_x, entry_start_y),
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x,
-           entry_intersection_y - epsilon),
-          ("intersection", (entry_intersection_x - lane_width),
-           (entry_intersection_y - lane_width)),
-          ("intersection", exit_intersection_x + epsilon, exit_intersection_y),
+           entry_intersection_y - car_length),
+          ("intersection", (exit_intersection_x + car_length),
+           exit_intersection_y),
+          ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
-      case "E3" | "E4" | "E5":
-        # Southbound left or U turn
+      case "A1" | "A2":
+        # Northbound U turn
 
         travel_path = (
           (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
           (adjacent_lane_name, adjacent_start_x, entry_start_y),
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x,
-           entry_intersection_y + epsilon),
-          ("intersection", (entry_intersection_x + lane_width),
-           (entry_intersection_y + lane_width)),
+           entry_intersection_y - car_length),
+          ("intersection", exit_intersection_x,
+           exit_intersection_y - car_length),
           ("intersection", exit_intersection_x, exit_intersection_y),
-          (exit_lane_name, exit_intersection_x - epsilon, exit_intersection_y),
+          (exit_lane_name, exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_end_x, exit_end_y))
+        
+      case "E4" | "E5":
+        # Southbound U turn
+
+        travel_path = (
+          (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
+          (adjacent_lane_name, adjacent_start_x, entry_start_y),
+          (entry_lane_name, entry_start_x, entry_start_y),
+          (entry_lane_name, entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x,
+           entry_intersection_y + car_length),
+          ("intersection", exit_intersection_x,
+           exit_intersection_y + car_length),
+          ("intersection", exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
+      case "E3":
+        # Southbound left turn
+
+        travel_path = (
+          (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
+          (adjacent_lane_name, adjacent_start_x, entry_start_y),
+          (entry_lane_name, entry_start_x, entry_start_y),
+          (entry_lane_name, entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x,
+           entry_intersection_y + car_length),
+          ("intersection", exit_intersection_x - car_length,
+           exit_intersection_y),
+          ("intersection", exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_end_x, exit_end_y))
 
       case "B5" | "C4":
         # Northbound through lanes
@@ -1297,9 +1333,8 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
         travel_path = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
-          ("intersection", entry_intersection_x,
-           entry_intersection_y - epsilon),
-          ("intersection", exit_intersection_x, exit_intersection_y + epsilon),
+          ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
@@ -1309,9 +1344,8 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
         travel_path = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
-          ("intersection", entry_intersection_x,
-           entry_intersection_y + epsilon),
-          ("intersection", exit_intersection_x, exit_intersection_y - epsilon),
+          ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
@@ -1321,9 +1355,12 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
         travel_path = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x,
-           entry_intersection_y - epsilon),
-          ("intersection", exit_intersection_x - epsilon, exit_intersection_y),
+           entry_intersection_y - car_length),
+          ("intersection", exit_intersection_x - car_length,
+           exit_intersection_y),
+          ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
@@ -1333,9 +1370,12 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
         travel_path = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x,
-           entry_intersection_y + epsilon),
-          ("intersection", exit_intersection_x + epsilon, exit_intersection_y),
+           entry_intersection_y + car_length),
+          ("intersection", exit_intersection_x + car_length,
+           exit_intersection_y),
+          ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
@@ -1345,9 +1385,12 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
         travel_path = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
-          ("intersection", entry_intersection_x - epsilon,
+          ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x - car_length,
            entry_intersection_y),
-          ("intersection", exit_intersection_x, exit_intersection_y - epsilon),
+          ("intersection", exit_intersection_x,
+           exit_intersection_y - car_length),
+          ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
@@ -1357,21 +1400,38 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
         travel_path = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
-          ("intersection", entry_intersection_x - epsilon,
-           entry_intersection_y),
-          ("intersection", exit_intersection_x - epsilon, exit_intersection_y),
+          ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
+      case "D3":
+        # Westbound U turn
+
+        travel_path = (
+          (entry_lane_name, entry_start_x, entry_start_y),
+          (entry_lane_name, entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x + car_length,
+           entry_intersection_y),
+          ("intersection", exit_intersection_x + car_length,
+           exit_intersection_y),
+          ("intersection", exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_end_x, exit_end_y))
+        
       case "D4":
         # Westbound right turn
 
         travel_path = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
-          ("intersection", entry_intersection_x - epsilon,
+          ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x - car_length,
            entry_intersection_y),
-          ("intersection", exit_intersection_x, exit_intersection_y + epsilon),
+          ("intersection", exit_intersection_x,
+           exit_intersection_y + car_length),
+          ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
         
@@ -1381,9 +1441,12 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
         travel_path = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
-          ("intersection", entry_intersection_x + epsilon,
+          ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x + car_length,
            entry_intersection_y),
-          ("intersection", exit_intersection_x, exit_intersection_y + epsilon),
+          ("intersection", exit_intersection_x,
+           exit_intersection_y + car_length),
+          ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
@@ -1393,9 +1456,8 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
         travel_path = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
-          ("intersection", entry_intersection_x + epsilon,
-           entry_intersection_y),
-          ("intersection", exit_intersection_x - epsilon, exit_intersection_y),
+          ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
@@ -1405,13 +1467,16 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
         travel_path = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
-          ("intersection", entry_intersection_x + epsilon,
+          ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x + car_length,
            entry_intersection_y),
-          ("intersection", exit_intersection_x, exit_intersection_y - epsilon),
+          ("intersection", exit_intersection_x,
+           exit_intersection_y - car_length),
+          ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
         
-      case "pswpse" | "pnwpne":
+      case "psepsw" | "pnepnw":
         # pedestrian crossing westbound:
         # Pedestrians cross in both
         # directions without conflict.  We model this by having westbound
@@ -1419,33 +1484,33 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
         
         travel_path = (
           (entry_lane_name, entry_start_x,
-           entry_start_y - (crosswalk_width / 2.0)),
+           entry_start_y - (crosswalk_width / 4.0)),
           (entry_lane_name, entry_intersection_x,
-           entry_intersection_y - (crosswalk_width / 2.0)),
-          ("crosswalk", entry_intersection_x - epsilon,
-           entry_intersection_y - (crosswalk_width / 2.0)),
-          ("crosswalk", exit_intersection_x + epsilon,
-           exit_intersection_y - (crosswalk_width / 2.0)),
+           entry_intersection_y - (crosswalk_width / 4.0)),
+          ("crosswalk", entry_intersection_x,
+           entry_intersection_y - (crosswalk_width / 4.0)),
+          ("crosswalk", exit_intersection_x,
+           exit_intersection_y - (crosswalk_width / 4.0)),
           (exit_lane_name, exit_intersection_x,
-           exit_intersection_y - (crosswalk_width / 2.0)),
-          (exit_lane_name, exit_end_x, exit_end_y - (crosswalk_width / 2.0)))
+           exit_intersection_y - (crosswalk_width / 4.0)),
+          (exit_lane_name, exit_end_x, exit_end_y - (crosswalk_width / 4.0)))
 
-      case "psepsw" | "pnepnw":
+      case "pswpse" | "pnwpne":
         # Pedestrian crossing eastbound
         # Eastbound pedestrians walk on the south side of the crosswalk.
 
         travel_path = (
           (entry_lane_name, entry_start_x,
-           entry_start_y + (crosswalk_width / 2.0)),
+           entry_start_y + (crosswalk_width / 4.0)),
           (entry_lane_name, entry_intersection_x,
-           entry_intersection_y + (crosswalk_width / 2.0)),
-          ("crosswalk", entry_intersection_x + epsilon,
-           entry_intersection_y + (crosswalk_width / 2.0)),
-          ("crosswalk", exit_intersection_x - epsilon,
-           exit_intersection_y + (crosswalk_width / 2.0)),
+           entry_intersection_y + (crosswalk_width / 4.0)),
+          ("crosswalk", entry_intersection_x,
+           entry_intersection_y + (crosswalk_width / 4.0)),
+          ("crosswalk", exit_intersection_x,
+           exit_intersection_y + (crosswalk_width / 4.0)),
           (exit_lane_name, exit_intersection_x,
-           exit_intersection_y + (crosswalk_width / 2.0)),
-          (exit_lane_name, exit_end_x, exit_end_y - (crosswalk_width / 2.0)))
+           exit_intersection_y + (crosswalk_width / 4.0)),
+          (exit_lane_name, exit_end_x, exit_end_y + (crosswalk_width / 4.0)))
         
       case _:
         travel_path = None
@@ -1773,13 +1838,23 @@ no_activity = True
 def format_time(the_time):
   return (f'{the_time:07.3f}')
 
+# Format the clock for display unless it has the same value as last time,
+# in which case just produce a blank space.
+previous_time = None
+def format_time_N(the_time):
+  global previous_time
+  if (the_time == previous_time):
+    return (" ")
+  previous_time = the_time
+  return (format_time (the_time))
+
 # The conversion factor from miles per hour to feet per second:
 mph_to_fps = fractions.Fraction(5280, 60*60)
 
 # Format the speed for display.
 def format_speed(the_speed_in_fps):
   the_speed_in_mph = the_speed_in_fps / mph_to_fps
-  if (the_speed_in_mph < 1.0):
+  if (the_speed_in_mph < 5.0):
     return ((f'{the_speed_in_fps:04.1f}') + " fps")
   else:
     return ((f'{the_speed_in_mph:04.1f}') + " mph")
@@ -1831,7 +1906,7 @@ def set_toggle_value (signal_face, toggle_name, new_value, source):
                  ".")
             
         if ((table_level >= 4) and (current_time > table_start_time)):
-          table_file.write ("\\hline " + format_time(current_time) + " & " +
+          table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                             signal_face["name"] + "& " + operator + 
                             toggle_name + byline + ". \\\\\n")
         no_activity = False
@@ -1849,7 +1924,7 @@ def set_toggle_value (signal_face, toggle_name, new_value, source):
                      signal_face["name"] + " finishes waiting: " +
                      format_time(wait_time) + ".")
             if ((table_level >= 5) and (current_time > table_start_time)):
-              table_file.write ("\\hline " + format_time(current_time) +
+              table_file.write ("\\hline " + format_time_N(current_time) +
                                 " & " + signal_face ["name"] +
                                 " & finishes waiting for " +
                                 format_time(wait_time) + ".\\\\\n")
@@ -1924,7 +1999,7 @@ def green_request_granted():
           print (format_time(current_time) + " signal face " +
                  signal_face["name"] + " starts waiting.")
         if ((table_level >= 5) and (current_time > table_start_time)):
-          table_file.write ("\\hline " + format_time(current_time) + " & " +
+          table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                             signal_face ["name"] + "& starts waiting. \\\\\n")
 
   # If the list of signal faces allowed to turn green is empty,
@@ -2120,7 +2195,7 @@ def perform_actions (signal_face, substate):
                  signal_face["name"] + " lamp set to " + external_lamp_name +
                  ".")
         if ((table_level >= 2) and (current_time > table_start_time)):
-          table_file.write ("\\hline " + format_time(current_time) + " & " +
+          table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                             signal_face["name"] +
                             " & Set lamp to " + external_lamp_name +
                             ". \\\\\n")
@@ -2171,7 +2246,7 @@ def perform_actions (signal_face, substate):
                     if ((table_level >= 4) and
                         (current_time > table_start_time)):
                       table_file.write ("\\hline " +
-                                        format_time(current_time) +
+                                        format_time_N(current_time) +
                                         " & " + signal_face_name +
                                         " & Unable to clear toggle " +
                                         toggle_name + " because sensor " +
@@ -2199,7 +2274,7 @@ def perform_actions (signal_face, substate):
                        timer_name + " duration " +
                        format_time(the_timer["remaining time"]) + ".")
               if ((table_level >= 5) and (current_time > table_start_time)):
-                table_file.write ("\\hline " + format_time(current_time) +
+                table_file.write ("\\hline " + format_time_N(current_time) +
                                   " & " + signal_face ["name"] +
                                   " & Start timer " + timer_name + ". \\\\\n")
       case _:
@@ -2240,7 +2315,7 @@ def enter_state (signal_face, state_name, substate_name):
            " enters state " + state_name +
            " substate " + substate_name + ".")
   if ((table_level >= 3) and (current_time > table_start_time)):
-    table_file.write ("\\hline " + format_time(current_time) + " & " +
+    table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                       signal_face["name"] + " & " +
                       "Enter state " + state_name + " substate " +
                       substate_name + ". \\\\\n")
@@ -2348,7 +2423,7 @@ def new_milestone (traffic_element):
   if (do_trace):
     trace_file.write ("New milestone bottom:\n")
     trace_file.write (" min x: " + str(min_x) + ", min y: " + str(min_y) +
-                      ", max x: " + str(max_x) + ", msx y: " + str(max_y) +
+                      ", max x: " + str(max_x) + ", max y: " + str(max_y) +
                       ".\n")
     pprint.pprint (traffic_element, trace_file)
     
@@ -2378,10 +2453,10 @@ def add_traffic_element (type, travel_path_name):
 
   match type:
     case "car":
-      traffic_element["length"] = 15
+      traffic_element["length"] = car_length
       traffic_element["width"] = 5.8
     case "truck":
-      traffic_element["length"] = 40
+      traffic_element["length"] = truck_length
       traffic_element["width"] = 8.5
     case "pedestrian":
       traffic_element["length"] = 2
@@ -2401,9 +2476,10 @@ def add_traffic_element (type, travel_path_name):
            ") distance to next milestone " +
            format_location(traffic_element["distance remaining"]) +
            " speed " + format_speed(traffic_element["speed"]) +
-           " angle " + str(traffic_element["angle"]) + ".")
+           " angle " + str(math.degrees(traffic_element["angle"])) +
+           " degrees.")
   if ((table_level >= 2) and (current_time > table_start_time)):
-    table_file.write ("\\hline " + format_time(current_time) + " & " +
+    table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                       traffic_element["current lane"] + " & " +
                       cap_first_letter(this_name) + " starts on travel path " +
                       travel_path_name + " speed " +
@@ -2534,7 +2610,7 @@ def move_traffic_element (traffic_element):
                format_location(traffic_element["distance remaining"]) +
                " is blocked by " + blocking_traffic_element["name"] + ".")
       if ((table_level >= 2) and (current_time > table_start_time)):
-        table_file.write ("\\hline " + format_time(current_time) + " & " +
+        table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                           traffic_element["current lane"] + " & " +
                           cap_first_letter(traffic_element["name"]) +
                           " is blocked by " +
@@ -2570,7 +2646,7 @@ def move_traffic_element (traffic_element):
                format_location(traffic_element["position x"]) + ", " +
                format_location(traffic_element["position y"]) + ").")
       if ((table_level >= 2) and (current_time > table_start_time)):
-        table_file.write ("\\hline " + format_time(current_time) + " & " +
+        table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                           traffic_element["current lane"] + " & " +
                           cap_first_letter(traffic_element["name"]) +
                           " exits the simulation. \\\\\n")
@@ -2609,7 +2685,7 @@ def move_traffic_element (traffic_element):
                              traffic_element["distance remaining"]) +
                            " stopped.")
                 if ((table_level >= 2) and (current_time > table_start_time)):
-                  table_file.write ("\\hline " + format_time(current_time) +
+                  table_file.write ("\\hline " + format_time_N(current_time) +
                                     " & " + traffic_element["current lane"] +
                                     " & " +
                                     cap_first_letter(traffic_element["name"]) +
@@ -2630,7 +2706,7 @@ def move_traffic_element (traffic_element):
                        format_location(traffic_element["position y"]) + ").")
             
               if ((table_level >= 2) and (current_time > table_start_time)):
-                table_file.write ("\\hline " + format_time(current_time) +
+                table_file.write ("\\hline " + format_time_N(current_time) +
                                   " & " + traffic_element["current lane"] +
                                   " & " +
                                   cap_first_letter(traffic_element["name"]) +
@@ -2669,7 +2745,7 @@ def move_traffic_element (traffic_element):
                      " speed " + format_speed(traffic_element["speed"]) +
                      tail_text + ".")
           if ((table_level >= 2) and (current_time > table_start_time)):
-            table_file.write ("\\hline " + format_time(current_time) +
+            table_file.write ("\\hline " + format_time_N(current_time) +
                               " & " + traffic_element["current lane"] +
                               " & " +
                               cap_first_letter(traffic_element["name"]) +
@@ -2695,7 +2771,7 @@ def move_traffic_element (traffic_element):
                  ") speed " + format_speed(traffic_element["speed"]) +
                  " at a milestone.")
         if ((table_level >= 5) and (current_time > table_start_time)):
-          table_file.write ("\\hline " + format_time(current_time) +
+          table_file.write ("\\hline " + format_time_N(current_time) +
                             " & " + traffic_element["current lane"] +
                             " & " +
                             cap_first_letter(traffic_element["name"]) +
@@ -2709,7 +2785,10 @@ def move_traffic_element (traffic_element):
         if (do_trace):
           trace_file.write ("Reached milestone:\n")
           pprint.pprint (traffic_element, trace_file)
-              
+
+        if (do_events_output):
+            write_event (traffic_element)
+            
   return
 
 # Subroutine to activate any sensors that detect a traffic element.
@@ -2735,7 +2814,7 @@ def check_sensors():
                      str(sensor["value"]) + " by " + sensor["triggered by"] +
                      ".")
             if ((table_level >= 2) and (current_time > table_start_time)):
-              table_file.write ("\\hline " + format_time(current_time) +
+              table_file.write ("\\hline " + format_time_N(current_time) +
                                 " & " + signal_face ["name"] + " & Sensor " +
                                 sensor_name + " set to " +
                                 str(sensor["value"]) + " by " +
@@ -2773,8 +2852,8 @@ def perform_script_action (the_operator, signal_face_name, the_operand):
                    signal_face["name"] + "/" + sensor_name + " set to " +
                    str(sensor["value"]) + " by script.")
           if ((table_level >= 2) and (current_time > table_start_time)):
-            table_file.write ("\\hline " + format_time(current_time) + " & " +
-                              signal_face ["name"] + " & Sensor " +
+            table_file.write ("\\hline " + format_time_N(current_time) +
+                              " & " + signal_face ["name"] + " & Sensor " +
                               sensor_name + " set to " + str(sensor["value"]) +
                               " by script. \\\\\n")
             
@@ -2814,7 +2893,7 @@ def update_timers():
                the_timer ["signal face name"] + "/" + the_timer["name"] +
                " completed.")
       if ((table_level >= 5) and (current_time > table_start_time)):          
-        table_file.write ("\\hline " + format_time(current_time) + " & " +
+        table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                           the_timer ["signal face name"] + " & Timer " +
                           the_timer ["name"] + " completed. \\\\\n")
 
@@ -2982,7 +3061,7 @@ while ((current_time < end_time) and (error_counter == 0)):
               print (format_time(current_time) + " Sensor " +
                      signal_face ["name"] + "/" + sensor_name + " is True.")
             if ((table_level >= 5) and (current_time > table_start_time)):
-              table_file.write ("\\hline " + format_time(current_time) +
+              table_file.write ("\\hline " + format_time_N(current_time) +
                                 " & " + signal_face["name"] +
                                 " &  Sensor " + sensor_name +
                                 " is True. \\\\\n")

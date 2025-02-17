@@ -1,5 +1,5 @@
 % File: traffic_control_signals.tex, author: John Sauter,
-% date: February 9, 2025.
+% date: February 16, 2025.
 
 % Copyright © 2025 by John Sauter.
 % Licensed under the Creative Commons Attribution-ShareAlike 4.0 International
@@ -1161,8 +1161,7 @@ signal faces F and G to turn green when their Red Limit timers complete,
 as described above.
 
 The following are the events that take place assuming there is only
-one vehicle that turns left, but it must wait for oncoming traffic
-to clear.
+one vehicle that turns left, but it chooses to wait for a green arrow.
 
 \input{left_turn_table.tex}
 
@@ -1200,40 +1199,25 @@ at signal faces A, psw, D, E, pne, H, and J in that order.
 Signal face A turns left flashing yellow immediately since lanes
 F and G are allowing traffic to flow.
 
-Signal faces psw and pse now receive permission to turn green.  They ask
-signal faces A, B, C, F, and G to turn red.
-While signal faces psw and pse are waiting for signal faces
-A, B, C, F, and G to clear,
-signal faces D, E, pne, pnw, H, and J request permission to turn green.
-Signal face D conflicts with psw and pse, but E does not so it is allowed to
-turn left flashing yellow out of order and immediately does so
-since it does not conflict with A, psw, or pse.
+Signal face psw asks signal faces A, B, C, F, and G to turn red.
+Signal face A is currently left flashing yellow but signal faces
+B, C, F, and G turn yellow and then red.
 
-Note: Check on signal faces H and J.
+With the through lanes all stopped signal face A turns
+green, then yellow, then red, permitting the pedestrians in the south
+crosswalk to cross.  Signal face E does the same, permitting the
+pedestrians in the north crosswalk to cross.
 
-When signal faces F and G are clear, signal face A changes from flashing
-left arrow yellow to steady left arrow green, since the left turn is now
-protected rather than permissive.  Similarly, when signal faces B and C
-are clear, signal face E changes from flashing left arrow yellow to
-steady left arrow green.
+When the pedestrians in the south crosswalk have crossed, signal
+face J turns green.  Similarly, when the pedestrians in the
+north crosswalk have crossed, signal face H turns green.
 
-When signal faces A and E become clear signal faces psw, pse, pnw and pne
-change from
-Don't Walk to Walk.  Signal faces H and J are now permitted to turn green
-out of order so they ask psw, pse, pnw and pne to turn red.
-
-When signal faces psw, pse, pnw, and pne are clear,
-signal faces H and J turn green
-and signal face D finally gets permission to turn green.  When signal faces
-H and J are clear, signal face D turns green.
-
-While signal face D is green, signal faces B, C, F, and G reach their
-Green Limit and are given permisson to turn green.  This causes signal
-face D to turn red, which allows signal faces B, C, F, and G to turn green
-and we are back to the idle state.
+When signal faces H and J have turned red, signal face D
+can finally turn green.  When it turns red signal faces
+B, C, F, and G turn green, getting us back to the idle state.
 
 To summarize, if traffic arrives in quick succession on signal faces
-A, ps, D, E, pn, H and J, traffic will flow through signal face
+A, psw, D, E, pne, H and J, traffic will flow through signal faces
 A and E, then through psw, pse, pnw, and pne, then H and J, and finally D.
 
 The following table shows the most important events in this screnrioario.

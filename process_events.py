@@ -57,7 +57,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='process_events 0.16 2025-02-15',
+                     version='process_events 0.16 2025-02-16',
                      help='print the version number and exit')
 parser.add_argument ('--animation-directory', metavar='animation_directory',
                      help='write animation output image files ' +
@@ -280,7 +280,7 @@ flash_light_time = flash_cycle_time * ((fractions.Fraction(1, 2) +
 
 if (do_trace):
   trace_file.write ("Flashing: cycle " + format_time(flash_cycle_time) +
-                    ", liggt " + format_time(flash_light_time) + "\n")
+                    ", light " + format_time(flash_light_time) + "\n")
   pprint.pprint(completed_flashers, trace_file)
 
 # The flashing light is iluminated at the start time.
@@ -339,12 +339,15 @@ if (do_trace):
 background=cv2.imread("background.png")
 canvas_size = background.shape[0:2]
 
-# Subroutine to map ground locations and sizes to screen locations and sizes.
-def map_ground_to_screen (x_feet, y_feet):
+# Subroutine to map ground locations to screen locations.
+# The ground has its origin at the center of the intersection, which is also
+# the center of the screen.  The screen has its origin at the upper left
+# corner.
+def map_location_ground_to_screen (y_feet, x_feet):
   global ground_height
   global background
   
-  screen_height, screen_width = background.shape[:2]
+  screen_height, screen_width = background.shape[0:2]
 
   # The ground is the same shape as the screen, but is measured in feet.
   ground_width = ground_height * (screen_width / screen_height)
@@ -353,21 +356,32 @@ def map_ground_to_screen (x_feet, y_feet):
   ground_center_y = ground_height / 2
   screen_center_x = screen_width / 2
   screen_center_y = screen_height / 2
-  x_from_center = x_feet - ground_center_x
-  y_from_center = y_feet - ground_center_y
+  x_from_center = x_feet
+  y_from_center = y_feet
   x_from_center = x_from_center * (screen_width / ground_width)
   y_from_center = y_from_center * (screen_height / ground_height)
   x_pixels = x_from_center + screen_center_x
   y_pixels = y_from_center + screen_center_y
 
-  return (int(x_pixels), int(y_pixels))
+  return (int(y_pixels), int(x_pixels))
 
-# Subroutine to map screen locations and sizes to ground locations and sizes.
-def map_screen_to_ground (x_pixels, y_pixels):
+# Subroutine to convert a ground size to a screen size.
+def convert_ground_size_to_screen_size (size_in_feet):
+  global ground_height
+  global background
+
+  screen_height, screen_width = background.shape[0::2]
+  size_in_pixels = size_in_feet * (screen_height / ground_height)
+  return (int(size_in_pixels))
+          
+# Subroutine to map screen locations to ground locations.
+# The screen has its origin at the top left, while the ground has its origin
+# in the center of the screen.
+def map_location_screen_to_ground (y_pixels, x_pixels):
   global ground_height
   global background
   
-  screen_height, screen_width = background.shape[:2]
+  screen_height, screen_width = background.shape[0:2]
   ground_width = ground_height * (screen_width / screen_height)
   ground_center_x = ground_width / 2
   ground_center_y = ground_height / 2
@@ -380,8 +394,16 @@ def map_screen_to_ground (x_pixels, y_pixels):
   x_feet = x_from_center + ground_center_x
   y_feet = y_from_center + ground_center_y
   
-  return (x_feet, y_feet)
+  return (y_feet, x_feet)
 
+# Subroutine to convert a screen size to a ground size.
+def convert_screen_size_to_ground_size (size_in_pixels):
+  global ground_height
+  global background
+
+  screen_height, screen_width = background.shape[0::2]
+  size_in_feet = size_in_pixels * (ground_height / screen_height)
+  return (int(size_in_feet))
 
 # Place a small image on a large image, removing what was below
 # except for transparent areas.  The anchor point of the small image is placed
@@ -391,53 +413,58 @@ def place_image(name, canvas, image_info, orientation, x_feet, y_feet):
   overlay_name, overlay_image, desired_width, desired_height = image_info
 
   if (do_trace):
-    trace_file.write ("Placing image " + str(overlay_name) + " size (" +
-                      format_position(desired_width) + ", " +
-                      format_position(desired_height) + ")\n orientation " +
-                      str(orientation) + " at (" +
+    trace_file.write ("Placing image " + str(overlay_name) +
+                      "\n desired ground width: " +
+                      format_position(desired_width) + ", height: " +
+                      format_position(desired_height) + " orientation: " +
+                      str(orientation) + "\n at ground location (" +
                       format_position(x_feet) + ", " +
                       format_position(y_feet) + ").\n")
     pprint.pprint (overlay_image, trace_file)
 
   # Rotate and shrink the image
   original_height, original_width = overlay_image.shape[0:2]
-  anchor_x = original_width / 2
+  target_height = convert_ground_size_to_screen_size (desired_height)
+  target_width = convert_ground_size_to_screen_size (desired_width)
+  anchor_x = int(target_width / 2.0)
   anchor_y = 0
-  target_width, target_height = map_ground_to_screen (desired_width,
-                                                      desired_height)
 
   if (do_trace):
-    trace_file.write ("target width: " + str(target_width) +
-                      ", target height: " + str(target_height) + ".\n")
+    trace_file.write (" overlay image screen width: " + str(original_width) +
+                      ", height: " + str(original_height) + ".\n")
+    trace_file.write (" target screen width: " + str(target_width) +
+                      ", height: " + str(target_height) + ".\n")
     
   rotation_matrix = cv2.getRotationMatrix2D ((anchor_x, anchor_y),
                                              math.degrees(orientation), 1)
 
   if (do_trace):
-    trace_file.write ("Rotation matrix:\n")
+    trace_file.write (" rotation matrix:\n")
     pprint.pprint (rotation_matrix, trace_file)
     
   rotated_image = cv2.warpAffine (overlay_image, rotation_matrix,
-                                  (original_height, original_width))
+                                  (original_width, original_height))
+  rotated_height, rotated_width = rotated_image.shape[0:2]
 
   if (do_trace):
-    trace_file.write ("Rotated image:\n")
+    trace_file.write (" rotated image: screen width: " + str(rotated_width) +
+                      ", height: " + str(rotated_height) + ":\n")
     pprint.pprint (rotated_image, trace_file)
 
   small_image = cv2.resize(rotated_image, (target_width, target_height),
                            interpolation=cv2.INTER_AREA)
-  y_size, x_size = small_image.shape[0:2]
+  small_height, small_width = small_image.shape[0:2]
  
   if (do_trace):
-    trace_file.write (" Reduced from (" + str(original_width) + ", " +
-                      str(original_height) + ") to (" + str(x_size) +
-                      ", " + str(y_size) + ").\n")
+    trace_file.write (" reduced from (" + str(original_width) + ", " +
+                      str(original_height) + ") to (" + str(small_width) +
+                      ", " + str(small_height) + ").\n")
     pprint.pprint (small_image, trace_file)
                     
   # Calculate the area in the large image that will be replaced.
   # The ground position passed is where the anchor goes.
   
-  x_position, y_position = map_ground_to_screen (x_feet, y_feet)
+  y_position, x_position = map_location_ground_to_screen (y_feet, x_feet)
 
   grey_image = cv2.cvtColor (small_image, cv2.COLOR_BGR2GRAY)
   thresholded_image = cv2.threshold (grey_image,226,255,cv2.THRESH_BINARY)[1]
@@ -446,18 +473,21 @@ def place_image(name, canvas, image_info, orientation, x_feet, y_feet):
   x_max = x_min + width
   y_max = y_min + height
 
-  if (do_trace):
-    trace_file.write (" Anchor at (" + str(x_position) + ", " +
-                      str(y_position) + ").\n")
-    trace_file.write (" Rotated width: " + str(width) + ", height: " +
-                      str(height) + ".\n")
-    trace_file.write (" Extent (" + str(x_min) + ", " + str(y_min) + ") to (" +
-                      str(x_max) + ", " + str(y_max) + ").\n")
-    
-  pixel_changed = False
-  pixel_off_canvas = False
   canvas_height, canvas_width = canvas.shape[0:2]
 
+  if (do_trace):
+    trace_file.write (" anchor placed on screen at (" + str(x_position) +
+                      ", " + str(y_position) + ").\n")
+    trace_file.write (" small image enclosing rectangle width: " + str(width) +
+                      ", height: " + str(height) + ".\n")
+    trace_file.write (" extent (" + str(x_min) + ", " + str(y_min) + ") to (" +
+                      str(x_max) + ", " + str(y_max) + ").\n")
+    trace_file.write (" canvas width: " + str(canvas_width) +
+                      " height: " + str(canvas_height) + ".\n")
+    
+  pixel_off_canvas = False
+  pixels_changed = 0
+ 
   # Replace the pixels in the area overlapped by the image being placed
   # by the pixels in the image being placed.  However, if there is
   # transparency in the image being placed, let the previous contents
@@ -467,15 +497,15 @@ def place_image(name, canvas, image_info, orientation, x_feet, y_feet):
   # be time-consuming.
   # The large image is assumed not to have an alpha channel.
   # Don't write any pixels that are off the canvas.
-  
+
   for y in range(height):
     overlay_y = y + y_min
-    canvas_y = overlay_y + y_position
+    canvas_y = overlay_y + y_position - anchor_y
     if ((canvas_y >= 0) and (canvas_y < canvas_height)):
       for x in range(width):
         overlay_x = x + x_min
-        canvas_x = overlay_x + x_position
-        if ((canvas_x >= 0) and (canvas_x < canvas_height)):
+        canvas_x = overlay_x + x_position - anchor_x
+        if ((canvas_x >= 0) and (canvas_x < canvas_width)):
       
           # Elements 0 to 2 are the color channels.
           overlay_blue = small_image[overlay_y, overlay_x, 0]
@@ -514,6 +544,8 @@ def place_image(name, canvas, image_info, orientation, x_feet, y_feet):
           canvas[canvas_y, canvas_x, 1] = composite_green
           canvas[canvas_y, canvas_x, 2] = composite_red
 
+          pixels_changed = pixels_changed + 1
+
           if (do_trace and (trace_level > 1)):
             trace_file.write ("Pixel at (" + str(canvas_x) + ", " +
                               str(canvas_y) + ") changed from (" +
@@ -523,18 +555,19 @@ def place_image(name, canvas, image_info, orientation, x_feet, y_feet):
                               str(composite_green) + ", " +
                               str(composite_red) + ".\n")
             
-          pixel_changed = True
         else:
           pixel_off_canvas = True
     else:
       pixel_off_canvas = True
 
   if (do_trace):
-    if (pixel_changed):
+    if (pixels_changed > 0):
       if (pixel_off_canvas):
-        trace_file.write (" Image partly placed.\n")
+        trace_file.write (" Image partly placed: " + str(pixels_changed) +
+                          " pixels changed.\n")
       else:
-        trace_file.write (" Image fully placed.\n")
+        trace_file.write (" Image fully placed: " + str(pixels_changed) +
+                          " pixels changed.\n")
     else:
       trace_file.write (" Image not placed.\n")
     
@@ -621,31 +654,31 @@ def choose_lamp_image (lane, color):
   image_path = pathlib.Path(image_name)
   if (image_path in image_cache):
     image = image_cache[image_path]
+    image_height, image_width = image.shape[0:2]
   else:
     if (do_trace):
       trace_file.write ("Reading image " + str(image_path) + ".\n")
       
     image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+    image_height, image_width = image.shape[0:2]
     
     if (do_trace):
-      trace_height, trace_width = image.shape[0:2]
-      trace_file.write (" size (" + str(trace_width) + ", " +
-                        str(trace_height) + ").\n")
+      trace_file.write (" width: " + str(image_width) + ", height: " +
+                        str(image_height) + ".\n")
     image_cache[image_path] = image
 
-  image_height, image_width = image.shape[0:2]
   match lane:
     case "psw" | "pse" | "pnw" | "pne":
       desired_width = lane_width
     case _:
-      desired_width = lane_width / 3
+      desired_width = lane_width / 3.0
       
   desired_height = desired_width * (image_height / image_width)
   
   image_info = (image_path, image, desired_width, desired_height)
   return (image_info)
   
-# SUbroutine to choose the image for a moving object.
+# Subroutine to choose the image for a moving object.
 def choose_moving_object_image (object_type, orientation, length):
   global image_cache
   
@@ -689,14 +722,12 @@ def choose_moving_object_image (object_type, orientation, length):
 # This is the place where moving objects stop if they cannot
 # enter the intersection and where moving objects leaving
 # the intersection enter the lane.
+# These locations are in the ground coordinate system, which has its origin
+# in the center of the screen and in which distances are measured in feet.
 def find_lane_position (lane):
-  global canvas_size
-  global lane_width
-  
-  center_y = canvas_size[0] / 2
-  center_x = canvas_size[1] / 2
 
-  center_x, center_y = map_screen_to_ground (center_x, center_y)
+  center_x = 0
+  center_y = 0
   
   match lane:
     case "1":
@@ -740,22 +771,6 @@ def find_lane_position (lane):
     
   return None
     
-# Find the direction of a lane.
-# Moving objects with a positive speed in this lane proceed
-# in this direction to or from the lane's origin.
-def find_lane_direction (lane):
-  match lane:
-    case "1" | "2" | "E" | "F" | "G":
-      return (0, 1) # down
-    case "3" | "H" | "J" | "ps":
-      return (1, 0) # right
-    case "A" | "B" | "C" | "4" | "5":
-      return (0, -1) # up
-    case "pn" | "D" | "6":
-      return (-1, 0) # left
-    
-  return None
-
 # Subroutine to find the offset of the traffic signal relative to the
 # origin of the lane.
 def find_signal_offset (lane):
@@ -789,7 +804,6 @@ for lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne", "F",
   lane["color"] = "Dark"
   lane["position x"], lane["position y"] = find_lane_position (lane_name)
   lane["signal offset"] = find_signal_offset(lane_name)
-  lane["direction"] = find_lane_direction(lane_name)
   lanes_dict[lane_name] = lane
 
   for lane_name in ("1", "2", "3", "4", "5", "6"):
@@ -797,9 +811,12 @@ for lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne", "F",
     lane["name"] = lane_name
     lane["color"] = "Blank"
     lane["position x"], lane["position y"] = find_lane_position(lane_name)
-    lane["direction"] = find_lane_direction(lane_name)
     lanes_dict[lane_name] = lane
-    
+
+if (do_trace):
+  trace_file.write ("Lanes:\n")
+  pprint.pprint (lanes_dict, trace_file)
+  
 # Create a data structure to hold information about moving objects.
 event_times = sorted(events.keys())
 moving_objects_dict = dict()
@@ -829,7 +846,7 @@ for event_time in event_times:
         moving_object["lane name"] = event["lane name"]
 
 if (do_trace):
-  trace_file.write ("moving objects:\n")
+  trace_file.write ("Moving objects:\n")
   pprint.pprint(moving_objects_dict, trace_file)
 
 # Subroutine to determine the present location of a moving object.
@@ -944,7 +961,8 @@ for event_time in event_times:
               name = moving_object["name"]
               x_feet, y_feet = find_moving_object_location (event_time,
                                                             moving_object)
-              x_pixels, y_pixels = map_ground_to_screen (x_feet, y_feet)
+              y_pixels, x_pixels = map_location_ground_to_screen (y_feet,
+                                                                  x_feet)
               the_orientation = moving_object["orientation"]
               image_info = choose_moving_object_image (type, the_orientation,
                                                   moving_object["length"])
