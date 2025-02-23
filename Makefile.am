@@ -1,4 +1,4 @@
-# File: Makefile.am, author: John Sauter, date: January 25, 2025.
+# File: Makefile.am, author: John Sauter, date: February 23, 2025.
 #
 # Build traffic_control_signals.pdf
 
@@ -262,7 +262,7 @@ signal_rrr_Yellow.png MUTCD_Ped_Signal_-_Hand_with_timer.png \
 MUTCD_Ped_Signal_-_Steady_hand.png MUTCD_Ped_Signal_-_Walk.png \
 events.csv build_video.sh background.png car-38800411-right.png \
 car-38800411-up.png truck-51893967-up.png truck-51893967-right.png \
-man_walking_right.png
+man_walking_right.png render_animation.sh
 	bash build_video.sh
 
 # When removing files, also remove the followins:

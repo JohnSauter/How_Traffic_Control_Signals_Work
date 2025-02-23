@@ -27,11 +27,7 @@
 #     telephone: (603) 424-1188
 #     e-mail: John_Sauter@systemeyescomputerstore.com
 
-#import sys
-#import re
-#import hashlib
-#import datetime
-#from jdcal import gcal2jd, jd2gcal
+import time
 import numpy as np
 import os
 os.environ["OPENCV_IO_MAX_IMAGE_PIXELS"] = pow(2,40).__str__()
@@ -57,7 +53,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='process_events 0.16 2025-02-16',
+                     version='process_events 0.18 2025-02-23',
                      help='print the version number and exit')
 parser.add_argument ('--animation-directory', metavar='animation_directory',
                      help='write animation output image files ' +
@@ -66,8 +62,15 @@ parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
 parser.add_argument ('--events-file', metavar='events_file',
                      help='read event output from the traffic simulator')
-parser.add_argument ('--start', type=decimal.Decimal, metavar='start',
+parser.add_argument ('--start-time', type=decimal.Decimal,
+                     metavar='start_time',
                      help='when in the simulation to start the animation')
+parser.add_argument ('--start-frame', type=decimal.Decimal,
+                     metavar='start_frame',
+                     help='the first frame to render, default 1')
+parser.add_argument ('--end-frame', type=decimal.Decimal,
+                     metavar='end_frame',
+                     help='the last frame to render, default unlimited')
 parser.add_argument ('--duration', type=decimal.Decimal, metavar='duration',
                      help='how long to run the animation')
 parser.add_argument('--FPS', type=decimal.Decimal, metavar='FPS',
@@ -84,6 +87,8 @@ animation_directory_name = ""
 do_events_input = False
 events_file_name = ""
 start_time = decimal.Decimal("0.000")
+start_frame = 1
+end_frame = None
 duration_time = None
 verbosity_level = 1
 error_counter = 0
@@ -111,14 +116,20 @@ if (arguments ['events_file'] != None):
   do_events_input = True
   events_file_name = arguments ['events_file']
 
-if (arguments ['start'] != None):
-  start_time = arguments ['start']
+if (arguments ['start_time'] != None):
+  start_time = arguments ['start_time']
+
+if (arguments ['start_frame'] != None):
+  start_frame = int(arguments ['start_frame'])
+
+if (arguments ['end_frame'] != None):
+  end_frame = int(arguments ['end_frame'])
 
 if (arguments ['duration'] != None):
   duration_time = arguments ['duration']
   
 if (arguments ['FPS'] != None):
-  frames_per_second = arguments ['FPS']
+  frames_per_second = int(arguments ['FPS'])
 else:
   frames_per_second = 30
   
@@ -129,9 +140,13 @@ if (arguments ['verbose'] != None):
 def format_time(the_time):
   return (f'{the_time:07.3f}')
 
-# Subroutine to format a position or distance for display.
+# Subroutine to format a ground position or distance for display.
 def format_position(the_position):
   return (f'{the_position:07.3f}')
+
+# Subroutine to format a screen position or distance for display.
+def format_screen_position (the_position):
+  return (f'{the_position:04.0f}')
   
 start_time = fractions.Fraction(start_time)
 if (duration_time != None):
@@ -408,9 +423,24 @@ def convert_screen_size_to_ground_size (size_in_pixels):
 # Place a small image on a large image, removing what was below
 # except for transparent areas.  The anchor point of the small image is placed
 # at the indicated location on the large image.
-def place_image(name, canvas, image_info, orientation, x_feet, y_feet):
+small_image_cache = dict()
+
+def place_image (name, canvas, image_info, orientation, x_feet, y_feet):
+  global small_image_cache
+
+  # Calculate the area in the large image that will be replaced.
+  # The ground position passed is where the anchor goes.
+  
+  y_position, x_position = map_location_ground_to_screen (y_feet, x_feet)
 
   overlay_name, overlay_image, desired_width, desired_height = image_info
+
+  original_height, original_width = overlay_image.shape[0:2]
+  target_height = convert_ground_size_to_screen_size (desired_height)
+  target_width = convert_ground_size_to_screen_size (desired_width)
+
+  anchor_x = int(original_width / 2.0)
+  anchor_y = 0
 
   if (do_trace):
     trace_file.write ("Placing image " + str(overlay_name) +
@@ -420,73 +450,152 @@ def place_image(name, canvas, image_info, orientation, x_feet, y_feet):
                       str(orientation) + "\n at ground location (" +
                       format_position(x_feet) + ", " +
                       format_position(y_feet) + ").\n")
-    pprint.pprint (overlay_image, trace_file)
 
-  # Rotate and shrink the image
-  original_height, original_width = overlay_image.shape[0:2]
-  target_height = convert_ground_size_to_screen_size (desired_height)
-  target_width = convert_ground_size_to_screen_size (desired_width)
-  anchor_x = int(target_width / 2.0)
-  anchor_y = 0
+    trace_file.write (" target screen width: " +
+                      format_screen_position(target_width) +
+                      ", height: " + format_screen_position(target_height) +
+                      ".\n")
+    trace_file.write (" anchor x: " +
+                      format_screen_position(anchor_x) +
+                      ", y: " + format_screen_position(anchor_y) +
+                      ".\n")
 
+  # If the image is cached we can save a lot of time.
+  small_image_cache_key = (str(overlay_name) + " / " +
+                           format_position(desired_height) +
+                           " / " + format_position(desired_width) + " / " +
+                           str(orientation) + " //.")
   if (do_trace):
-    trace_file.write (" overlay image screen width: " + str(original_width) +
-                      ", height: " + str(original_height) + ".\n")
-    trace_file.write (" target screen width: " + str(target_width) +
-                      ", height: " + str(target_height) + ".\n")
-    
-  rotation_matrix = cv2.getRotationMatrix2D ((anchor_x, anchor_y),
-                                             math.degrees(orientation), 1)
-
-  if (do_trace):
-    trace_file.write (" rotation matrix:\n")
-    pprint.pprint (rotation_matrix, trace_file)
-    
-  rotated_image = cv2.warpAffine (overlay_image, rotation_matrix,
-                                  (original_width, original_height))
-  rotated_height, rotated_width = rotated_image.shape[0:2]
-
-  if (do_trace):
-    trace_file.write (" rotated image: screen width: " + str(rotated_width) +
-                      ", height: " + str(rotated_height) + ":\n")
-    pprint.pprint (rotated_image, trace_file)
-
-  small_image = cv2.resize(rotated_image, (target_width, target_height),
-                           interpolation=cv2.INTER_AREA)
-  small_height, small_width = small_image.shape[0:2]
- 
-  if (do_trace):
-    trace_file.write (" reduced from (" + str(original_width) + ", " +
-                      str(original_height) + ") to (" + str(small_width) +
-                      ", " + str(small_height) + ").\n")
-    pprint.pprint (small_image, trace_file)
-                    
-  # Calculate the area in the large image that will be replaced.
-  # The ground position passed is where the anchor goes.
+    trace_file.write (" small image cache key: " + small_image_cache_key +
+                      "\n")
+                           
+  if (small_image_cache_key in small_image_cache):
+    image_dict = small_image_cache[small_image_cache_key]
+    small_image = image_dict["small image"]
+    height = image_dict["height"]
+    width = image_dict["width"]
+    anchor_x = image_dict["anchor x"]
+    anchor_y = image_dict["anchor y"]
+    x_min = image_dict["x min"]
+    x_max = image_dict["x max"]
+    y_min = image_dict["y min"]
+    y_max = image_dict["y max"]
+  else:
+    # Rotate and shrink the image
   
-  y_position, x_position = map_location_ground_to_screen (y_feet, x_feet)
+    # Pad the original image with transparency so it has room to rotate
+    # without being cropped.
+    pad_size = max (original_height, original_width) + 1
+    padded_image = cv2.copyMakeBorder (overlay_image, top=pad_size,
+                                       bottom=pad_size, left=pad_size,
+                                       right=pad_size,
+                                       borderType=cv2.BORDER_CONSTANT,
+                                       value=(0, 0, 0, 0))
+    padded_height, padded_width = padded_image.shape[0:2]
+  
+    # Adjust the anchor coordinates and target height and width
+    # to take the padding into account.
+    anchor_x = anchor_x + pad_size
+    anchor_y = anchor_y + pad_size
+    target_width = int((target_width / original_width) * padded_width)
+    target_height = int ((target_height / original_height) * padded_height)
 
-  grey_image = cv2.cvtColor (small_image, cv2.COLOR_BGR2GRAY)
-  thresholded_image = cv2.threshold (grey_image,226,255,cv2.THRESH_BINARY)[1]
-  inverted_image = cv2.bitwise_not (thresholded_image)
-  x_min, y_min, width, height = cv2.boundingRect(inverted_image)
-  x_max = x_min + width
-  y_max = y_min + height
+    padded_height, padded_width = padded_image.shape[0:2]
+  
+    if (do_trace):
+      trace_file.write (" padded anchor x: " +
+                        format_screen_position(anchor_x) +
+                        ", y: " + format_screen_position(anchor_y) +
+                        ".\n")
+      trace_file.write (" overlay image screen width: " +
+                        format_screen_position(original_width) +
+                        ", height: " +
+                        format_screen_position(original_height) + ".\n")
+      trace_file.write (" padded image screen width: " +
+                        format_screen_position(padded_width) +
+                        ", height: " +
+                        format_screen_position(padded_height) + ".\n")
+      trace_file.write (" target screen width: " +
+                        format_screen_position(target_width) +
+                        ", height: " +
+                        format_screen_position(target_height) + ".\n")
+    
+    rotation_matrix = cv2.getRotationMatrix2D ((anchor_x, anchor_y),
+                                             -math.degrees(orientation), 1)
 
+    if (do_trace):
+      trace_file.write (" rotation matrix:\n")
+      pprint.pprint (rotation_matrix, trace_file)
+    
+    rotated_image = cv2.warpAffine (padded_image, rotation_matrix,
+                                  (padded_width, padded_height))
+    rotated_height, rotated_width = rotated_image.shape[0:2]
+
+    if (do_trace):
+      trace_file.write (" rotated image: screen width: " +
+                        format_screen_position(rotated_width) +
+                        ", height: " + format_screen_position(rotated_height) +
+                        ".\n")
+
+    small_image = cv2.resize(rotated_image, (target_width, target_height),
+                             interpolation=cv2.INTER_AREA)
+    small_height, small_width = small_image.shape[0:2]
+    anchor_x = int(anchor_x * (small_width / padded_width))
+    anchor_y = int(anchor_y * (small_height / padded_height))
+  
+    if (do_trace):
+      trace_file.write (" reduced from (" +
+                        format_screen_position(padded_width) + ", " +
+                        format_screen_position(padded_height) + ") to (" +
+                        format_screen_position(small_width) +
+                        ", " + format_screen_position(small_height) + ").\n")
+      trace_file.write (" new anchor x: " + format_screen_position(anchor_x) +
+                        " y: " + format_screen_position(anchor_y) + ".\n")
+    
+    grey_image = cv2.cvtColor (small_image, cv2.COLOR_BGR2GRAY)
+    thresholded_image = cv2.threshold (grey_image,226,255,cv2.THRESH_BINARY)[1]
+    inverted_image = cv2.bitwise_not (thresholded_image)
+    x_min, y_min, width, height = cv2.boundingRect(inverted_image)
+    x_max = x_min + width
+    y_max = y_min + height
+
+    if (do_trace):
+      trace_file.write (" anchor placed on screen at (" +
+                        format_screen_position(x_position) +
+                        ", " + format_screen_position(y_position) + ").\n")
+      trace_file.write (" small image enclosing rectangle width: " +
+                        format_screen_position(width) +
+                        ", height: " + format_screen_position(height) + ".\n")
+      trace_file.write (" extent (" + format_screen_position(x_min) + ", " +
+                        format_screen_position(y_min) + ") to (" +
+                        format_screen_position(x_max) + ", " +
+                        format_screen_position(y_max) + ").\n")
+
+    # Capture the information needed to place this image on the canvas.
+    image_dict = dict()
+    image_dict["small image"] = small_image
+    image_dict["height"] = height
+    image_dict["width"] = width
+    image_dict["anchor x"] = anchor_x
+    image_dict["anchor y"] = anchor_y
+    image_dict["x min"] = x_min
+    image_dict["x max"] = x_max
+    image_dict["y min"] = y_min
+    image_dict["y max"] = y_max
+
+    small_image_cache[small_image_cache_key] = image_dict
+  
   canvas_height, canvas_width = canvas.shape[0:2]
 
   if (do_trace):
-    trace_file.write (" anchor placed on screen at (" + str(x_position) +
-                      ", " + str(y_position) + ").\n")
-    trace_file.write (" small image enclosing rectangle width: " + str(width) +
-                      ", height: " + str(height) + ".\n")
-    trace_file.write (" extent (" + str(x_min) + ", " + str(y_min) + ") to (" +
-                      str(x_max) + ", " + str(y_max) + ").\n")
-    trace_file.write (" canvas width: " + str(canvas_width) +
-                      " height: " + str(canvas_height) + ".\n")
-    
+    trace_file.write (" canvas width: " +
+                      format_screen_position(canvas_width) +
+                      ", height: " +
+                      format_screen_position(canvas_height) + ".\n")
+  
   pixel_off_canvas = False
   pixels_changed = 0
+  pixels_left_unchanged = 0
  
   # Replace the pixels in the area overlapped by the image being placed
   # by the pixels in the image being placed.  However, if there is
@@ -519,41 +628,50 @@ def place_image(name, canvas, image_info, orientation, x_feet, y_feet):
           overlay_beta = 1.0 - overlay_alpha
       
           if (do_trace and (trace_level > 1)):
-            trace_file.write (" Overlay pixel at (" + str(overlay_x) + ", " +
-                              str(overlay_y) + "): (" + str(overlay_blue) +
-                              ", " + str(overlay_green) + ", " +
-                              str(overlay_red) + ", " + str(overlay_alpha) +
-                              ").\n")
+            trace_file.write (" Overlay pixel at (" +
+                              format_screen_position(overlay_x) + ", " +
+                              format_screen_position(overlay_y) + "): (" +
+                              format_screen_position(overlay_blue) + ", " +
+                              format_screen_position(overlay_green) + ", " +
+                              format_screen_position(overlay_red) + ", " +
+                              format_screen_position(overlay_alpha) + ").\n")
 
           # Compute the desired color by combining the new color with
-          # the old, taking into account the transparency.
-          
-          canvas_blue = canvas[canvas_y, canvas_x, 0]
-          canvas_green = canvas[canvas_y, canvas_x, 1]
-          canvas_red = canvas[canvas_y, canvas_x, 2]
+          # the old, taking into account the transparency.  If the overlay
+          # pixel is fully transparent we need do nothing.
+
+          if (overlay_alpha > 0):        
+            canvas_blue = canvas[canvas_y, canvas_x, 0]
+            canvas_green = canvas[canvas_y, canvas_x, 1]
+            canvas_red = canvas[canvas_y, canvas_x, 2]
                       
-          composite_blue = ((canvas_blue * overlay_beta) +
-                            (overlay_blue * overlay_alpha))
-          composite_green = ((canvas_green * overlay_beta) +
-                             (overlay_green * overlay_alpha))
-          composite_red = ((canvas_red * overlay_beta) +
-                           (overlay_red * overlay_alpha))
+            composite_blue = ((canvas_blue * overlay_beta) +
+                              (overlay_blue * overlay_alpha))
+            composite_green = ((canvas_green * overlay_beta) +
+                               (overlay_green * overlay_alpha))
+            composite_red = ((canvas_red * overlay_beta) +
+                             (overlay_red * overlay_alpha))
 
-          # Store the new color in the appropriate place in the canvas.
-          canvas[canvas_y, canvas_x, 0] = composite_blue
-          canvas[canvas_y, canvas_x, 1] = composite_green
-          canvas[canvas_y, canvas_x, 2] = composite_red
+            # Store the new color in the appropriate place in the canvas.
+            canvas[canvas_y, canvas_x, 0] = composite_blue
+            canvas[canvas_y, canvas_x, 1] = composite_green
+            canvas[canvas_y, canvas_x, 2] = composite_red
 
-          pixels_changed = pixels_changed + 1
+            pixels_changed = pixels_changed + 1
 
-          if (do_trace and (trace_level > 1)):
-            trace_file.write ("Pixel at (" + str(canvas_x) + ", " +
-                              str(canvas_y) + ") changed from (" +
-                              str(canvas_blue) + ", " + str(canvas_green) +
-                              ", " + str(canvas_red) + ") to (" +
-                              str(composite_blue) + ", " +
-                              str(composite_green) + ", " +
-                              str(composite_red) + ".\n")
+            if (do_trace and (trace_level > 1)):
+              trace_file.write ("Pixel at (" +
+                                format_screen_position(canvas_x) + ", " +
+                                format_screen_position(canvas_y) +
+                                ") changed from (" +
+                                format_screen_position(canvas_blue) + ", " +
+                                format_screen_position(canvas_green) + ", " +
+                                str(canvas_red) + ") to (" +
+                                str(composite_blue) + ", " +
+                                str(composite_green) + ", " +
+                                str(composite_red) + ".\n")
+          else:
+            pixels_left_unchanged = pixels_left_unchanged + 1
             
         else:
           pixel_off_canvas = True
@@ -561,13 +679,15 @@ def place_image(name, canvas, image_info, orientation, x_feet, y_feet):
       pixel_off_canvas = True
 
   if (do_trace):
-    if (pixels_changed > 0):
+    if ((pixels_changed + pixels_left_unchanged) > 0):
       if (pixel_off_canvas):
         trace_file.write (" Image partly placed: " + str(pixels_changed) +
-                          " pixels changed.\n")
+                          " pixels changed and " + str(pixels_left_unchanged) +
+                          " left unchanged.\n")
       else:
         trace_file.write (" Image fully placed: " + str(pixels_changed) +
-                          " pixels changed.\n")
+                          " pixels changed and " + str(pixels_left_unchanged) +
+                          " left unchanged.\n")
     else:
       trace_file.write (" Image not placed.\n")
     
@@ -930,53 +1050,78 @@ for event_time in event_times:
         if (do_trace):
           trace_file.write ("Frame at " + format_time(event_time) + ":\n")
           trace_file.flush()
+
+        # Don't start counting frames until we are within the animation time.
+        if (event_time < start_time):
+          continue
+        if (event_time > end_time):
+          continue
+
+        frame_number = frame_number + 1
+        
+        # Render the frame only if we are within the frame limits.
+        if (frame_number < start_frame):
+          continue
+        if ((end_frame != None) and (frame_number > end_frame)):
+          continue
+        
+        if (do_trace):
+            trace_file.write ("In time and frame range.\n")
+
+        the_time = event["time"]
+        frame_start_time = time.clock_gettime_ns (time.CLOCK_BOOTTIME)
+        root_name = "frame_" + "{:06d}".format(frame_number) + ".png"
+        file_path = pathlib.Path(animation_directory_name, root_name)
+        canvas = background.copy()
           
-        if ((event_time >= start_time) and (event_time <= end_time)):
+        # Draw the signals in their current state.
+        for lane_name in lanes_dict:
+          lane = lanes_dict[lane_name]
+          color = lane["color"]
+          if (color != "Blank"):
+            image_info = choose_lamp_image (lane_name, color)
+            x_feet = lane["position x"]
+            y_feet = lane["position y"]
+            x_feet = x_feet + lane["signal offset"][0]
+            y_feet = y_feet + lane["signal offset"][1]
+            place_image (lane_name, canvas, image_info, 0,
+                         x_feet, y_feet)
+              
+        # Draw the moving objects: pedestrians and vehicles.
+        for moving_object_name in moving_objects_dict:
+          moving_object = moving_objects_dict[moving_object_name]
+          if (moving_object["present"]):
+            type = moving_object["type"]
+            name = moving_object["name"]
+            x_feet, y_feet = find_moving_object_location (event_time,
+                                                          moving_object)
+            y_pixels, x_pixels = map_location_ground_to_screen (y_feet,
+                                                                x_feet)
+            the_orientation = moving_object["orientation"]
+            image_info = choose_moving_object_image (type, the_orientation,
+                                                     moving_object["length"])
+            place_image (name, canvas, image_info, the_orientation,
+                         x_feet, y_feet)
+              
+        if (do_animation_output):
           if (do_trace):
-            trace_file.write ("In time range.\n")
-          the_time = event["time"]
-          frame_number = frame_number + 1
-          root_name = "frame_" + "{:06d}".format(frame_number) + ".png"
-          file_path = pathlib.Path(animation_directory_name, root_name)
-          canvas = background.copy()
-          
-          # Draw the signals in their current state.
-          for lane_name in lanes_dict:
-            lane = lanes_dict[lane_name]
-            color = lane["color"]
-            if (color != "Blank"):
-              image_info = choose_lamp_image (lane_name, color)
-              x_feet = lane["position x"]
-              y_feet = lane["position y"]
-              x_feet = x_feet + lane["signal offset"][0]
-              y_feet = y_feet + lane["signal offset"][1]
-              place_image (lane_name, canvas, image_info, 0,
-                           x_feet, y_feet)
-              
-          # Draw the moving objects: pedestrians and vehicles.
-          for moving_object_name in moving_objects_dict:
-            moving_object = moving_objects_dict[moving_object_name]
-            if (moving_object["present"]):
-              type = moving_object["type"]
-              name = moving_object["name"]
-              x_feet, y_feet = find_moving_object_location (event_time,
-                                                            moving_object)
-              y_pixels, x_pixels = map_location_ground_to_screen (y_feet,
-                                                                  x_feet)
-              the_orientation = moving_object["orientation"]
-              image_info = choose_moving_object_image (type, the_orientation,
-                                                  moving_object["length"])
-              place_image (name, canvas, image_info, the_orientation,
-                           x_feet, y_feet)
-              
-          if (do_animation_output):
-            if (do_trace):
-              trace_file.write ("Writing frame " + str(file_path) + ".\n")
-            cv2.imwrite (file_path, canvas)
+            trace_file.write ("Writing frame " + str(file_path) + ".\n")
+          cv2.imwrite (file_path, canvas)
+
+        frame_end_time = time.clock_gettime_ns (time.CLOCK_BOOTTIME)
+        frame_process_time = frame_end_time - frame_start_time
+        if (verbosity_level > 2):
+          print ("Frame " +str(frame_number) + " created in " +
+                 str(frame_process_time / 1e9) + " seconds.")
+        if (do_trace):
+          trace_file.write (" frame processing time: " +
+                            str(frame_process_time / 1e9) + " seconds.\n")
 
 if (do_trace):
   trace_file.write ("Image cache:\n")
   pprint.pprint (image_cache, trace_file)
+  trace_file.write ("Small image cache:\n")
+  pprint.pprint (small_image_cache)
   
 if (do_trace):
   trace_file.close()
