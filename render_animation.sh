@@ -7,7 +7,6 @@
 # 6 is the number of the last frame, 7 is the frame rate.
 python3 process_events.py --events-file ${1} --animation ${2} \
 	--start-time ${3} --duration ${4} --start-frame ${5} \
-	--end-frame ${6} --FPS ${7} --verbose 3 \
-	--trace-file foo_${5}_trace.txt
+	--end-frame ${6} --FPS ${7} --verbose 3 
 
 # End of file render_animation.sh
