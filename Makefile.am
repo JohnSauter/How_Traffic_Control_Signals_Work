@@ -1,4 +1,4 @@
-# File: Makefile.am, author: John Sauter, date: February 23, 2025.
+# File: Makefile.am, author: John Sauter, date: March 2, 2025.
 #
 # Build traffic_control_signals.pdf
 
@@ -93,8 +93,8 @@ man_walking_right.svg \
 background.png \
 process_events.py 
 
-# Distribute the shell scripts which build the RPMs and the video animation.
-EXTRA_DIST += build_RPMs.sh build_video.sh
+# Distribute the shell scripts which build the RPMs and the video animations.
+EXTRA_DIST += build_RPMs.sh build_video.sh render_animation.sh
 
 # Build the RPM if the developer types "make RPMs".
 .phoney: RPMs
@@ -172,7 +172,8 @@ sensor_map.tex : traffic_control_signals.py
 	python3 ${srcdir}/traffic_control_signals.py \
 --sensor-map=${builddir}/sensor_map.tex 
 
-# Generate the table files which detail the finite state machines operation.
+# Generate the table files which detail the operation of the
+# finite state machines
 idle_table.tex : traffic_control_signals.py
 	python3 ${srcdir}/traffic_control_signals.py --table-level 4 \
 --table-file ${builddir}/idle_table.tex --duration 200  \
@@ -238,20 +239,14 @@ check_output.txt : traffic_control_signals.py heavy_script.txt
 --script ${srcdir}/heavy_script.txt \
 --duration 1000 --verbose 4 | tee ${builddir}/check_output.txt
 
-# A secondary target is the event output, for post-processing.
-events: events.csv
-.PHONEY: events
-
-events.csv : traffic_control_signals.py events_script.txt
+# Animations illustrate a scenario.
+%_animation.csv : %_script.txt traffic_control_signals.py
 	python3 ${srcdir}/traffic_control_signals.py \
---script ${srcdir}/events_script.txt \
---duration 1000 --events-file events.csv
+--script "${srcdir}/$<" --duration 1000 --events-file "$@"
 
-# Another target is constructing an animation.
-animation : traffic_animation.mkv
-.PHONEY: animation
-
-traffic_animation.mkv : process_events.py \
+# Creating the mkv file also creates the individual images.
+%_animation.mkv : %_animation.csv process_events.py build_video.sh \
+render_animation.sh \
 signal_ccc_Green.png signal_ccc_Red.png \
 signal_ccc_Yellow.png signal_ccu_Green.png signal_ccu_Red.png \
 signal_ccu_Yellow.png signal_Dark_3.png signal_Dark_4.png \
@@ -260,10 +255,13 @@ signal_llll_Flashing_Yellow.png signal_llll_Green.png signal_llll_Red.png \
 signal_llll_Yellow.png signal_rrr_Green.png signal_rrr_Red.png \
 signal_rrr_Yellow.png MUTCD_Ped_Signal_-_Hand_with_timer.png \
 MUTCD_Ped_Signal_-_Steady_hand.png MUTCD_Ped_Signal_-_Walk.png \
-events.csv build_video.sh background.png car-38800411-right.png \
+background.png car-38800411-right.png \
 car-38800411-up.png truck-51893967-up.png truck-51893967-right.png \
-man_walking_right.png render_animation.sh
-	bash build_video.sh
+man_walking_right.png 
+	bash build_video.sh "$@" "$<" "animation_$(*F)_temp"
+
+%_animation.pdf : %_animation.mkv
+	img2pdf --output "$@" animation_$(*F)_temp/frame_*.png
 
 # When removing files, also remove the followins:
 CLEANFILES = \
@@ -298,8 +296,9 @@ truck-51893967-up.png \
 pedestrian.png \
 man_walking_right.png \
 *_table.tex \
-events.csv \
-traffic_animation.mkv \
+*_animation.csv \
+*_animation.mkv \
+*_animation.pdf \
 check_output.txt \
 verify_files.sh \
 *trace.txt 

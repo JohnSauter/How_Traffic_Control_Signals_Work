@@ -53,7 +53,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='process_events 0.18 2025-02-23',
+                     version='process_events 0.19 2025-03-02',
                      help='print the version number and exit')
 parser.add_argument ('--animation-directory', metavar='animation_directory',
                      help='write animation output image files ' +
@@ -193,7 +193,7 @@ if (do_events_input):
         destination_y = fractions.Fraction(destination_y)
       orientation = row['orientation']
       if (orientation != None):
-        orientation = fractions.Fraction(orientation)
+        orientation = float(fractions.Fraction(orientation))
       the_length = row['length']
       if (the_length != None):
         the_length = fractions.Fraction(the_length)
@@ -425,7 +425,7 @@ def convert_screen_size_to_ground_size (size_in_pixels):
 # at the indicated location on the large image.
 small_image_cache = dict()
 
-def place_image (name, canvas, image_info, orientation, x_feet, y_feet):
+def place_image (name, canvas, image_info, target_orientation, x_feet, y_feet):
   global small_image_cache
 
   # Calculate the area in the large image that will be replaced.
@@ -433,7 +433,8 @@ def place_image (name, canvas, image_info, orientation, x_feet, y_feet):
   
   y_position, x_position = map_location_ground_to_screen (y_feet, x_feet)
 
-  overlay_name, overlay_image, desired_width, desired_height = image_info
+  (overlay_name, overlay_image, original_orientation, desired_width,
+   desired_height) = image_info
 
   original_height, original_width = overlay_image.shape[0:2]
   target_height = convert_ground_size_to_screen_size (desired_height)
@@ -444,10 +445,12 @@ def place_image (name, canvas, image_info, orientation, x_feet, y_feet):
 
   if (do_trace):
     trace_file.write ("Placing image " + str(overlay_name) +
-                      "\n desired ground width: " +
+                      "\n original orientation " + str(original_orientation) +
+                      " \n desired ground width: " +
                       format_position(desired_width) + ", height: " +
-                      format_position(desired_height) + " orientation: " +
-                      str(orientation) + "\n at ground location (" +
+                      format_position(desired_height) +
+                      " \n target orientation: " + str(target_orientation) +
+                      "\n at ground location (" +
                       format_position(x_feet) + ", " +
                       format_position(y_feet) + ").\n")
 
@@ -464,7 +467,7 @@ def place_image (name, canvas, image_info, orientation, x_feet, y_feet):
   small_image_cache_key = (str(overlay_name) + " / " +
                            format_position(desired_height) +
                            " / " + format_position(desired_width) + " / " +
-                           str(orientation) + " //.")
+                           str(target_orientation) + " //.")
   if (do_trace):
     trace_file.write (" small image cache key: " + small_image_cache_key +
                       "\n")
@@ -501,6 +504,15 @@ def place_image (name, canvas, image_info, orientation, x_feet, y_feet):
     target_height = int ((target_height / original_height) * padded_height)
 
     padded_height, padded_width = padded_image.shape[0:2]
+
+    # If a right-pointing image is to be pointed left, or a left-pointing
+    # image is to be pointed right, flip it before rotating it.
+    if (((original_orientation > 0) and (target_orientation < 0)) or
+        ((original_orientation < 0) and (target_orientation > 0))):
+      padded_image = cv2.flip (padded_image, 1)
+      target_orientation = -target_orientation
+  
+    rotation_amount = target_orientation - original_orientation
   
     if (do_trace):
       trace_file.write (" padded anchor x: " +
@@ -519,9 +531,11 @@ def place_image (name, canvas, image_info, orientation, x_feet, y_feet):
                         format_screen_position(target_width) +
                         ", height: " +
                         format_screen_position(target_height) + ".\n")
-    
+      trace_file.write (" rotation amount: " + str(rotation_amount) + ".\n")
+
     rotation_matrix = cv2.getRotationMatrix2D ((anchor_x, anchor_y),
-                                             -math.degrees(orientation), 1)
+                                               -math.degrees(rotation_amount),
+                                               1)
 
     if (do_trace):
       trace_file.write (" rotation matrix:\n")
@@ -795,7 +809,8 @@ def choose_lamp_image (lane, color):
       
   desired_height = desired_width * (image_height / image_width)
   
-  image_info = (image_path, image, desired_width, desired_height)
+  image_info = (image_path, image, math.radians(0), desired_width,
+                desired_height)
   return (image_info)
   
 # Subroutine to choose the image for a moving object.
@@ -805,12 +820,18 @@ def choose_moving_object_image (object_type, orientation, length):
   match object_type:
    case "car":
      image_name = "car-38800411-up.png"
+     orientation = math.radians(0)
+     expansion_factor = 1.0
          
    case "truck":
      image_name = "truck-51893967-up.png"
+     orientation = math.radians(0)
+     expansion_factor = 1.0
          
    case "pedestrian":
      image_name = "man_walking_right.png"
+     orientation = math.radians(90)
+     expansion_factor = 5.0
 
   image_path = pathlib.Path(image_name)
 
@@ -821,18 +842,17 @@ def choose_moving_object_image (object_type, orientation, length):
       trace_file.write ("Reading image " + str(image_path) + ".\n")
       
     image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
-    
+
     if (do_trace):
       trace_height, trace_width = image.shape[0:2]
       trace_file.write (" size (" + str(trace_width) + ", " +
                         str(trace_height) + ").\n")
     image_cache[image_path] = image
-
         
   image_height, image_width = image.shape[0:2]
-  shrink_factor = length / image_height
+  shrink_factor = expansion_factor * (length / image_height)
         
-  image_info = (image_path, image, image_width * shrink_factor,
+  image_info = (image_path, image, orientation, image_width * shrink_factor,
           image_height * shrink_factor)
   return (image_info)
 
@@ -1121,7 +1141,7 @@ if (do_trace):
   trace_file.write ("Image cache:\n")
   pprint.pprint (image_cache, trace_file)
   trace_file.write ("Small image cache:\n")
-  pprint.pprint (small_image_cache)
+  pprint.pprint (small_image_cache, trace_file)
   
 if (do_trace):
   trace_file.close()
