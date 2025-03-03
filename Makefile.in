@@ -1234,14 +1234,14 @@ man_walking_right.png
 	bash build_video.sh "$@" "$<" "animation_$(*F)_temp"
 
 %_animation.pdf : %_animation.mkv
-	img2pdf --output "$@" animation_$(*F)_temp/frame_*.png
+	-img2pdf --output "$@" animation_$(*F)_temp/frame_*.png
 
 clean-local: clean-local-check
 .PHONEY: clean-local-check
 clean-local-check:
 	if [ -e "copied_from_srcdir" ] ; then rm -f check_expected_output.txt ; rm copied_from_srcdir ; fi
 	rm -rf autom4te.cache
-	rm -rf animation_temp
+	rm -rf animation_*_temp
 	rm -f trace*.txt
 	rm -f *~
 

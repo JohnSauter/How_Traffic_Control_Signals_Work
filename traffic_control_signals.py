@@ -1338,7 +1338,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
-      case "F2" | "G2":
+      case "F2" | "G1":
         # Soundbound through lanes
 
         travel_path = (
