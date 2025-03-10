@@ -53,7 +53,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='process_events 0.19 2025-03-02',
+                     version='process_events 0.20 2025-03-09',
                      help='print the version number and exit')
 parser.add_argument ('--animation-directory', metavar='animation_directory',
                      help='write animation output image files ' +
@@ -434,14 +434,11 @@ def place_image (name, canvas, image_info, target_orientation, x_feet, y_feet):
   y_position, x_position = map_location_ground_to_screen (y_feet, x_feet)
 
   (overlay_name, overlay_image, original_orientation, desired_width,
-   desired_height) = image_info
+   desired_height, anchor_x, anchor_y) = image_info
 
   original_height, original_width = overlay_image.shape[0:2]
   target_height = convert_ground_size_to_screen_size (desired_height)
   target_width = convert_ground_size_to_screen_size (desired_width)
-
-  anchor_x = int(original_width / 2.0)
-  anchor_y = 0
 
   if (do_trace):
     trace_file.write ("Placing image " + str(overlay_name) +
@@ -808,9 +805,11 @@ def choose_lamp_image (lane, color):
       desired_width = lane_width / 3.0
       
   desired_height = desired_width * (image_height / image_width)
+  anchor_x = int (image_width / 2)
+  anchor_y = 0
   
   image_info = (image_path, image, math.radians(0), desired_width,
-                desired_height)
+                desired_height, anchor_x, anchor_y)
   return (image_info)
   
 # Subroutine to choose the image for a moving object.
@@ -850,10 +849,20 @@ def choose_moving_object_image (object_type, orientation, length):
     image_cache[image_path] = image
         
   image_height, image_width = image.shape[0:2]
+
+  match object_type:
+    case "car" | "truck":
+      anchor_x = int (image_width / 2)
+      anchor_y = 0
+
+    case "pedestrian":
+      anchor_x = int (image_width / 2)
+      anchor_y = int (image_height / 2)
+      
   shrink_factor = expansion_factor * (length / image_height)
         
   image_info = (image_path, image, orientation, image_width * shrink_factor,
-          image_height * shrink_factor)
+                image_height * shrink_factor, anchor_x, anchor_y)
   return (image_info)
 
 

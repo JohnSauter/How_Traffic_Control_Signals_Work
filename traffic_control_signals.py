@@ -27,11 +27,6 @@
 #     telephone: (603) 424-1188
 #     e-mail: John_Sauter@systemeyescomputerstore.com
 
-#import sys
-#import re
-#import hashlib
-#import datetime
-#from jdcal import gcal2jd, jd2gcal
 import math
 import pprint
 import decimal
@@ -55,7 +50,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.18 2025-02-22',
+                     version='traffic_control_signals 0.20 2025-03-09',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
