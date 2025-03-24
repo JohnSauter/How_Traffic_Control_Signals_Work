@@ -1,6 +1,6 @@
-# File: Makefile.am, author: John Sauter, date: March 9, 2025.
+# File: Makefile.am, author: John Sauter, date: March 23, 2025.
 #
-# Build traffic_control_signals.pdf
+# Build traffic_control_signals.pdf and animations.
 
 #   Copyright © 2025 by John Sauter <John_Sauter@systemeyescomputerstore.com>
 
@@ -54,6 +54,32 @@ left_turn_script.txt \
 legalcode.txt mutcd11thedition.pdf \
 multiple_script.txt \
 MUTCD_Ped_Signal_-_Hand_with_timer.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-00.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-01.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-02.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-03.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-04.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-05.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-06.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-07.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-08.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-09.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-10.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-11.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-12.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-13.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-14.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-15.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-16.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-17.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-18.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-19.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-20.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-21.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-22.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-23.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-24.svg \
+MUTCD_Ped_Signal_-_Hand_with_timer-25.svg \
 MUTCD_Ped_Signal_-_Steady_hand.svg \
 MUTCD_Ped_Signal_-_Walk.svg \
 pedestrian_and_left_turn_script.txt \
@@ -120,7 +146,34 @@ state_diagram.eps red_state_table.tex \
 green_state_table.tex yellow_state_table.tex lamp_map_names.tex \
 sensor_map.tex idle_table.tex left_turn_table.tex \
 pedestrian_table.tex pedestrian_and_left_turn_table.tex multiple_table.tex \
-MUTCD_Ped_Signal_-_Hand_with_timer.pdf MUTCD_Ped_Signal_-_Steady_hand.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-00.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-01.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-02.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-03.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-04.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-05.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-06.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-07.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-08.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-09.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-10.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-11.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-12.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-13.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-14.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-15.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-16.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-17.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-18.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-19.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-20.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-21.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-22.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-23.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-24.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-25.pdf \
+MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf signal_ccc.pdf signal_ccu.pdf signal_rrr.pdf \
 signal_cccl.pdf signal_llll.pdf
 	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
@@ -138,7 +191,34 @@ LICENSE legalcode.txt state_diagram.eps \
 red_state_table.tex green_state_table.tex yellow_state_table.tex \
 lamp_map_names.tex sensor_map.tex idle_table.tex left_turn_table.tex \
 pedestrian_table.tex pedestrian_and_left_turn_table.tex multiple_table.tex \
-MUTCD_Ped_Signal_-_Hand_with_timer.pdf MUTCD_Ped_Signal_-_Steady_hand.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-00.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-01.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-02.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-03.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-04.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-05.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-06.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-07.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-08.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-09.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-10.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-11.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-12.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-13.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-14.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-15.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-16.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-17.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-18.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-19.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-20.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-21.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-22.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-23.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-24.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer-25.pdf \
+MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf signal_ccc.pdf signal_ccu.pdf signal_rrr.pdf \
 signal_cccl.pdf signal_llll.pdf
 	echo " " >${builddir}/traffic_control_signals.bbl
@@ -226,7 +306,7 @@ ${PACKAGE}-${VERSION}.tar.gz.asc : ${PACKAGE}-${VERSION}.tar.gz
 	gpg2 --detach-sign --armor ${PACKAGE}-${VERSION}.tar.gz
 
 # Support make check and make distcheck
-dist_check_DATA = check_expected_output.txt heavy_script.txt
+dist_check_DATA = check_expected_output.txt left_turn_script.txt
 dist_check_SCRIPTS = verify_files_template.sh
 
 TESTS = verify_files.sh
@@ -235,17 +315,19 @@ verify_files.sh : verify_files_template.sh check_output.txt
 	if [ ! -r "check_expected_output.txt" ] ; then cp $(srcdir)/check_expected_output.txt check_expected_output.txt ; touch copied_from_srcdir ; fi
 	chmod +x verify_files.sh
 
-check_output.txt : traffic_control_signals.py heavy_script.txt
+check_output.txt : traffic_control_signals.py left_turn_script.txt
 	python3 ${srcdir}/traffic_control_signals.py \
---script ${srcdir}/heavy_script.txt \
---duration 1000 --verbose 4 | tee ${builddir}/check_output.txt
+--script ${srcdir}/left_turn_script.txt \
+--duration 1200 --verbose 2 | tee ${builddir}/check_output.txt
 
-# Animations illustrate a scenario.
+# Animations illustrate a scenario.  This csv file describes where each
+# object is located with the passage of time.
 %_animation.csv : %_script.txt traffic_control_signals.py
 	python3 ${srcdir}/traffic_control_signals.py \
---script "${srcdir}/$<" --duration 1000 --events-file "$@"
+--script "${srcdir}/$<" --duration 1200 --events-file "$@" 
 
-# Creating the PDF alco creates the individual images for the movie.
+# Render the animation as individual images.  We use the PDF file
+# as a marker to day that the frames have been generated.
 %_animation.pdf : %_animation.csv \
 process_events.py build_animation.sh render_animation.sh \
 signal_ccc_Green.png signal_ccc_Red.png \
@@ -255,12 +337,38 @@ signal_cccl_Green.png signal_cccl_Red.png signal_cccl_Yellow.png \
 signal_llll_Flashing_Yellow.png signal_llll_Green.png signal_llll_Red.png \
 signal_llll_Yellow.png signal_rrr_Green.png signal_rrr_Red.png \
 signal_rrr_Yellow.png MUTCD_Ped_Signal_-_Hand_with_timer.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-00.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-01.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-02.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-03.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-04.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-05.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-06.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-07.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-08.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-09.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-10.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-11.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-12.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-13.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-14.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-15.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-16.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-17.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-18.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-19.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-20.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-21.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-22.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-23.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-24.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-25.png \
 MUTCD_Ped_Signal_-_Steady_hand.png MUTCD_Ped_Signal_-_Walk.png \
 background.png car-38800411-right.png \
 car-38800411-up.png truck-51893967-up.png truck-51893967-right.png \
 man_walking_right.png
 	bash build_animation.sh "$<" "animation_$(*F)_temp"
-	-img2pdf --output "$@" animation_$(*F)_temp/frame_*.png
+	img2pdf --output "$@" animation_$(*F)_temp/frame_*.png
 
 %_animation.mkv : %_animation.pdf
 	bash build_video.sh "$@" "animation_$(*F)_temp"
@@ -283,10 +391,10 @@ green_state_table.tex \
 yellow_state_table.tex \
 lamp_map_names.tex \
 sensor_map.tex \
-MUTCD_Ped_Signal_-_Hand_with_timer.pdf \
+MUTCD_Ped_Signal_-_Hand_with_timer*.pdf \
 MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf \
-MUTCD_Ped_Signal_-_Hand_with_timer.png \
+MUTCD_Ped_Signal_-_Hand_with_timer*.png \
 MUTCD_Ped_Signal_-_Steady_hand.png \
 MUTCD_Ped_Signal_-_Walk.png \
 signal_*.pdf \

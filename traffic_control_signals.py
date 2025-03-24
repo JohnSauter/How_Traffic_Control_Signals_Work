@@ -50,7 +50,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.20 2025-03-09',
+                     version='traffic_control_signals 0.22 2025-03-22',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -121,7 +121,7 @@ error_counter = 0
 # 1 only errors (and statistics if requested)
 # 2 add lamp changes, script actions, and vehicles and pedestrians
 #   arriving, leaving and reaching milestones
-# 3 add state changes
+# 3 add state changes and blocking
 # 4 add toggle and sensor changes
 # 5 add lots of other items for debugging
 
@@ -217,11 +217,11 @@ if (do_events_output):
                      "travel path,present\n")
 
 # Subroutine to write a traffic element event to the event file.
-def write_event (traffic_element):
+def write_event (traffic_element, tag):
   events_file.write (str(current_time) + "," +
                      traffic_element["current lane"] + "," +
                      traffic_element["type"] + "," +
-                     "unspecified" + "," +
+                     tag + "," +
                      traffic_element["name"] + "," +
                      str(traffic_element["position x"]) + "," +
                      str(traffic_element["position y"]) + "," +
@@ -232,6 +232,7 @@ def write_event (traffic_element):
                      str(traffic_element["speed"]) + "," +
                      traffic_element["travel path name"] + "," +
                      str(traffic_element["present"]) + "\n")
+
   
 # Construct the template finite state machine.  This template
 # contains the states, actions and transitions.  All of the signal
@@ -1407,15 +1408,15 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
-          ("intersection", entry_intersection_x + car_length,
+          ("intersection", entry_intersection_x - car_length,
            entry_intersection_y),
-          ("intersection", exit_intersection_x + car_length,
+          ("intersection", exit_intersection_x - car_length,
            exit_intersection_y),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
         
-      case "D4":
+      case "D4" | "D5":
         # Westbound right turn
 
         travel_path = (
@@ -2352,8 +2353,16 @@ def speed_limit (lane_name, travel_path_name, was_stopped):
     
   return None
 
-# rebuild the shape of a traffic element after it has moved.
-def rebuild_shape (traffic_element):
+# rebuild the shape and clearance spaces of a traffic element
+# after it has moved.
+vehicle_stop_clearance = 5
+vehicle_go_clearance = vehicle_stop_clearance + 3
+
+def rebuild_shapes (traffic_element):
+  global vehicle_clearance
+
+  # If the shape of a traffic element overlaps the shape of
+  # a sensor, the sensor is triggered by the traffic element.
   start_x = traffic_element["position x"]
   start_y = traffic_element["position y"]
   min_x = start_x - (traffic_element["width"] / 2.0)
@@ -2364,6 +2373,27 @@ def rebuild_shape (traffic_element):
   box = shapely.affinity.rotate (box, traffic_element["angle"],
                                  origin=(start_x, start_y), use_radians=True)
   traffic_element["shape"] = box
+
+  # If the shape of a traffic element overlaps the clearance space of a second
+  # traffic element, the second is blocked by the first.
+  # The clearance space of a traffic element is a box the width of the
+  # traffic element, vehicle_clearance feet long, positioned just in front
+  # of the traffic element.
+  box = shapely.geometry.box(min_x, min_y, max_x,
+                             min_y - vehicle_stop_clearance)
+  box = shapely.affinity.rotate (box, traffic_element["angle"],
+                                 origin=(start_x, start_y), use_radians=True)
+  traffic_element["stop shape"] = box
+
+  # However, the blocked vehicle cannot start moving until the blocking
+  # vehicle has moved some distance beyond the clearance space.
+  box = shapely.geometry.box(min_x, min_y, max_x,
+                             min_y - vehicle_go_clearance)
+  box = shapely.affinity.rotate (box, traffic_element["angle"],
+                                 origin=(start_x, start_y), use_radians=True)
+  traffic_element["go shape"] = box
+  
+  
   return
 
 # The traffic element has reached the next milestone.  Make it the current
@@ -2404,22 +2434,11 @@ def new_milestone (traffic_element):
   traffic_element["position x"] = start_x
   traffic_element["position y"] = start_y
   traffic_element["distance remaining"] = distance_between_milestones
-  min_x = start_x - (traffic_element["width"] / 2.0)
-  min_y = start_y
-  max_x = start_x + (traffic_element["width"] / 2.0)
-  max_y = start_y + traffic_element["length"]
-  box = shapely.geometry.box(min_x, min_y, max_x, max_y)
-  box = shapely.affinity.rotate (box, traffic_element["angle"],
-                                 origin=(start_x, start_y), use_radians=True)
-  traffic_element["shape"] = box
-  
+  rebuild_shapes (traffic_element)
   traffic_element["milestone index"] = next_milestone_index
 
   if (do_trace):
     trace_file.write ("New milestone bottom:\n")
-    trace_file.write (" min x: " + str(min_x) + ", min y: " + str(min_y) +
-                      ", max x: " + str(max_x) + ", max y: " + str(max_y) +
-                      ".\n")
     pprint.pprint (traffic_element, trace_file)
     
   return
@@ -2459,7 +2478,7 @@ def add_traffic_element (type, travel_path_name):
 
   traffic_element["current time"] = current_time
   traffic_element["present"] = True
-  traffic_element["blocker"] = None
+  traffic_element["blocker name"] = None
   new_milestone (traffic_element)
   
   if (verbosity_level >= 2):
@@ -2480,7 +2499,7 @@ def add_traffic_element (type, travel_path_name):
                       travel_path_name + " speed " +
                       format_speed(abs(traffic_element["speed"])) + ". \\\\\n")
   if (do_events_output):
-    write_event (traffic_element)
+    write_event (traffic_element, "new")
                        
   traffic_elements[this_name] = traffic_element
 
@@ -2490,35 +2509,135 @@ def add_traffic_element (type, travel_path_name):
     
   return
 
-# Subroutine to test for overlap of a traffic element
-# with either a sensor or another traffic element.
-def check_overlap (object_A, object_B):
-  if ("shape" not in object_A):
+# Check if a traffic element is triggering a sensor
+def check_overlap_sensor (traffic_element, sensor):
+  # If either the traffic elements or the sensor does not have a shape,
+  # there cannot be any overlap between them.
+  if ("shape" not in traffic_element):
     return (False)
-  if ("shape" not in object_B):
+  if ("shape" not in sensor):
     return (False)
-  shape_A = object_A["shape"]
-  shape_B = object_B["shape"]
+
+  shape_A = traffic_element["shape"]
+  shape_B = sensor["shape"]
+  
+  # An object will have no shape if it has left the simulation.
+  if ((shape_A == None) or (shape_B == None)):
+    return (False)
+  
   if (shape_A.intersects(shape_B)):
     if (do_trace):
       trace_file.write ("These objects intersect at " +
                         format_time(current_time) + ":\n")
-      pprint.pprint (object_A, trace_file)
-      pprint.pprint (object_B, trace_file)
+      pprint.pprint (traffic_element, trace_file)
+      pprint.pprint (sensor, trace_file)
+      trace_file.write ("\n")
+      
     return (True)
   else:
     return (False)
 
-# Check a traffic element to see if the last move
-# caused it to overlap another traffic element.
-# If so, return that blocking traffic element.
-def check_blocked(traffic_element):
+# Subroutine to test for overlap of a traffic element's stop space
+# with another traffic element.  Return None if there is no blockage;
+# otherwise return the name of the blocking traffic element.
+def check_stopped_by(traffic_element_A, traffic_element_B):
+
+  # If either of the traffic elements does not have a shape,
+  # there cannot be any overlap between them.
   
- # TODO
+  if ("shape" not in traffic_element_A):
+    return (None)
+  if ("shape" not in traffic_element_B):
+    return (None)
+
+  shape_A = traffic_element_A["stop shape"]
+  shape_B = traffic_element_B["shape"]
+  
+  # An object will have no shape if it has left the simulation.
+  if ((shape_A == None) or (shape_B == None)):
+    return (None)
+  
+  if (shape_A.intersects(shape_B)):
+    if (do_trace):
+      trace_file.write ("These objects intersect at " +
+                        format_time(current_time) + ":\n")
+      pprint.pprint (traffic_element_A, trace_file)
+      pprint.pprint (traffic_element_B, trace_file)
+      trace_file.write ("\n")
       
+    return (traffic_element_B["name"])
+  else:
+    return (None)
+
+# Subroutine to test for overlap of a traffic element's go space
+# with another traffic element.  Return None if there is no blockage;
+# otherwise return the name of the blocking traffic element.
+def check_still_stopped_by(traffic_element_A, traffic_element_B):
+
+  # If either of the traffic elements does not have a shape,
+  # there cannot be any overlap between them.
+  
+  if ("shape" not in traffic_element_A):
+    return (None)
+  if ("shape" not in traffic_element_B):
+    return (None)
+
+  shape_A = traffic_element_A["go shape"]
+  shape_B = traffic_element_B["shape"]
+  
+  # An object will have no shape if it has left the simulation.
+  if ((shape_A == None) or (shape_B == None)):
+    return (None)
+  
+  if (shape_A.intersects(shape_B)):
+    if (do_trace):
+      trace_file.write ("These objects intersect at " +
+                        format_time(current_time) + ":\n")
+      pprint.pprint (traffic_element_A, trace_file)
+      pprint.pprint (traffic_element_B, trace_file)
+      trace_file.write ("\n")
+      
+    return (traffic_element_B["name"])
+  else:
+    return (None)
+
+# Subroutine to check a traffic element to see if the last move
+# caused it to overlap another traffic element.
+# If so, return that blocking traffic element's name.
+# Otherwise, return None.
+def check_blocked(traffic_element):
+  for other_traffic_element_name in traffic_elements:
+
+    # Only check other traffic elements
+    if (other_traffic_element_name == traffic_element["name"]):
+      continue
+
+    other_traffic_element = traffic_elements[other_traffic_element_name]
+    blocking_name = check_stopped_by (traffic_element, other_traffic_element)
+    if (blocking_name != None):
+      return blocking_name
+
   return (None)
 
-# Subroutine to move a traffic element
+# Check a traffic element to see if is still blocked.
+# If so, return that blocking traffic element's name.
+# If not, return None.
+def check_unblocked(traffic_element):
+  for other_traffic_element_name in traffic_elements:
+
+    # Only check other traffic elements
+    if (other_traffic_element_name == traffic_element["name"]):
+      continue
+
+    other_traffic_element = traffic_elements[other_traffic_element_name]
+    blocking_name = check_still_stopped_by (traffic_element,
+                                            other_traffic_element)
+    if (blocking_name != None):
+      return blocking_name
+    
+  return (None)
+
+# Subroutine to move a traffic element.
 def move_traffic_element (traffic_element):
   global current_time
   global no_activity
@@ -2528,12 +2647,35 @@ def move_traffic_element (traffic_element):
                       format_time(current_time) + ":\n")
     pprint.pprint (traffic_element, trace_file)
     
-  # See if our blocker has moved.
-  blocking_traffic_element = traffic_element["blocker"]
-  if (blocking_traffic_element != None):
-    if (check_overlap(traffic_element, blocking_traffic_element)):
-      traffic_element["speed"] = traffic_element["old speed"]
-      traffic_element["blocker"] = None
+  # See if our blocker has moved out of the way.
+  if (traffic_element["blocker name"] != None):
+    blocker_name = check_unblocked (traffic_element)
+    if (blocker_name == None):
+      # The blocker has left.
+      old_speed = traffic_element["old speed"]
+      blocker_name = traffic_element["blocker name"]
+      blocker = traffic_elements[blocker_name]
+      blocker_speed = blocker["speed"]
+      if ((blocker_speed > 0) and (blocker_speed < old_speed)):
+        old_speed = blocker_speed
+      traffic_element["speed"] = old_speed
+      traffic_element["blocker name"] = None
+
+      if ((table_level >= 3) and (current_time > table_start_time)):
+        table_file.write ("\\hline " + format_time_N(current_time) + " & " +
+                          traffic_element["current lane"] + " & " +
+                          cap_first_letter(traffic_element["name"]) +
+                          " is unblocked. \\\\\n")
+        
+      if (verbosity_level >= 3):  
+        print (format_time(current_time) + " " + traffic_element["name"] +
+               " in " + place_name(traffic_element) + " is unblocked.")
+      
+      if (do_trace):
+        trace_file.write (" Blocker has departed.\n")
+
+      if (do_events_output):
+        write_event(traffic_element, "unblocked")
         
   old_time = traffic_element["current time"]
   delta_time = current_time - old_time
@@ -2566,8 +2708,8 @@ def move_traffic_element (traffic_element):
     position_y = start_y + (fraction_moved * (target_y - start_y))
     traffic_element["position x"] = position_x
     traffic_element["position y"] = position_y
-    rebuild_shape (traffic_element)
-
+    rebuild_shapes (traffic_element)
+      
     if (verbosity_level >= 5):  
       print (format_time(current_time) + " " + traffic_element["name"] +
              " in " + place_name(traffic_element) + " from position (" +
@@ -2587,31 +2729,34 @@ def move_traffic_element (traffic_element):
                         format_time(delta_time) + ".\n")
       pprint.pprint (traffic_element, trace_file)
       
-    # Don't move if we are blocked.
-    blocking_traffic_element = check_blocked(traffic_element)
-    if (blocking_traffic_element != None):
+    # Undo the move if we are blocked.
+    blocking_traffic_element_name = check_blocked(traffic_element)
+    if (blocking_traffic_element_name != None):
+      # We are blocked.
       traffic_element["position x"] = old_position_x
       traffic_element["position y"] = old_position_y
       traffic_element["distance remaining"] = old_distance_remaining
-      traffic_element["blocker"] = blocking_traffic_element
-      traffic_element["old speed"] = traffic_element["speed"]
+      traffic_element["blocker name"] = blocking_traffic_element_name
+      if (traffic_element["speed"] > 0):
+        traffic_element["old speed"] = traffic_element["speed"]
       traffic_element["speed"] = 0
-      if (verbosity_level >= 2):  
+      if (verbosity_level >= 3):  
         print (format_time(current_time) + " " + traffic_element["name"] +
                " in " + place_name(traffic_element) + " at position (" +
                format_location(traffic_element["position x"]) + ", " +
                format_location(traffic_element["position y"]) +
                " ) distance to next milestone  " +
                format_location(traffic_element["distance remaining"]) +
-               " is blocked by " + blocking_traffic_element["name"] + ".")
-      if ((table_level >= 2) and (current_time > table_start_time)):
+               " is blocked by " + blocking_traffic_element_name + ".")
+      if ((table_level >= 3) and (current_time > table_start_time)):
         table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                           traffic_element["current lane"] + " & " +
                           cap_first_letter(traffic_element["name"]) +
                           " is blocked by " +
-                          blocking_traffic_element["name"] + ". \\\\\n")
+                          blocking_traffic_element_name + ". \\\\\n")
+        
       if (do_events_output):
-        write_event(traffic_element)
+        write_event(traffic_element, "blocked")
                            
       return
     
@@ -2633,6 +2778,7 @@ def move_traffic_element (traffic_element):
     if (following_milestone_index >= len(milestone_list)):
       # We have reached the last milestone.
       traffic_element["present"] = False
+      traffic_element["shape"] = None
       if (verbosity_level >= 2):
         print (format_time(current_time) + " " +
                traffic_element["name"] +
@@ -2646,7 +2792,7 @@ def move_traffic_element (traffic_element):
                           cap_first_letter(traffic_element["name"]) +
                           " exits the simulation. \\\\\n")
       if (do_events_output):
-        write_event (traffic_element)
+        write_event (traffic_element, "exiting")
       
       no_activity = False
     else:
@@ -2686,7 +2832,7 @@ def move_traffic_element (traffic_element):
                                     cap_first_letter(traffic_element["name"]) +
                                     " stopped. \\\\\n")
                 if (do_events_output):
-                  write_event (traffic_element)
+                  write_event (traffic_element, "stopped")
 
                 no_activity = False
             else:
@@ -2715,7 +2861,7 @@ def move_traffic_element (traffic_element):
                 pprint.pprint (traffic_element, trace_file)
                 
               if (do_events_output):
-                write_event (traffic_element)
+                write_event (traffic_element, "entering")
                 
                 no_activity = False
         else:
@@ -2750,7 +2896,7 @@ def move_traffic_element (traffic_element):
             pprint.pprint (traffic_element, trace_file)
             
           if (do_events_output):
-            write_event (traffic_element)
+            write_event (traffic_element, "changing lane")
 
           no_activity = False
       else:
@@ -2782,7 +2928,7 @@ def move_traffic_element (traffic_element):
           pprint.pprint (traffic_element, trace_file)
 
         if (do_events_output):
-            write_event (traffic_element)
+            write_event (traffic_element, "reaching milestone")
             
   return
 
@@ -2797,7 +2943,7 @@ def check_sensors():
         triggered = False
         for traffic_element_name in traffic_elements:
           traffic_element = traffic_elements[traffic_element_name]
-          if (check_overlap (traffic_element, sensor)):
+          if (check_overlap_sensor (traffic_element, sensor)):
             triggered = True
             sensor["triggered by"] = traffic_element["name"]
         if (not sensor["controlled by script"]):

@@ -53,7 +53,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='process_events 0.20 2025-03-09',
+                     version='process_events 0.22 2025-03-23',
                      help='print the version number and exit')
 parser.add_argument ('--animation-directory', metavar='animation_directory',
                      help='write animation output image files ' +
@@ -87,7 +87,7 @@ animation_directory_name = ""
 do_events_input = False
 events_file_name = ""
 start_time = decimal.Decimal("0.000")
-start_frame = 1
+start_frame = 0
 end_frame = None
 duration_time = None
 verbosity_level = 1
@@ -149,6 +149,7 @@ def format_screen_position (the_position):
   return (f'{the_position:04.0f}')
   
 start_time = fractions.Fraction(start_time)
+
 if (duration_time != None):
   duration_time = fractions.Fraction(duration_time)
 
@@ -228,7 +229,7 @@ if (do_events_input):
       events_list.append(the_event)
 
 # Run the animation for one second after the last event
-# unless the duraiton is specified.
+# unless the duration is specified.
 if (duration_time == None):
   duration_time = latest_time - start_time + 1
 end_time = start_time + duration_time
@@ -1037,7 +1038,7 @@ def find_moving_object_location (event_time, moving_object):
   
 # Update the states of the lamps and moving objeects,
 # and generate the animation image frames.
-frame_number = 0
+frame_number = -1
 
 if (do_trace):
   trace_file.write ("Start: " + format_time(start_time) +
@@ -1140,8 +1141,8 @@ for event_time in event_times:
         frame_end_time = time.clock_gettime_ns (time.CLOCK_BOOTTIME)
         frame_process_time = frame_end_time - frame_start_time
         if (verbosity_level > 2):
-          print ("Frame " +str(frame_number) + " created in " +
-                 str(frame_process_time / 1e9) + " seconds.")
+          print ("Frame " + str(frame_number) + " created in " +
+                 str(int(frame_process_time / 1e9)) + " seconds.")
         if (do_trace):
           trace_file.write (" frame processing time: " +
                             str(frame_process_time / 1e9) + " seconds.\n")
