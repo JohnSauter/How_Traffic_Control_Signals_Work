@@ -21,6 +21,7 @@ BuildRequires: texlive-scheme-full
 BuildRequires: sil-andika-fonts
 BuildRequires: sil-charis-fonts
 BuildRequires: liberation-mono-fonts
+BuildRequires: parallel
 
 %global _hardened_build 1
 
@@ -60,7 +61,7 @@ make check VERBOSE=1
 
 %changelog
  * Sat Mar 29 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
- - 0.22-1 improve animation.
+ - 0.23-1 in animation: display countdown and compute duration.
  * Sat Mar 22 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.22-1 Don't follow so closely.
  * Sat Mar 15 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
