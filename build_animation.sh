@@ -1,10 +1,14 @@
 #!/bin/bash
-# file: build_animation.sh, author: John Sauter, date: March 23, 2025.
+# file: build_animation.sh, author: John Sauter, date: March 30, 2025.
 
 # Construct an animation from an event log.
 
 source="${1}"
-animation_temp="${2}"
+last_event_time_file=${2}
+animation_temp="${3}"
+
+last_event_time=$(<${last_event_time_file})
+echo "last event time " ${last_event_time}
 
 # Start time is in seconds.
 start_time="200"
@@ -13,9 +17,20 @@ start_time="200"
 frame_rate="30"
 
 # Batch size and count are in numbers of frames.
-# two minutes (120 seconds) seconds means 120*30 = 3,600 frames.
+# Each batch processes 100 frames.
 batch_size="100"
-batch_count="36"
+
+# Compute the number of batches from the duration of the animation.
+
+# Duration in seconds.
+let "temp = ${last_event_time} - ${start_time}"
+# Duration in frames
+let "temp = ${temp} * ${frame_rate}"
+#Number of batches, rounded down
+let "temp = ${temp} / ${batch_size}"
+# Round up.
+let "batch_count = ${temp} + 1"
+echo "batch count "  ${batch_count}
 
 rm -rf ${animation_temp}/
 mkdir ${animation_temp}

@@ -50,7 +50,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.22 2025-03-22',
+                     version='traffic_control_signals 0.23 2025-03-30',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -82,6 +82,8 @@ parser.add_argument ('--duration', type=decimal.Decimal, metavar='duration',
                      'default is 0.000')
 parser.add_argument ('--table-caption', metavar='table_caption',
                      help='caption of LaTex table.')
+parser.add_argument ('--last-event-time', metavar='last_event_time',
+                     help='time of last event written to this file'),
 parser.add_argument ('--script-input', metavar='script_input',
                      help='actions for the simulator to execute')
 parser.add_argument ('--waiting-limit', type=int, metavar='waiting_limit',
@@ -112,6 +114,7 @@ table_start_time  = decimal.Decimal ('-1.000')
 table_caption = "no caption"
 do_script_input = False
 script_input_file = ""
+do_last_event_time_output = False
 waiting_limit = 60
 print_statistics = False
 verbosity_level = 1
@@ -133,7 +136,7 @@ if (arguments ['trace_file'] != None):
   do_trace = True
   trace_file_name = arguments ['trace_file']
   trace_file_name = pathlib.Path(trace_file_name)
-  trace_file = open (trace_file_name, 'wt')
+  trace_file = open (trace_file_name, 'w')
 
 if (arguments ['events_file'] != None):
   do_events_output = True
@@ -187,6 +190,11 @@ if (arguments ['script_input'] != None):
   script_file_name = arguments ['script_input']
   script_file_name = pathlib.Path(script_file_name)
   
+if (arguments ['last_event_time'] != None):
+  do_last_event_time_output = True
+  last_event_time_file_name = arguments ['last_event_time']
+  last_event_time_file_name = pathlib.Path(last_event_time_file_name)
+
 if (arguments ['waiting_limit'] != None):
   waiting_limit = arguments ['waiting_limit']
 
@@ -198,11 +206,12 @@ if (arguments ['verbose'] != None):
 
 start_time = decimal.Decimal("0.000")
 current_time = fractions.Fraction(start_time)
-  
+last_event_time = current_time
+
 # Write the first lines in the table file.
 
 if (do_table_output):
-  table_file = open (table_file_name, 'wt')
+  table_file = open (table_file_name, 'w')
   table_file.write ("\\begin{longtable}{c | P{1.00cm} | p{9.25cm}}\n")
   table_file.write ("  \\caption{" + table_caption + "} \\\\\n")
   table_file.write ("  Time & Lane & Event \\endfirsthead \n")
@@ -218,6 +227,8 @@ if (do_events_output):
 
 # Subroutine to write a traffic element event to the event file.
 def write_event (traffic_element, tag):
+  global last_event_time
+  
   events_file.write (str(current_time) + "," +
                      traffic_element["current lane"] + "," +
                      traffic_element["type"] + "," +
@@ -232,6 +243,8 @@ def write_event (traffic_element, tag):
                      str(traffic_element["speed"]) + "," +
                      traffic_element["travel path name"] + "," +
                      str(traffic_element["present"]) + "\n")
+  last_event_time = current_time
+  return
 
   
 # Construct the template finite state machine.  This template
@@ -2171,6 +2184,7 @@ running_timers = list()
 def perform_actions (signal_face, substate):
   global running_timers
   global error_counter
+  global last_event_time
   
   for action in substate["actions"]:
     if (verbosity_level >= 5):
@@ -2198,6 +2212,8 @@ def perform_actions (signal_face, substate):
         if (do_events_output):
           events_file.write (str(current_time) + "," + signal_face["name"] +
                              ",lamp," + external_lamp_name + "\n")
+          last_event_time = current_time
+          
       case "set toggle":
         set_toggle_value (signal_face, action[1], True, "")
         
@@ -3211,7 +3227,7 @@ while ((current_time < end_time) and (error_counter == 0)):
                               sensor_name)
             no_activity = False          
         
-  # Update the positions of the cars, trucks and pedestrians
+  # Update the positions of the cars, trucks and pedestrians.
   for traffic_element_name in traffic_elements:
     traffic_element = traffic_elements[traffic_element_name]
     if (traffic_element["present"]):
@@ -3270,6 +3286,13 @@ if (do_table_output):
   table_file.write ("\\hline \\end{longtable}\n")
   table_file.close()
 
+# If requested, output the time of the last event, rounded up
+# to the nearest second.
+if (do_last_event_time_output):
+  last_event_time_file = open (last_event_time_file_name, "w")
+  last_event_time_file.write (str(int(last_event_time) + 1) + "\n")
+  last_event_time_file.close()
+  
 if (do_trace):
   trace_file.close()
 

@@ -53,7 +53,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='process_events 0.22 2025-03-23',
+                     version='process_events 0.23 2025-03-29',
                      help='print the version number and exit')
 parser.add_argument ('--animation-directory', metavar='animation_directory',
                      help='write animation output image files ' +
@@ -215,6 +215,7 @@ if (do_events_input):
       the_event["lane name"] = the_lane_name
       the_event["type"] = the_type
       the_event["color"] = the_color
+      the_event["counter"] = None
       the_event["position x"] = position_x
       the_event["position y"] = position_y
       the_event["destination x"] = destination_x
@@ -347,6 +348,79 @@ for flasher in completed_flashers:
                         " lane " + event["lane name"] + ".\n")
     event_time = go_light_time
 
+# Make the crosswalk count down to Don't Walk.
+# Make a list of crosswalk signals.
+current_crossers = dict()
+completed_crossers = list()
+event_times = sorted(events.keys())
+for event_time in event_times:
+  events_list = events[event_time]
+  for event in events_list:
+    type = event["type"]
+    if (type == "lamp"):
+      lane_name = event["lane name"]
+      the_color = event["color"]
+      # If we are changing the color of an existing crosser, we have found
+      # the end time of the crosser.
+      if (lane_name in current_crossers):
+        crosser = current_crossers[lane_name]
+        if (the_color != crosser["color"]):
+          crosser["countdown stop time"] = event_time
+          completed_crossers.append(crosser)
+          del current_crossers[lane_name]
+      if (do_trace):
+        trace_file.write ("Time " + format_time(event_time) + " lane " +
+                          lane_name + " color " + the_color + ".\n")
+      if (the_color == "Walk with Countdown"):
+        if (do_trace):
+          trace_file.write ("We have a crosser.\n")
+        crosser = dict()
+        crosser["countdown start time"] = event_time
+        crosser["lane name"] = lane_name
+        crosser["color"] = the_color
+        crosser["start event"] = event
+        current_crossers[lane_name] = crosser
+          
+# Go through the list of counting down lights inserting the countdown value.
+
+if (do_trace):
+  trace_file.write ("Countdown signals:\n")
+  pprint.pprint(completed_crossers, trace_file)
+
+# Starting one second before the sign changes to Don't Walk,
+# show the countdown to the sign change.
+for crosser in completed_crossers:
+  crosser_start_time = crosser["countdown start time"]
+  crosser_stop_time = crosser["countdown stop time"]
+  event_time = crosser_stop_time - 1
+  counter = 1
+  while (event_time > crosser_start_time):
+    if (do_trace):
+      trace_file.write ("Top of crosser loop: now " +
+                        format_time(event_time) + " start " +
+                        format_time(crosser_start_time) + " stop " +
+                        format_time(crosser_stop_time) + "\n")
+    event = dict()
+    event["type"] = "lamp"
+    event["lane name"] = crosser["lane name"]
+    event["color"] = crosser["color"]
+    event["counter"] = counter
+    event["source"] = "crosser"
+    event["time"] = event_time
+    if (event_time not in events):
+      events[event_time] = list()
+    events_list = events[event_time]
+    events_list.append(event)
+    if (do_trace):
+      trace_file.write ("Crossing: " + format_time(event_time) + " lane " +
+                        event["lane name"] + ".\n")
+    counter = counter + 1
+    event_time = event_time - 1
+
+  # Also fix up the initial event.  This display won't last a full second.
+  event = crosser["start event"]
+  event["counter"] = counter
+    
 if (do_trace):
   trace_file.write ("Events:\n")
   pprint.pprint (events, trace_file)
@@ -708,22 +782,27 @@ def place_image (name, canvas, image_info, target_orientation, x_feet, y_feet):
 # Subroutine to choose the correct stoplight image given its lane and color.
 image_cache = dict()
 
-def choose_lamp_image (lane, color):
+def choose_lamp_image (lane):
   global image_cache
+  global lane_width
 
+  lane_name = lane["name"]
+  lane_color = lane["color"]
+  lane_counter = lane["counter"]
+  
   if (color == "Dark"):
-    match lane:
+    match lane_name:
       case "A" | "E" | "H" :
         image_name = ("signal_Dark_4.png")
       case "B" | "C" | "D" | "F" | "G" | "J":
         image_name = ("signal_Dark_3.png")
-      case "ps" | "pn":
+      case "psw" | "pse" | "pnw" | "pne":
         image_name = ("MUTCD_Ped_Signal_-_Steady_hand.png")
         
-  match lane:
+  match lane_name:
     case "A" | "E":
       root = "signal_llll"
-      match color:
+      match lane_color:
         case "Steady Left Arrow Red":
           image_name = (root + "_Red.png")
         case "Flashing Left Arrow Yellow (lower)":
@@ -735,17 +814,17 @@ def choose_lamp_image (lane, color):
         
     case "psw" | "pse" | "pnw" | "pne":
       root = "MUTCD_Ped_Signal_-"
-      match color:
+      match lane_color:
         case "Don't Walk":
           image_name = (root + "_Steady_hand.png")
         case "Walk":
           image_name = (root + "_Walk.png")
         case "Walk with Countdown":
-          image_name = (root + "_Hand_with_timer.png")
+          image_name = (root + f'_Hand_with_timer-{lane_counter:02d}.png')
                          
     case "B" | "F":
       root = "signal_ccc"
-      match color:
+      match lane_color:
         case "Steady Circular Red":
           image_name = (root + "_Red.png")
         case "Steady Circular Yellow":
@@ -755,7 +834,7 @@ def choose_lamp_image (lane, color):
         
     case "C" | "D" | "G" :
       root = "signal_ccc"
-      match color:
+      match lane_color:
         case "Steady Circular Red":
           image_name = (root + "_Red.png")
         case "Steady Circular Yellow":
@@ -765,7 +844,7 @@ def choose_lamp_image (lane, color):
 
     case "H":
       root = "signal_cccl"
-      match color:
+      match lane_color:
         case "Steady Circular Red":
           image_name = (root + "_Red.png")
         case "Steady Left Arrow Green and Steady Circular Green":
@@ -775,7 +854,7 @@ def choose_lamp_image (lane, color):
 
     case "J":
       root = "signal_rrr"
-      match color:
+      match lane_color:
         case "Steady Right Arrow Red":
           image_name = (root + "_Red.png")
         case "Steady Right Arrow Green":
@@ -799,7 +878,7 @@ def choose_lamp_image (lane, color):
                         str(image_height) + ".\n")
     image_cache[image_path] = image
 
-  match lane:
+  match lane_name:
     case "psw" | "pse" | "pnw" | "pne":
       desired_width = lane_width
     case _:
@@ -1055,9 +1134,12 @@ for event_time in event_times:
         the_color = event["color"]
         lane = lanes_dict[lane_name]
         lane["color"] = the_color
+        lane["counter"] = event["counter"]
+        
         if (do_trace):
           trace_file.write ("Lamp: " + format_time(event_time) + " lane " +
-                           lane_name + " color " + the_color + ".\n")
+                           lane_name + " color " + the_color + " " +
+                            str(lane["counter"]) + ".\n")
         
       case "car" | "truck" | "pedestrian":
         moving_object_name = event["name"]
@@ -1109,7 +1191,7 @@ for event_time in event_times:
           lane = lanes_dict[lane_name]
           color = lane["color"]
           if (color != "Blank"):
-            image_info = choose_lamp_image (lane_name, color)
+            image_info = choose_lamp_image (lane)
             x_feet = lane["position x"]
             y_feet = lane["position y"]
             x_feet = x_feet + lane["signal offset"][0]

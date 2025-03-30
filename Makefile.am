@@ -1,4 +1,4 @@
-# File: Makefile.am, author: John Sauter, date: March 23, 2025.
+# File: Makefile.am, author: John Sauter, date: March 30, 2025.
 #
 # Build traffic_control_signals.pdf and animations.
 
@@ -324,7 +324,8 @@ check_output.txt : traffic_control_signals.py left_turn_script.txt
 # object is located with the passage of time.
 %_animation.csv : %_script.txt traffic_control_signals.py
 	python3 ${srcdir}/traffic_control_signals.py \
---script "${srcdir}/$<" --duration 1200 --events-file "$@" 
+--script "${srcdir}/$<" --duration 600 --events-file "$@" \
+--last-event-time "last_event_time_$(*F)_animation.txt"
 
 # Render the animation as individual images.  We use the PDF file
 # as a marker to day that the frames have been generated.
@@ -367,7 +368,8 @@ MUTCD_Ped_Signal_-_Steady_hand.png MUTCD_Ped_Signal_-_Walk.png \
 background.png car-38800411-right.png \
 car-38800411-up.png truck-51893967-up.png truck-51893967-right.png \
 man_walking_right.png
-	bash build_animation.sh "$<" "animation_$(*F)_temp"
+	bash build_animation.sh "$<" \
+"last_event_time_$(*F)_animation.txt" "animation_$(*F)_temp"
 	img2pdf --output "$@" animation_$(*F)_temp/frame_*.png
 
 %_animation.mkv : %_animation.pdf
@@ -409,6 +411,7 @@ man_walking_right.png \
 *_animation.csv \
 *_animation.mkv \
 *_animation.pdf \
+last_event_time_*_animation.txt \
 check_output.txt \
 verify_files.sh \
 *trace.txt 
