@@ -1093,6 +1093,7 @@ truck_length = 40
 approach_sensor_distance = 365
 long_lane_length = 528
 short_lane_length = 450
+very_short_lane_length = 40
 lane_width = 12
 crosswalk_width = 6
 
@@ -1106,6 +1107,7 @@ def find_lane_info (lane_name):
   global lane_width
   global long_lane_length
   global short_lane_length
+  global very_short_lane_length
   
   center_y = 0
   center_x = 0
@@ -1197,8 +1199,8 @@ def find_lane_info (lane_name):
       
     case "J":
       top_x = center_x - (5.0 * lane_width)
-      top_y = center_y + (1.5 * lane_width)
-      bottom_x = top_x - long_lane_length
+      top_y = center_y + (1.0 * lane_width)
+      bottom_x = top_x - very_short_lane_length
       bottom_y = top_y
       
     case "psw":
@@ -1248,6 +1250,8 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
       adjacent_lane_name = "B"
     case "E":
       adjacent_lane_name = "F"
+    case "J":
+      adjacent_lane_name = "H"
     case _:
       adjacent_lane_name = None
 
@@ -1474,10 +1478,13 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
         # Eastbound right turn
 
         travel_path = (
+          (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
+          (adjacent_lane_name, entry_start_x - (1.0 * car_length),
+           adjacent_start_y),
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
-          ("intersection", entry_intersection_x + (2 * car_length),
+          ("intersection", entry_intersection_x + car_length,
            entry_intersection_y),
           ("intersection", exit_intersection_x,
            exit_intersection_y - car_length),
@@ -1487,8 +1494,8 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
         
       case "psepsw" | "pnepnw":
         # pedestrian crossing westbound:
-        # Pedestrians cross in both
-        # directions without conflict.  We model this by having westbound
+        # Pedestrians cross in both directions without conflict.
+        # We model this by having westbound
         # pedestrians walk on the north side of the crosswalk.
         
         travel_path = (
@@ -2369,11 +2376,8 @@ def speed_limit (lane_name, travel_path_name, was_stopped):
     
   return None
 
-# rebuild the shape and clearance spaces of a traffic element
+# Rebuild the shape and clearance spaces of a traffic element
 # after it has moved.
-vehicle_stop_clearance = 5
-vehicle_go_clearance = vehicle_stop_clearance + 3
-
 def rebuild_shapes (traffic_element):
   global vehicle_clearance
 
@@ -2393,18 +2397,18 @@ def rebuild_shapes (traffic_element):
   # If the shape of a traffic element overlaps the clearance space of a second
   # traffic element, the second is blocked by the first.
   # The clearance space of a traffic element is a box the width of the
-  # traffic element, vehicle_clearance feet long, positioned just in front
-  # of the traffic element.
-  box = shapely.geometry.box(min_x, min_y, max_x,
-                             min_y - vehicle_stop_clearance)
+  # traffic element, stop_clearance feet long, positioned just in front
+  # of the traffic element
+  stop_clearance = traffic_element["length"] / 3
+  box = shapely.geometry.box(min_x, min_y, max_x, min_y - stop_clearance)
   box = shapely.affinity.rotate (box, traffic_element["angle"],
                                  origin=(start_x, start_y), use_radians=True)
   traffic_element["stop shape"] = box
 
   # However, the blocked vehicle cannot start moving until the blocking
   # vehicle has moved some distance beyond the clearance space.
-  box = shapely.geometry.box(min_x, min_y, max_x,
-                             min_y - vehicle_go_clearance)
+  go_clearance = stop_clearance * 1.5
+  box = shapely.geometry.box(min_x, min_y, max_x, min_y - go_clearance)
   box = shapely.affinity.rotate (box, traffic_element["angle"],
                                  origin=(start_x, start_y), use_radians=True)
   traffic_element["go shape"] = box
