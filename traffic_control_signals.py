@@ -50,7 +50,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.23 2025-03-30',
+                     version='traffic_control_signals 0.25 2025-04-05',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -1837,9 +1837,13 @@ if (do_script_input):
       the_operator = row['operator']
       signal_face_name = row['signal face']
       the_operand = row['operand']
-      the_action = (the_time, the_operator, signal_face_name, the_operand)
-      script_set.add(the_action)
-
+      the_count = int(row['count'])
+      the_interval = fractions.Fraction (row['interval'])
+      for counter in range(0, the_count):
+        this_time = the_time + (the_interval * counter);
+        this_action = (this_time, the_operator, signal_face_name, the_operand)
+        script_set.add(this_action)
+ 
   if (do_trace):
     trace_file.write ("Script:\n")
     pprint.pprint (script_set, trace_file)
@@ -2466,6 +2470,7 @@ def new_milestone (traffic_element):
 # Subroutine to add a traffic element to the traffic elements dictionary.
 # A traffic element starts at its first milestone.
 next_traffic_element_number = 0
+
 def add_traffic_element (type, travel_path_name):
   global travel_paths
   global traffic_elements
@@ -2500,32 +2505,58 @@ def add_traffic_element (type, travel_path_name):
   traffic_element["present"] = True
   traffic_element["blocker name"] = None
   new_milestone (traffic_element)
-  
-  if (verbosity_level >= 2):
-    print (format_time(current_time) + " " + this_name +
-           " starts on travel path " + travel_path_name +
-           " in lane " + traffic_element["current lane"] +
-           " at position (" + format_location(traffic_element["position x"]) +
-           ", " + format_location(traffic_element["position y"]) +
-           ") distance to next milestone " +
-           format_location(traffic_element["distance remaining"]) +
-           " speed " + format_speed(traffic_element["speed"]) +
-           " angle " + str(math.degrees(traffic_element["angle"])) +
-           " degrees.")
-  if ((table_level >= 2) and (current_time > table_start_time)):
-    table_file.write ("\\hline " + format_time_N(current_time) + " & " +
-                      traffic_element["current lane"] + " & " +
-                      cap_first_letter(this_name) + " starts on travel path " +
-                      travel_path_name + " speed " +
-                      format_speed(abs(traffic_element["speed"])) + ". \\\\\n")
-  if (do_events_output):
-    write_event (traffic_element, "new")
-                       
-  traffic_elements[this_name] = traffic_element
 
-  if (do_trace):
-    trace_file.write ("New traffic element:\n")
-    pprint.pprint (traffic_element, trace_file)
+  # If this traffic element would be born blocked, don't spawn it.
+  blocker_name = check_still_blocked (traffic_element)
+  
+  if (blocker_name != None):
+    # This traffic element does not get spawned.
+    traffic_element["present"] = False
+  
+    if (verbosity_level >= 2):
+      print (format_time(current_time) + " " + this_name +
+             " is blocked from spawning by " + blocker_name + ".")
+    if ((table_level >= 2) and (current_time > table_start_time)):
+      table_file.write ("\\hline " + format_time_N(current_time) + " & " +
+                        traffic_element["current lane"] + " & " +
+                        cap_first_letter(this_name) +
+                        " is blocked from spawning by " + blocker_name +
+                        ". \\\\\n")
+    if (do_trace):
+      trace_file.write ("New traffic element not created:\n")
+      pprint.pprint (traffic_element, trace_file)
+      tracefile.write (" because it is blocked by:\n")
+      pprint.pprint (traffic_elements[blocker_name], trace_file)
+
+  else:
+    if (verbosity_level >= 2):
+      print (format_time(current_time) + " " + this_name +
+             " starts on travel path " + travel_path_name +
+             " in lane " + traffic_element["current lane"] +
+             " at position (" +
+             format_location(traffic_element["position x"]) +
+             ", " + format_location(traffic_element["position y"]) +
+             ") distance to next milestone " +
+             format_location(traffic_element["distance remaining"]) +
+             " speed " + format_speed(traffic_element["speed"]) +
+             " angle " + str(math.degrees(traffic_element["angle"])) +
+             " degrees.")
+    if ((table_level >= 2) and (current_time > table_start_time)):
+      table_file.write ("\\hline " + format_time_N(current_time) + " & " +
+                        traffic_element["current lane"] + " & " +
+                        cap_first_letter(this_name) +
+                        " starts on travel path " +
+                        travel_path_name + " speed " +
+                        format_speed(abs(traffic_element["speed"])) +
+                        ". \\\\\n")
+    if (do_events_output):
+      write_event (traffic_element, "new")
+                       
+    traffic_elements[this_name] = traffic_element
+
+    if (do_trace):
+      trace_file.write ("New traffic element:\n")
+      pprint.pprint (traffic_element, trace_file)
     
   return
 
@@ -2642,7 +2673,7 @@ def check_blocked(traffic_element):
 # Check a traffic element to see if is still blocked.
 # If so, return that blocking traffic element's name.
 # If not, return None.
-def check_unblocked(traffic_element):
+def check_still_blocked(traffic_element):
   for other_traffic_element_name in traffic_elements:
 
     # Only check other traffic elements
@@ -2669,7 +2700,7 @@ def move_traffic_element (traffic_element):
     
   # See if our blocker has moved out of the way.
   if (traffic_element["blocker name"] != None):
-    blocker_name = check_unblocked (traffic_element)
+    blocker_name = check_still_blocked (traffic_element)
     if (blocker_name == None):
       # The blocker has left.
       old_speed = traffic_element["old speed"]

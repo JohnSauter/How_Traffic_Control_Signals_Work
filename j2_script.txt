@@ -1,4 +1,0 @@
-time,operator,signal face,operand
-200.000,car,H,J1
-201.000,car,H,J2
-

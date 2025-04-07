@@ -1,30 +1,6 @@
-time,operator,signal face,operand
-200.000,pedestrian,psw,pswpse
-201.000,pedestrian,pnw,pnwpne
-202.000,pedestrian,pse,psepsw
-203.000,pedestrian,pne,pnepnw
-214.000,pedestrian,psw,pswpse
-215.000,pedestrian,pnw,pnwpne
-216.000,pedestrian,pse,psepsw
-217.000,pedestrian,pne,pnepnw
-228.000,pedestrian,psw,pswpse
-229.000,pedestrian,pnw,pnwpne
-230.000,pedestrian,pse,psepsw
-231.000,pedestrian,pne,pnepnw
-242.000,pedestrian,psw,pswpse
-243.000,pedestrian,pnw,pnwpne
-244.000,pedestrian,pse,psepsw
-245.000,pedestrian,pne,pnepnw
-256.000,pedestrian,psw,pswpse
-257.000,pedestrian,pnw,pnwpne
-258.000,pedestrian,pse,psepsw
-259.000,pedestrian,pne,pnepnw
-262.000,pedestrian,psw,pswpse
-263.000,pedestrian,pnw,pnwpne
-264.000,pedestrian,pse,psepsw
-265.000,pedestrian,pne,pnepnw
-266.000,pedestrian,psw,pswpse
-267.000,pedestrian,pnw,pnwpne
-268.000,pedestrian,pse,psepsw
-269.000,pedestrian,pne,pnepnw
+time,operator,signal face,operand,count,interval
+200.000,pedestrian,psw,pswpse,30,4
+201.000,pedestrian,pnw,pnwpne,30,4
+202.000,pedestrian,pse,psepsw,30,4
+203.000,pedestrian,pne,pnepnw,30,4
 

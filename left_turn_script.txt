@@ -1,2 +1,2 @@
-time,operator,signal face,operand
-200.000,car,B,A6
+time,operator,signal face,operand,count,interval
+200.000,car,B,A6,1,1

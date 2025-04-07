@@ -1,8 +1,8 @@
-time,operator,signal face,operand
-200.000,car,D,D6
-204.000,truck,H,H5
-205.000,car,J,J1
-209.000,car,B,A6
-211.000,pedestrian,psw,pswpse
-212.000,car,E,E3
-214.000,pedestrian,pne,pnepnw
+time,operator,signal face,operand,count,interval
+200.000,car,D,D6,1,1
+204.000,truck,H,H5,1,1
+206.000,car,J,J1,1,1
+209.000,car,B,A6,1,1
+211.000,pedestrian,psw,pswpse,1,1
+212.000,car,E,E3,1,1
+214.000,pedestrian,pne,pnepnw,1,1

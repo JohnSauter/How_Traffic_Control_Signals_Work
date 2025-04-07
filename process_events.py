@@ -320,6 +320,7 @@ for flasher in completed_flashers:
     event["type"] = "lamp"
     event["lane name"] = flasher["lane name"]
     event["color"] = "Dark"
+    event["counter"] = None
     event["source"] = "flasher"
     event["time"] = go_dark_time
     if (go_dark_time not in events):
@@ -337,6 +338,7 @@ for flasher in completed_flashers:
     event["type"] = "lamp"
     event["lane name"] = flasher["lane name"]
     event["color"] = flasher["color"]
+    event["counter"] = None
     event["source"] = "flasher"
     event["time"] = go_light_time
     if (go_light_time not in events):
