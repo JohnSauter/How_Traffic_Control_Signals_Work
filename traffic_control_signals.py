@@ -50,7 +50,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.26 2025-04-12',
+                     version='traffic_control_signals 0.26 2025-04-13',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -969,9 +969,9 @@ for signal_face_name in ("B", "C", "F", "G"):
 
 for signal_face_name in ("A", "E"):
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Waiting"
-  timer_durations[timer_full_name] = decimal.Decimal ("10.000")
+  timer_durations[timer_full_name] = decimal.Decimal ("15.000")
   timer_full_name = signal_face_name + "/" + "Minimum Left Flashing Yellow"
-  timer_durations[timer_full_name] = decimal.Decimal ("10.000")
+  timer_durations[timer_full_name] = decimal.Decimal ("5.000")
   timer_full_name = signal_face_name + "/" + "Maximum Green"
   timer_durations[timer_full_name] = decimal.Decimal ("20.000")
   timer_full_name = signal_face_name + "/" + "Minimum Green"
@@ -1112,7 +1112,8 @@ for signal_face in signal_faces_list:
 # the last milestone it vanishes from the simulation.
 car_length = 15
 truck_length = 40
-approach_sensor_distance = 365
+approach_sensor_long_distance = 365
+approach_sensor_short_distance = 120
 long_lane_length = 528
 short_lane_length = 450
 very_short_lane_length = 40
@@ -1305,6 +1306,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
     travel_path["exit lane name"] = exit_lane_name
 
     permissive_left_shape = None
+    permissive_distance = 250
     
     match travel_path_name:
       case "A6":
@@ -1326,7 +1328,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
 
         permissive_left_shape = shapely.geometry.box (
           entry_intersection_x - (2.5 * lane_width),
-          entry_intersection_y - (3 * lane_width) - 120,
+          entry_intersection_y - (3 * lane_width) - permissive_distance,
           entry_intersection_x - (0.5 * lane_width), entry_intersection_y)
         
       case "A1" | "A2":
@@ -1348,7 +1350,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
 
         permissive_left_shape = shapely.geometry.box (
           entry_intersection_x - (2.5 * lane_width),
-          entry_intersection_y - (3 * lane_width) - 120,
+          entry_intersection_y - (3 * lane_width) - permissive_distance,
           entry_intersection_x - (0.5 * lane_width), entry_intersection_y)
         
       case "E4" | "E5":
@@ -1371,7 +1373,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
         permissive_left_shape = shapely.geometry.box (
           entry_intersection_x + (0.5 * lane_width), entry_intersection_y,
           entry_intersection_x + (2.5 * lane_width),
-          entry_intersection_y + (3.0 * lane_width) + 120)
+          entry_intersection_y + (3.0 * lane_width) + permissive_distance)
         
       case "E3":
         # Southbound left turn
@@ -1393,7 +1395,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
         permissive_left_shape = shapely.geometry.box (
           entry_intersection_x + (0.5 * lane_width), entry_intersection_y,
           entry_intersection_x + (2.5 * lane_width),
-          entry_intersection_y + (3.0 * lane_width) + 120)
+          entry_intersection_y + (3.0 * lane_width) + permissive_distance)
                 
       case "B5" | "C4":
         # Northbound through lanes
@@ -1788,15 +1790,30 @@ for signal_face in signal_faces_list:
     
     match sensor_name:
       case "Traffic Approaching":
-        sensor_offset = 365
         match signal_face["name"]:
-          case "A" | "B" | "C":
+          case "A":
+            sensor_offset = approach_sensor_short_distance
             sensor["x min"] = lane_info[0] - (sensor_width / 2.0)
             sensor["y min"] = lane_info[1] + sensor_offset
             sensor["x max"] = lane_info[0] + (sensor_width / 2.0)
             sensor["y max"] = lane_info[1] + sensor_offset + sensor_length
             
-          case "E" | "F" | "G":
+          case "B" | "C":
+            sensor_offset = approach_sensor_long_distance
+            sensor["x min"] = lane_info[0] - (sensor_width / 2.0)
+            sensor["y min"] = lane_info[1] + sensor_offset
+            sensor["x max"] = lane_info[0] + (sensor_width / 2.0)
+            sensor["y max"] = lane_info[1] + sensor_offset + sensor_length
+            
+          case "E":
+            sensor_offset = approach_sensor_short_distance
+            sensor["x min"] = lane_info[0] - (sensor_width / 2.0)
+            sensor["y min"] = lane_info[1] - sensor_offset - sensor_length
+            sensor["x max"] = lane_info[0] + (sensor_width / 2.0)
+            sensor["y max"] = lane_info[1] - sensor_offset
+            
+          case "F" | "G":
+            sensor_offset = approach_sensor_long_distance
             sensor["x min"] = lane_info[0] - (sensor_width / 2.0)
             sensor["y min"] = lane_info[1] - sensor_offset - sensor_length
             sensor["x max"] = lane_info[0] + (sensor_width / 2.0)

@@ -1241,7 +1241,7 @@ idle_table.tex : traffic_control_signals.py
 --table-caption "Power On to Idle State"
 
 left_turn_table.tex : traffic_control_signals.py left_turn_script.txt
-	python3 ${srcdir}/traffic_control_signals.py --table-level 3 \
+	python3 ${srcdir}/traffic_control_signals.py --table-level 4 \
 --table-file ${builddir}/left_turn_table.tex --duration 400 --table-start 199 \
 --script ${srcdir}/left_turn_script.txt --table-caption "Left Turn"
 
