@@ -1,5 +1,5 @@
 Name:           How_Traffic_Control_Signals_Work
-Version:        0.25
+Version:        0.26
 Release:        1%{?dist}
 Summary:        Explain traffic control signals
 
@@ -60,6 +60,8 @@ make check VERBOSE=1
 %license COPYING
 
 %changelog
+ * Sat Apr 12 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.26-1 Work on passing permissive signals.
  * Sat Apr 04 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.25-1 Improve spawning.
  * Sun Mar 30 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>

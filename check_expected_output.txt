@@ -22,16 +22,9 @@
 204.092 sensor A/Traffic Approaching set to False by car 0000.
 213.446 sensor A/Traffic Present set to True by car 0000.
 213.637 car 0000 in lane A at position (0, 48) distance to next milestone 0 stopped.
-218.519 signal face F lamp set to Steady Circular Yellow.
-218.519 signal face G lamp set to Steady Circular Yellow.
-223.519 signal face F lamp set to Steady Circular Red.
-223.519 signal face G lamp set to Steady Circular Red.
-224.519 signal face A lamp set to Steady Left Arrow Green.
-224.519 car 0000 in lane A enters the intersection at position (0, 48).
-224.901 sensor A/Traffic Present set to False by car 0000.
-227.223 car 0000 in lane 6 at position (-60, -12) distance to next milestone 528 speed 25.0 mph leaves the intersection.
-241.623 car 0000 in lane 6 exits the simulation at position (-588, -12).
-263.519 signal face A lamp set to Steady Left Arrow Yellow (upper).
-267.019 signal face A lamp set to Steady Left Arrow Red.
-283.519 signal face F lamp set to Steady Circular Green.
-283.519 signal face G lamp set to Steady Circular Green.
+214.637 car 0000 in lane A enters the intersection at position (0, 48).
+215.019 sensor A/Traffic Present set to False by car 0000.
+215.020 signal face A lamp set to Steady Left Arrow Yellow (upper).
+217.341 car 0000 in lane 6 at position (-60, -12) distance to next milestone 528 speed 25.0 mph leaves the intersection.
+218.520 signal face A lamp set to Steady Left Arrow Red.
+231.741 car 0000 in lane 6 exits the simulation at position (-588, -12).

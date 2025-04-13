@@ -50,7 +50,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.25 2025-04-05',
+                     version='traffic_control_signals 0.26 2025-04-12',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -687,6 +687,8 @@ action = ("set toggle", "Traffic Flowing")
 actions_list.append(action)
 action = ("start timer", "Minimum Left Flashing Yellow")
 actions_list.append(action)
+action = ("start timer", "Left Flashing Yellow Waiting")
+actions_list.append(action)
 action = ("start timer", "Green Limit")
 actions_list.append(action)
 
@@ -715,8 +717,6 @@ action = ("clear toggle", "Traffic Present")
 actions_list.append(action)
 action = ("clear toggle", "Traffic Approaching")
 actions_list.append(action)
-action = ("start timer", "Left Flashing Yellow Waiting")
-actions_list.append(action)
 
 substate["exits"] = list()
 exits_list = substate["exits"]
@@ -728,19 +728,9 @@ exit = ( conditional_tests, "Yellow", "Going Red" )
 exits_list.append(exit)
 
 conditional_tests = list()
-conditional_test = ("timer is completed", "Left Flashing Yellow Waiting")
+conditional_test = ("toggle is true", "Flash Red")
 conditional_tests.append(conditional_test)
-conditional_test = ("toggle is true", "Traffic Approaching")
-conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Yellow", "Going Green" )
-exits_list.append(exit)
-
-conditional_tests = list()
-conditional_test = ("timer is completed", "Left Flashing Yellow Waiting")
-conditional_tests.append(conditional_test)
-conditional_test = ("toggle is true", "Traffic Present")
-conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Yellow", "Going Green" )
+exit = ( conditional_tests, "Yellow", "Going Red" )
 exits_list.append(exit)
 
 conditional_tests = list()
@@ -757,6 +747,38 @@ conditional_tests.append(conditional_test)
 conditional_test = ("toggle is false", "Manual Green")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("timer is not complete", "Left Flashing Yellow Waiting")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is true", "Traffic Approaching")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Left Flashing 2" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("timer is not complete", "Left Flashing Yellow Waiting")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is true", "Traffic Present")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Left Flashing 2" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("timer is completed", "Left Flashing Yellow Waiting")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Traffic Present")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("timer is completed", "Left Flashing Yellow Waiting")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is true", "Traffic Present")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Green" )
 exits_list.append(exit)
 
 yellow_state.append(substate)
@@ -949,7 +971,7 @@ for signal_face_name in ("A", "E"):
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Waiting"
   timer_durations[timer_full_name] = decimal.Decimal ("10.000")
   timer_full_name = signal_face_name + "/" + "Minimum Left Flashing Yellow"
-  timer_durations[timer_full_name] = decimal.Decimal ("5.000")
+  timer_durations[timer_full_name] = decimal.Decimal ("10.000")
   timer_full_name = signal_face_name + "/" + "Maximum Green"
   timer_durations[timer_full_name] = decimal.Decimal ("20.000")
   timer_full_name = signal_face_name + "/" + "Minimum Green"
@@ -1235,7 +1257,14 @@ def find_lane_info (lane_name):
     
   return (top_x, top_y, bottom_x, bottom_y)
 
+# Construct the travel paths.  Each valid path through the intersection
+# has an entry lane and an exit lane.  It also has milestones which
+# the vehicles pass through on their way from the entrance to the exit.
+# Some travel paths have a shape which must be empty of vehicles before
+# a permissive turn can be taken.
+
 travel_paths = dict()
+
 for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
                         "F", "G", "H", "J"):
   
@@ -1270,12 +1299,18 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
     exit_end_y = exit_lane_info[3]
     
     travel_path_name = entry_lane_name + exit_lane_name
+    travel_path = dict()
+    travel_path["name"] = travel_path_name
+    travel_path["entry lane name"] = entry_lane_name
+    travel_path["exit lane name"] = exit_lane_name
+
+    permissive_left_shape = None
     
     match travel_path_name:
       case "A6":
         # Northbound left turn
 
-        travel_path = (
+        milestones = (
           (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
           (adjacent_lane_name, adjacent_start_x, entry_start_y),
           (entry_lane_name, entry_start_x, entry_start_y),
@@ -1289,10 +1324,15 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
+        permissive_left_shape = shapely.geometry.box (
+          entry_intersection_x - (2.5 * lane_width),
+          entry_intersection_y - (3 * lane_width) - 120,
+          entry_intersection_x - (0.5 * lane_width), entry_intersection_y)
+        
       case "A1" | "A2":
         # Northbound U turn
 
-        travel_path = (
+        milestones = (
           (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
           (adjacent_lane_name, adjacent_start_x, entry_start_y),
           (entry_lane_name, entry_start_x, entry_start_y),
@@ -1305,11 +1345,16 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
+
+        permissive_left_shape = shapely.geometry.box (
+          entry_intersection_x - (2.5 * lane_width),
+          entry_intersection_y - (3 * lane_width) - 120,
+          entry_intersection_x - (0.5 * lane_width), entry_intersection_y)
         
       case "E4" | "E5":
         # Southbound U turn
 
-        travel_path = (
+        milestones = (
           (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
           (adjacent_lane_name, adjacent_start_x, entry_start_y),
           (entry_lane_name, entry_start_x, entry_start_y),
@@ -1323,10 +1368,15 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
+        permissive_left_shape = shapely.geometry.box (
+          entry_intersection_x + (0.5 * lane_width), entry_intersection_y,
+          entry_intersection_x + (2.5 * lane_width),
+          entry_intersection_y + (3.0 * lane_width) + 120)
+        
       case "E3":
         # Southbound left turn
 
-        travel_path = (
+        milestones = (
           (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
           (adjacent_lane_name, adjacent_start_x, entry_start_y),
           (entry_lane_name, entry_start_x, entry_start_y),
@@ -1340,10 +1390,15 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
+        permissive_left_shape = shapely.geometry.box (
+          entry_intersection_x + (0.5 * lane_width), entry_intersection_y,
+          entry_intersection_x + (2.5 * lane_width),
+          entry_intersection_y + (3.0 * lane_width) + 120)
+                
       case "B5" | "C4":
         # Northbound through lanes
 
-        travel_path = (
+        milestones = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
@@ -1354,7 +1409,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
       case "F2" | "G1":
         # Soundbound through lanes
 
-        travel_path = (
+        milestones = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
@@ -1365,7 +1420,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
       case "C3":
         # Northbound right turn
 
-        travel_path = (
+        milestones = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
@@ -1380,7 +1435,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
       case "G6":
         # Soundbound right turn
         
-        travel_path = (
+        milestones = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
@@ -1395,7 +1450,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
       case "D2" | "D1":
         # Westbound left turn
 
-        travel_path = (
+        milestones = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
@@ -1410,7 +1465,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
       case "D6":
         # Westbound straight through
         
-        travel_path = (
+        milestones = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
@@ -1421,7 +1476,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
       case "D3":
         # Westbound U turn
 
-        travel_path = (
+        milestones = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
@@ -1436,7 +1491,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
       case "D4" | "D5":
         # Westbound right turn
 
-        travel_path = (
+        milestones = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
@@ -1451,7 +1506,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
       case "H4" | "H5":
         # Eastbound left turn
 
-        travel_path = (
+        milestones = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
@@ -1466,7 +1521,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
       case "H3":
         # Eastbound striaght through
 
-        travel_path = (
+        milestones = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
@@ -1477,7 +1532,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
       case "J1" | "J2":
         # Eastbound right turn
 
-        travel_path = (
+        milestones = (
           (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
           (adjacent_lane_name, entry_start_x - (1.0 * car_length),
            adjacent_start_y),
@@ -1498,7 +1553,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
         # We model this by having westbound
         # pedestrians walk on the north side of the crosswalk.
         
-        travel_path = (
+        milestones = (
           (entry_lane_name, entry_start_x,
            entry_start_y - (crosswalk_width / 4.0)),
           (entry_lane_name, entry_intersection_x,
@@ -1515,7 +1570,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
         # Pedestrian crossing eastbound
         # Eastbound pedestrians walk on the south side of the crosswalk.
 
-        travel_path = (
+        milestones = (
           (entry_lane_name, entry_start_x,
            entry_start_y + (crosswalk_width / 4.0)),
           (entry_lane_name, entry_intersection_x,
@@ -1529,12 +1584,13 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (exit_lane_name, exit_end_x, exit_end_y + (crosswalk_width / 4.0)))
         
       case _:
-        travel_path = None
+        milestones = None
 
+    travel_path["milestones"] = milestones
+    travel_path["permissive left shape"] = permissive_left_shape
+    
     travel_paths[travel_path_name] = travel_path
   
-  travel_paths[travel_path_name] = travel_path
-    
 if (do_trace):
   trace_file.write ("Travel paths:\n")
   pprint.pprint (travel_paths, trace_file)
@@ -2475,6 +2531,7 @@ def add_traffic_element (type, travel_path_name):
   global travel_paths
   global traffic_elements
   global next_traffic_element_number
+  global current_time
   
   traffic_element = dict()
 
@@ -2484,7 +2541,8 @@ def add_traffic_element (type, travel_path_name):
   
   traffic_element["type"] = type
   traffic_element["travel path name"] = travel_path_name
-  milestone_list = travel_paths[travel_path_name]
+  travel_path = travel_paths[travel_path_name]
+  milestone_list = travel_path["milestones"]
   traffic_element["milestones"] = milestone_list
   milestone_index = 0
   traffic_element["milestone index"] = -1
@@ -2504,6 +2562,7 @@ def add_traffic_element (type, travel_path_name):
   traffic_element["current time"] = current_time
   traffic_element["present"] = True
   traffic_element["blocker name"] = None
+  traffic_element["stopped time"] = current_time
   new_milestone (traffic_element)
 
   # If this traffic element would be born blocked, don't spawn it.
@@ -2525,7 +2584,7 @@ def add_traffic_element (type, travel_path_name):
     if (do_trace):
       trace_file.write ("New traffic element not created:\n")
       pprint.pprint (traffic_element, trace_file)
-      tracefile.write (" because it is blocked by:\n")
+      trace_file.write (" because it is blocked by:\n")
       pprint.pprint (traffic_elements[blocker_name], trace_file)
 
   else:
@@ -2688,6 +2747,100 @@ def check_still_blocked(traffic_element):
     
   return (None)
 
+# Subroutine to see if a traffic element may change lanes.
+# If we are trying to enter the intersection or crosswalk
+# the light must be green.
+def can_change_lanes (traffic_element):
+  global current_time
+  
+  this_milestone_index = traffic_element["milestone index"]
+  next_milestone_index = this_milestone_index + 1
+  previous_milestone_index = this_milestone_index - 1
+  milestone_list = traffic_element["milestones"]
+  next_milestone = milestone_list[next_milestone_index]
+  previous_milestone = milestone_list[previous_milestone_index]
+  
+  current_lane = traffic_element["current lane"]
+
+  # If the current lane does not have a signal face,
+  # we can proceed.
+  if (current_lane not in signal_faces_dict):
+    return True
+  
+  signal_face = signal_faces_dict[current_lane]
+
+  travel_path_name = traffic_element["travel path name"]
+  travel_path = travel_paths[travel_path_name]
+  
+  match next_milestone[0]:
+    case "intersection" | "crosswalk":
+      
+      if (do_trace):
+        trace_file.write ("Considering entering " + next_milestone[0] + ":\n")
+        pprint.pprint (traffic_element, trace_file)
+        pprint.pprint (signal_face, trace_file)
+        pprint.pprint (travel_path, trace_file)
+        
+      iluminated_lamp_name = signal_face["iluminated lamp name"]
+      green_lamps = ("Steady Circular Green", "Steady Left Arrow Green",
+                     "Steady Left Arrow Green and Steady Circular Green",
+                     "Steady Right Arrow Green", "Walk")
+      if (iluminated_lamp_name in green_lamps):
+        if (do_trace):
+          trace_file.write (" Lamp is green.\n\n")
+        return True
+      
+      permissive_lamps = "Flashing Left Arrow Yellow (lower)"
+      if (iluminated_lamp_name in permissive_lamps):
+        # We can enter the intersection if it is safe.  First, look for
+        # oncoming traffic for a second.
+        if (traffic_element["speed"] > 0):
+          if (do_trace):
+            trace_file.write (" Still moving.\n\n")
+          return False
+
+        stopped_duration = current_time - traffic_element["stopped time"]
+        if (do_trace):
+          trace_file.write (" Stopped for " + format_time(stopped_duration)
+                            + ".\n")
+        if (stopped_duration < 1):
+          if (do_trace):
+            trace_file.write (" Not stopped long enough.\n\n")
+          return False
+        
+        # Check for a vehicle approaching.
+        permissive_left_shape = travel_path["permissive left shape"]
+        for other_traffic_element_name in traffic_elements:
+
+          # Only check other traffic elements
+          if (other_traffic_element_name == traffic_element["name"]):
+            continue
+
+          other_traffic_element = traffic_elements[other_traffic_element_name]
+          if (not other_traffic_element["present"]):
+            continue
+          
+          stop_shape = other_traffic_element["stop shape"]
+          if (stop_shape.intersects(permissive_left_shape)):
+            if (do_trace):
+              trace_file.write (" Intersection blocked by:\n")
+              pprint.pprint (other_traffic_element, trace_file)
+              trace_file.write ("\n")
+            return False
+      
+        if (do_trace):
+          trace_file.write (" No vehicles approaching.\n\n")
+        return True
+      else:
+        # The lamp is neither green nor permissive
+        if (do_trace):
+          trace_file.write (" Lamp is nether green nor permissive.\n\n")
+        return False
+        
+    case _:
+      return True
+    
+  
 # Subroutine to move a traffic element.
 def move_traffic_element (traffic_element):
   global current_time
@@ -2856,38 +3009,38 @@ def move_traffic_element (traffic_element):
       current_lane = traffic_element["current lane"]
       if (next_milestone[0] != current_lane):
         # We cannot enter the intersection or crosswalk if the light is red.
-        if ((next_milestone[0] == "intersection") or
-            (next_milestone[0] == "crosswalk")):
-          if (current_lane in signal_faces_dict):
-            signal_face = signal_faces_dict[current_lane]
-            if (signal_face["state"] != "Green"):
-              if (traffic_element["speed"] != 0):
-                traffic_element["speed"] = 0
-                traffic_element["was stopped"] = True
-                if (verbosity_level >= 2):
-                    print (format_time(current_time) + " " +
-                           traffic_element["name"] +
-                           " in " + place_name(traffic_element) +
-                           " at position (" +
-                           format_location(traffic_element["position x"]) +
-                           ", " +
-                           format_location(traffic_element["position y"]) +
-                           ") distance to next milestone " +
-                           format_location(
-                             traffic_element["distance remaining"]) +
-                           " stopped.")
-                if ((table_level >= 2) and (current_time > table_start_time)):
-                  table_file.write ("\\hline " + format_time_N(current_time) +
-                                    " & " + traffic_element["current lane"] +
-                                    " & " +
-                                    cap_first_letter(traffic_element["name"]) +
-                                    " stopped. \\\\\n")
-                if (do_events_output):
-                  write_event (traffic_element, "stopped")
+        if (not can_change_lanes (traffic_element)):
+          if (traffic_element["speed"] != 0):
+            traffic_element["speed"] = 0
+            traffic_element["was stopped"] = True
+            traffic_element["stopped time"] = current_time
 
-                no_activity = False
-            else:
-              # We are entering the intersection or the crosswalk.
+            if (verbosity_level >= 2):
+              print (format_time(current_time) + " " +
+                     traffic_element["name"] +
+                     " in " + place_name(traffic_element) +
+                     " at position (" +
+                     format_location(traffic_element["position x"]) +
+                     ", " +
+                     format_location(traffic_element["position y"]) +
+                     ") distance to next milestone " +
+                     format_location(
+                       traffic_element["distance remaining"]) +
+                     " stopped.")
+            if ((table_level >= 2) and (current_time > table_start_time)):
+              table_file.write ("\\hline " + format_time_N(current_time) +
+                                " & " + traffic_element["current lane"] +
+                                " & " +
+                                cap_first_letter(traffic_element["name"]) +
+                                " stopped. \\\\\n")
+            if (do_events_output):
+              write_event (traffic_element, "stopped")
+              
+            no_activity = False
+        else:
+          # We are allowed to enter this lane.
+          match next_milestone[0]:
+            case "crosswalk" | "intersection":
               if (verbosity_level >= 2):
                 print (format_time(current_time) + " " +
                        traffic_element["name"] +
@@ -2914,42 +3067,44 @@ def move_traffic_element (traffic_element):
               if (do_events_output):
                 write_event (traffic_element, "entering")
                 
-                no_activity = False
-        else:
-          # Changing lanes but not into the intersection or crosswalk
-          old_lane = traffic_element["current lane"]
-          new_milestone (traffic_element)
-          
-          match old_lane:
-            case "intersection" | "crosswalk":
-              tail_text = " leaves the " + old_lane
-            case _:
-              tail_text = " leaves lane " + old_lane
+              no_activity = False
               
-          if (verbosity_level >= 2):
-              print (format_time(current_time) + " " +
-                     traffic_element["name"] +
-                     " in " + place_name(traffic_element) + " at position (" +
-                     format_location(traffic_element["position x"]) + ", " +
-                     format_location(traffic_element["position y"]) + 
-                     ") distance to next milestone " +
-                     format_location(traffic_element["distance remaining"]) +
-                     " speed " + format_speed(traffic_element["speed"]) +
-                     tail_text + ".")
-          if ((table_level >= 2) and (current_time > table_start_time)):
-            table_file.write ("\\hline " + format_time_N(current_time) +
-                              " & " + traffic_element["current lane"] +
-                              " & " +
-                              cap_first_letter(traffic_element["name"]) +
-                              tail_text + ". \\\\\n")
-          if (do_trace):
-            trace_file.write ("Changing lane from " + old_lane + ":\n")
-            pprint.pprint (traffic_element, trace_file)
+            case _:
+              # Changing lanes but not into the intersection or crosswalk
+              old_lane = traffic_element["current lane"]
+              new_milestone (traffic_element)
+          
+              match old_lane:
+                case "intersection" | "crosswalk":
+                  tail_text = " leaves the " + old_lane
+                case _:
+                  tail_text = " leaves lane " + old_lane
+              
+              if (verbosity_level >= 2):
+                print (format_time(current_time) + " " +
+                       traffic_element["name"] +
+                       " in " + place_name(traffic_element) +
+                       " at position (" +
+                       format_location(traffic_element["position x"]) + ", " +
+                       format_location(traffic_element["position y"]) + 
+                       ") distance to next milestone " +
+                       format_location(traffic_element["distance remaining"]) +
+                       " speed " + format_speed(traffic_element["speed"]) +
+                       tail_text + ".")
+              if ((table_level >= 2) and (current_time > table_start_time)):
+                table_file.write ("\\hline " + format_time_N(current_time) +
+                                  " & " + traffic_element["current lane"] +
+                                  " & " +
+                                  cap_first_letter(traffic_element["name"]) +
+                                  tail_text + ". \\\\\n")
+              if (do_trace):
+                trace_file.write ("Changing lane from " + old_lane + ":\n")
+                pprint.pprint (traffic_element, trace_file)
             
-          if (do_events_output):
-            write_event (traffic_element, "changing lane")
+              if (do_events_output):
+                write_event (traffic_element, "changing lane")
 
-          no_activity = False
+              no_activity = False
       else:
         # Not changing lanes
         new_milestone (traffic_element)
