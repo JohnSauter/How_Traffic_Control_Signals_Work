@@ -533,7 +533,7 @@ exits_list.append(exit)
 conditional_tests = list()
 conditional_test = ("toggle is true", "Traffic Approaching")
 conditional_tests.append(conditional_test)
-conditional_test = ("timer is not complete", "Maximum Green")
+conditional_test = ("timer not complete", "Maximum Green")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Green", "Looking for Gap")
 exits_list.append(exit)
@@ -541,7 +541,7 @@ exits_list.append(exit)
 conditional_tests = list()
 conditional_test = ("toggle is true", "Preempt Green")
 conditional_tests.append(conditional_test)
-conditional_test = ("timer is not complete", "Maximum Green")
+conditional_test = ("timer not complete", "Maximum Green")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Green", "Looking for Gap")
 exits_list.append(exit)
@@ -549,7 +549,7 @@ exits_list.append(exit)
 conditional_tests = list()
 conditional_test = ("toggle is true", "Manual Green")
 conditional_tests.append(conditional_test)
-conditional_test = ("timer is not complete", "Maximum Green")
+conditional_test = ("timer not complete", "Maximum Green")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Green", "Looking for Gap")
 exits_list.append(exit)
@@ -557,7 +557,7 @@ exits_list.append(exit)
 conditional_tests = list()
 conditional_test = ("toggle is true", "Traffic Present")
 conditional_tests.append(conditional_test)
-conditional_test = ("timer is not complete", "Maximum Green")
+conditional_test = ("timer not complete", "Maximum Green")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Green", "Looking for Gap")
 exits_list.append(exit)
@@ -575,7 +575,7 @@ conditional_test = ("toggle is false", "Preempt Green")
 conditional_tests.append(conditional_test)
 conditional_test = ("toggle is true", "Clearance Requested")
 conditional_tests.append(conditional_test)
-conditional_test = ("timer is not complete", "Maximum Green")
+conditional_test = ("timer not complete", "Maximum Green")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Yellow", "Going Red")
 exits_list.append(exit)
@@ -750,7 +750,7 @@ exit = ( conditional_tests, "Yellow", "Going Red" )
 exits_list.append(exit)
 
 conditional_tests = list()
-conditional_test = ("timer is not complete", "Left Flashing Yellow Waiting")
+conditional_test = ("timer not complete", "Left Flashing Yellow Waiting")
 conditional_tests.append(conditional_test)
 conditional_test = ("toggle is true", "Traffic Approaching")
 conditional_tests.append(conditional_test)
@@ -758,7 +758,7 @@ exit = ( conditional_tests, "Yellow", "Left Flashing 2" )
 exits_list.append(exit)
 
 conditional_tests = list()
-conditional_test = ("timer is not complete", "Left Flashing Yellow Waiting")
+conditional_test = ("timer not complete", "Left Flashing Yellow Waiting")
 conditional_tests.append(conditional_test)
 conditional_test = ("toggle is true", "Traffic Present")
 conditional_tests.append(conditional_test)
@@ -3351,23 +3351,72 @@ while ((current_time < end_time) and (error_counter == 0)):
         match conditional[0]:
           case "toggle is true":
             toggle_name = conditional[1]
+            if (verbosity_level >= 5):
+              print (format_time(current_time) + " Testing toggle " +
+                     toggle_name + " for True.")
             if (not toggle_value(signal_face, toggle_name)):
+              if (verbosity_level >= 5):
+                print (format_time(current_time) + "  " + toggle_name +
+                       " is false.")
               conditions_all_true = False
+            else:
+              if (verbosity_level >= 5):
+                print (format_time(current_time) + "  " + toggle_name +
+                       " is true.")
+                
           case "toggle is false":
             toggle_name = conditional[1]
+            if (verbosity_level >= 5):
+              print (format_time(current_time) + " Testing toggle " +
+                     toggle_name + " for False.")
             if (toggle_value(signal_face, toggle_name)):
+              if (verbosity_level >= 5):
+                print (format_time(current_time) + "  " + toggle_name +
+                       " is true.")
               conditions_all_true = False
+            else:
+              if (verbosity_level >= 5):
+                print (format_time(current_time) + "  " + toggle_name +
+                       " is false.")
+                
           case "timer is completed":
             timer_name = conditional[1]
+            if (verbosity_level >= 5):
+              print (format_time(current_time) + " Testing timer " +
+                     timer_name + " for being complete.")
             if (timer_state (signal_face, timer_name) != "completed"):
+              if (verbosity_level >= 5):
+                print (format_time(current_time) + "  " + timer_name +
+                       " is not complete.")
               conditions_all_true = False
+            else:
+              if (verbosity_level >= 5):
+                print (format_time(current_time) + "  " + timer_name +
+                       " has completed.")
+                
           case "timer not complete":
             timer_name = conditional[1]
+            if (verbosity_level >= 5):
+              print (format_time(current_time) + " Testing timer " +
+                     timer_name + " for being not complete.")
             if (timer_state (signal_face, timer_name) == "completed"):
+              if (verbosity_level >= 5):
+                print (format_time(current_time) + "  " + timer_name +
+                       " has completed.")
               conditions_all_true = False
+            else:
+              if (verbosity_level >= 5):
+                print (format_time(current_time) + "  " + timer_name +
+                       " has not completed.")
+
+          case _:
+            print ("Unknown condition test: " + conditional[0] + ".")
+            error_counter = error_counter + 1
+            
       if (conditions_all_true):
         found_exit = the_exit
         break
+      
     if (found_exit != None):
       new_state_name = found_exit[1]
       new_substate_name = found_exit[2]

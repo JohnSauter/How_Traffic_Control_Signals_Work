@@ -1,4 +1,4 @@
 time,operator,signal face,operand,count,interval
 200.000,car,B,A6,1,1
-201.000,car,F,F2,15,1
-211.000,truck,G,G1,1,1
+201.000,car,F,F2,30,1
+211.500,truck,G,G1,6,3
