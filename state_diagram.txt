@@ -52,7 +52,6 @@ edge [label="traffic\npresent"]
      "Red\nTravel Path\nis Clear"->"Red\nGoing Green 1";
 #edge [label="flash\nyellow"]
 #     "Red\nTravel Path\nis Clear"->"Yellow\nFlashing";
-edge [label="traffic\ngone"] "Red\nGoing Green 1"->"Red\nGoing Green 1";
 edge [label="permission\ngranted"] "Red\nGoing Green 1"->"Red\nGoing Green 2";
 edge [label="permissive\nleft turn"]
      "Red\nGoing Green 2"->"Yellow\nLeft Flashing 1";
