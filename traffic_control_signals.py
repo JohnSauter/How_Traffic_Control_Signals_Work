@@ -50,7 +50,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.26 2025-04-13',
+                     version='traffic_control_signals 0.27 2025-04-19',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -335,6 +335,12 @@ exit  = ( conditional_tests, "Red", "Going Green 1")
 exits_list.append(exit)
 
 conditional_tests = list()
+conditional_test = ("toggle is true", "Manual Green")
+conditional_tests.append(conditional_test)
+exit  = ( conditional_tests, "Red", "Going Green 1")
+exits_list.append(exit)
+
+conditional_tests = list()
 conditional_test = ("timer is completed", "Red Limit")
 conditional_tests.append(conditional_test)
 conditional_test = ("toggle is false", "Preempt Red")
@@ -355,12 +361,6 @@ conditional_test = ("toggle is true", "Flash Yellow")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Yellow", "Flashing" )
 exits_list.append(exit)
-
-conditional_tests = list()
-conditional_test = ("toggle is true", "Manual Green")
-conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Red", "Going Green 1" )
-exits_list.append(exit)
 red_state.append(substate)
 
 substate = dict()
@@ -368,6 +368,10 @@ substate["name"] = "Going Green 1"
 substate["actions"] = list()
 actions_list = substate["actions"]
 action=("set toggle", "Request Green")
+actions_list.append(action)
+action=("clear toggle", "Traffic Present")
+actions_list.append(action)
+action=("clear toggle", "Traffic Approaching")
 actions_list.append(action)
 substate["exits"] = list()
 exits_list = substate["exits"]
@@ -377,8 +381,17 @@ conditional_test = ("toggle is true", "Green Request Granted")
 conditional_tests.append(conditional_test)
 conditional_test = ("toggle is false", "Preempt Red")
 conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Manual Red")
+conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Red", "Going Green 2" )
 exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is false", "Green Request Granted")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Going Green 1" )
+exits_list.append(exit)
+
 red_state.append(substate)
 
 substate=dict()
@@ -399,6 +412,8 @@ conditional_test = ("toggle is false", "Conflicting Paths are Clear")
 conditional_tests.append(conditional_test)
 conditional_test = ("toggle is false", "Preempt Red")
 conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Manual Red")
+conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Yellow", "Left Flashing 1" )
 exits_list.append(exit)
 
@@ -406,6 +421,8 @@ conditional_tests = list()
 conditional_test = ("toggle is true", "Conflicting Paths are Clear")
 conditional_tests.append(conditional_test)
 conditional_test = ("toggle is false", "Preempt Red")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Manual Red")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Green", "Minimum Green" )
 exits_list.append(exit)
@@ -2333,13 +2350,13 @@ def perform_actions (signal_face, substate):
                 # If it is active we cannot clear this toggle.
                 if (test_sensor["value"]):
                     new_toggle_value = True
-                    if (verbosity_level >= 4):
+                    if (verbosity_level >= 5):
                       print (format_time(current_time) + " signal face " +
                              signal_face_name +
                              " Unable to clear toggle " + toggle_name +
                              " because sensor " + full_test_sensor_name +
                              " is still active.")
-                    if ((table_level >= 4) and
+                    if ((table_level >= 5) and
                         (current_time > table_start_time)):
                       table_file.write ("\\hline " +
                                         format_time_N(current_time) +
@@ -2396,8 +2413,10 @@ def enter_state (signal_face, state_name, substate_name):
     old_substate_name = ""
 
   # Entering a state is only a significant event if the state is different.
+  significant_event = False
   if ((state_name != old_state_name) or (substate_name != old_substate_name)):
     no_activity = False
+    significant_event = True
   else:
     if (verbosity_level >= 5):
       print (format_time(current_time) + " signal face " +
@@ -2406,11 +2425,13 @@ def enter_state (signal_face, state_name, substate_name):
   signal_face["state"] = state_name
   signal_face["substate"] = substate_name
 
-  if (verbosity_level >= 3):
+  if (((verbosity_level >= 3) and significant_event) or
+      (verbosity_level >= 5)):
     print (format_time(current_time) + " signal face " + signal_face["name"] +
            " enters state " + state_name +
            " substate " + substate_name + ".")
-  if ((table_level >= 3) and (current_time > table_start_time)):
+  if ((table_level >= 3) and (current_time > table_start_time) and
+      significant_event):
     table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                       signal_face["name"] + " & " +
                       "Enter state " + state_name + " substate " +
