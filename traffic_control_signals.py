@@ -50,7 +50,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.27 2025-04-19',
+                     version='traffic_control_signals 0.27 2025-04-20',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -1143,6 +1143,10 @@ crosswalk_width = 6
 # leaving the intersection enter their exit lane.
 # The bottom is the other end of the lane, where vehicles enter or leave
 # the simulation.
+
+lane_names = ("A", "B", "C", "D", "E", "F", "G", "H", "J", "1", "2", "3", "4",
+              "5", "6", "psw", "pse", "pnw", "pne")
+
 def find_lane_info (lane_name):
   global lane_width
   global long_lane_length
@@ -1277,10 +1281,42 @@ def find_lane_info (lane_name):
 
 # Construct the travel paths.  Each valid path through the intersection
 # has an entry lane and an exit lane.  It also has milestones which
-# the vehicles pass through on their way from the entrance to the exit.
+# the traffic elements pass through on their way from the entrance to the exit.
 # Some travel paths have a shape which must be empty of vehicles before
 # a permissive turn can be taken.
 
+# Construct the shape of the intersection.
+max_x = None
+max_y = None
+min_x = None
+min_y = None
+
+for lane_name in lane_names:
+  intersection_x, intersection_y, *bottom  = find_lane_info (lane_name)
+
+  if (max_x == None):
+    max_x = intersection_x
+  if (intersection_x > max_x):
+    max_x = intersection_x
+  if (min_x == None):
+    min_x = intersection_x
+  if (intersection_x < min_x):
+    min_x = intersection_x
+  if (max_y == None):
+    max_y = intersection_y
+  if (intersection_y > max_y):
+    max_y = intersection_y
+  if (min_y == None):
+    min_y = intersection_y
+  if (intersection_y < min_y):
+    min_y = intersection_y
+
+intersection_shape = shapely.geometry.box (min_x, min_y, max_x, max_y)
+if (do_trace):
+  trace_file.write ("Intersection shape:\n")
+  pprint.pprint ((min_x, min_y, max_x, max_y), trace_file)
+  pprint.pprint (intersection_shape, trace_file)
+  
 travel_paths = dict()
 
 for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
@@ -1322,7 +1358,8 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
     travel_path["entry lane name"] = entry_lane_name
     travel_path["exit lane name"] = exit_lane_name
 
-    permissive_left_shape = None
+    permissive_left_info = None
+    permissive_right_info = None
     permissive_distance = 250
     
     match travel_path_name:
@@ -1347,6 +1384,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           entry_intersection_x - (2.5 * lane_width),
           entry_intersection_y - (3 * lane_width) - permissive_distance,
           entry_intersection_x - (0.5 * lane_width), entry_intersection_y)
+        permissive_left_info = (("present", permissive_left_shape),)
         
       case "A1" | "A2":
         # Northbound U turn
@@ -1369,6 +1407,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           entry_intersection_x - (2.5 * lane_width),
           entry_intersection_y - (3 * lane_width) - permissive_distance,
           entry_intersection_x - (0.5 * lane_width), entry_intersection_y)
+        permissive_left_info = (("present", permissive_left_shape),)
         
       case "E4" | "E5":
         # Southbound U turn
@@ -1391,6 +1430,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           entry_intersection_x + (0.5 * lane_width), entry_intersection_y,
           entry_intersection_x + (2.5 * lane_width),
           entry_intersection_y + (3.0 * lane_width) + permissive_distance)
+        permissive_left_info = (("present", permissive_left_shape),)
         
       case "E3":
         # Southbound left turn
@@ -1413,7 +1453,8 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           entry_intersection_x + (0.5 * lane_width), entry_intersection_y,
           entry_intersection_x + (2.5 * lane_width),
           entry_intersection_y + (3.0 * lane_width) + permissive_distance)
-                
+        permissive_left_info = (("present", permissive_left_shape),)
+        
       case "B5" | "C4":
         # Northbound through lanes
 
@@ -1451,6 +1492,13 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
+        permissive_right_shape = shapely.geometry.box (
+          entry_intersection_x - (lane_width / 2),
+          exit_intersection_y - (lane_width * 2) - permissive_distance,
+          exit_intersection_x + (lane_width * 2), entry_intersection_y)
+                                                       
+        permissive_right_info = (("moving East", intersection_shape),
+                                 ("present", permissive_right_shape))
       case "G6":
         # Soundbound right turn
         
@@ -1466,6 +1514,13 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
+        permissive_right_shape = shapely.geometry.box (
+          entry_intersection_x - (lane_width / 2), exit_intersection_y,
+          exit_intersection_x - (lane_width * 2),
+          exit_intersection_y + (lane_width / 2))
+                                                       
+        permissive_right_info = (("moving East", intersection_shape),
+                                 ("present", permissive_right_shape))
       case "D2" | "D1":
         # Westbound left turn
 
@@ -1521,6 +1576,15 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
+
+        permissive_right_shape = shapely.geometry.box (
+          exit_intersection_x - lane_width / 2,
+          exit_intersection_y - lane_width * 2,
+          entry_intersection_x,
+          entry_intersection_y + (2.0 * lane_width) + permissive_distance)
+                                                       
+        permissive_right_info = (("moving East", intersection_shape),
+                                 ("present", permissive_right_shape))
         
       case "H4" | "H5":
         # Eastbound left turn
@@ -1606,7 +1670,8 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
         milestones = None
 
     travel_path["milestones"] = milestones
-    travel_path["permissive left shape"] = permissive_left_shape
+    travel_path["permissive left turn info"] = permissive_left_info
+    travel_path["permissive right turn info"] = permissive_right_info
     
     travel_paths[travel_path_name] = travel_path
   
@@ -2785,9 +2850,92 @@ def check_still_blocked(traffic_element):
     
   return (None)
 
+# Subroutine to check an area for the presence of a traffic element that
+# makes moving into the area unsafe.
+def check_conflicting_traffic (traffic_element, permissive_info):
+  global error_counter
+  
+  # We can enter the intersection if it is safe.  First, stop for
+  # a second.  A real driver will be checking for oncoming traffic.
+  
+  if (traffic_element["speed"] > 0):
+    if (do_trace):
+      trace_file.write (" Still moving.\n\n")
+    return False
+
+  stopped_duration = current_time - traffic_element["stopped time"]
+  if (do_trace):
+    trace_file.write (" Stopped for " + format_time(stopped_duration)
+                      + ".\n")
+  if (stopped_duration < 1):
+    if (do_trace):
+      trace_file.write (" Not stopped long enough.\n\n")
+    return False
+        
+  # Check for a vehicle present or approaching.
+  for permissive_item in permissive_info:
+    movement_type = permissive_item[0]
+    permissive_shape = permissive_item[1]
+    for other_traffic_element_name in traffic_elements:
+
+      # Only check other traffic elements
+      if (other_traffic_element_name == traffic_element["name"]):
+        continue
+
+      other_traffic_element = traffic_elements[other_traffic_element_name]
+      if (not other_traffic_element["present"]):
+        continue
+          
+      stop_shape = other_traffic_element["stop shape"]
+      if (stop_shape.intersects(permissive_shape)):
+        if (do_trace):
+          trace_file.write ("Possible conflict:\n")
+          pprint.pprint (stop_shape, trace_file)
+          pprint.pprint (permissive_shape)
+          
+        if (movement_type == "present"):
+          if (do_trace):
+            trace_file.write (" Permissive turn is blocked by presence:\n")
+            pprint.pprint (other_traffic_element, trace_file)
+            trace_file.write ("\n")
+          return False
+
+        # The other traffic element most be moving towards us
+        # to make entering unsafe.
+        if (other_traffic_element["speed"] == 0):
+          continue
+
+        # Check the direction of movement.
+        movement_angle = other_traffic_element["angle"]
+      
+        match movement_type:
+          case "moving North":
+            if (abs(movement_angle) < math.radians(90)):
+              return False
+          case "moving South":
+            if (abs(movement_angle) > math.radians(90)):
+              return False
+          case "moving East":
+            if ((movement_angle < math.radians(0)) and
+                (movement_angle > math.radians(-180))):
+              return False
+          case "moving West":
+            if ((movement_angle > math.radians(0)) and
+                (movement_angle < math.radians(180))):
+              return False
+            
+          case _:
+            print ("Invalid conflicting movement: " + movement_type + ".")
+            error_counter = error_counter + 1
+
+  # If all the tests pass, we can proceed.
+  return True
+
 # Subroutine to see if a traffic element may change lanes.
 # If we are trying to enter the intersection or crosswalk
-# the light must be green.
+# the light must either be green or the movement must be
+# permitted even though the light is not green.
+
 def can_change_lanes (traffic_element):
   global current_time
   
@@ -2828,54 +2976,39 @@ def can_change_lanes (traffic_element):
           trace_file.write (" Lamp is green.\n\n")
         return True
       
-      permissive_lamps = "Flashing Left Arrow Yellow (lower)"
-      if (iluminated_lamp_name in permissive_lamps):
-        # We can enter the intersection if it is safe.  First, look for
-        # oncoming traffic for a second.
-        if (traffic_element["speed"] > 0):
+      permissive_left_lamps = "Flashing Left Arrow Yellow (lower)"
+      if (iluminated_lamp_name in permissive_left_lamps):
+        permissive_info = travel_path ["permissive left turn info"]
+        if (check_conflicting_traffic (traffic_element, permissive_info)):
           if (do_trace):
-            trace_file.write (" Still moving.\n\n")
+            trace_file.write (" No conflicting trafficc elements.\n\n")
+          return True
+        else:
           return False
 
-        stopped_duration = current_time - traffic_element["stopped time"]
-        if (do_trace):
-          trace_file.write (" Stopped for " + format_time(stopped_duration)
-                            + ".\n")
-        if (stopped_duration < 1):
-          if (do_trace):
-            trace_file.write (" Not stopped long enough.\n\n")
+      permissive_red_lamps = ("Steady Circular Red", "Steady Left Arrow Red",
+                              "Steady Right Arrow Red")
+      if (iluminated_lamp_name in permissive_red_lamps):
+        # If a right turn on red is allowed, the travel path will have
+        # permissive info.
+        permissive_info = travel_path ["permissive right turn info"]
+        if (permissive_info == None):
           return False
-        
-        # Check for a vehicle approaching.
-        permissive_left_shape = travel_path["permissive left shape"]
-        for other_traffic_element_name in traffic_elements:
-
-          # Only check other traffic elements
-          if (other_traffic_element_name == traffic_element["name"]):
-            continue
-
-          other_traffic_element = traffic_elements[other_traffic_element_name]
-          if (not other_traffic_element["present"]):
-            continue
+        if (check_conflicting_traffic (traffic_element, permissive_info)):
+          if (do_trace):
+            trace_file.write (" No conflicting trafficc elements.\n\n")
+          return True
+        else:
+          return False
           
-          stop_shape = other_traffic_element["stop shape"]
-          if (stop_shape.intersects(permissive_left_shape)):
-            if (do_trace):
-              trace_file.write (" Intersection blocked by:\n")
-              pprint.pprint (other_traffic_element, trace_file)
-              trace_file.write ("\n")
-            return False
-      
-        if (do_trace):
-          trace_file.write (" No vehicles approaching.\n\n")
-        return True
-      else:
-        # The lamp is neither green nor permissive
-        if (do_trace):
-          trace_file.write (" Lamp is nether green nor permissive.\n\n")
-        return False
+      # The lamp is neither green nor permissive
+      if (do_trace):
+        trace_file.write (" Lamp is nether green nor permissive.\n\n")
+      return False
         
     case _:
+      # The milestone is neither the entrance to the intersection nor
+      # the entrance to the crosswalk.  Always allow it.
       return True
     
   
