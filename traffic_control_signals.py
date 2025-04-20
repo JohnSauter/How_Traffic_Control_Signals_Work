@@ -1519,7 +1519,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           exit_intersection_x - (lane_width * 2),
           exit_intersection_y + (lane_width / 2))
                                                        
-        permissive_right_info = (("moving East", intersection_shape),
+        permissive_right_info = (("moving West", intersection_shape),
                                  ("present", permissive_right_shape))
       case "D2" | "D1":
         # Westbound left turn
