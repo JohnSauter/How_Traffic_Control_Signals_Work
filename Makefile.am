@@ -1,4 +1,4 @@
-# File: Makefile.am, author: John Sauter, date: March 30, 2025.
+# File: Makefile.am, author: John Sauter, date: April 20, 2025.
 #
 # Build traffic_control_signals.pdf and animations.
 
@@ -84,7 +84,6 @@ MUTCD_Ped_Signal_-_Steady_hand.svg \
 MUTCD_Ped_Signal_-_Walk.svg \
 pedestrian_and_left_turn_script.txt \
 pedestrian_script.txt \
-events_script.txt \
 references.bib \
 Signal_Timing_Manual_Second_Edition_22097.pdf \
 traffic_control_signals.py \

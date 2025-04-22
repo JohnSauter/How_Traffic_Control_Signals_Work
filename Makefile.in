@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# File: Makefile.am, author: John Sauter, date: March 30, 2025.
+# File: Makefile.am, author: John Sauter, date: April 20, 2025.
 #
 # Build traffic_control_signals.pdf and animations.
 
@@ -512,8 +512,7 @@ EXTRA_DIST = signal_ccc.svg signal_ccu.svg signal_rrr.svg \
 	MUTCD_Ped_Signal_-_Hand_with_timer-25.svg \
 	MUTCD_Ped_Signal_-_Steady_hand.svg MUTCD_Ped_Signal_-_Walk.svg \
 	pedestrian_and_left_turn_script.txt pedestrian_script.txt \
-	events_script.txt references.bib \
-	Signal_Timing_Manual_Second_Edition_22097.pdf \
+	references.bib Signal_Timing_Manual_Second_Edition_22097.pdf \
 	traffic_control_signals.py traffic_control_signals.tex \
 	state_diagram.txt signal_ccc_Green.svg signal_ccc_Red.svg \
 	signal_ccc_Yellow.svg signal_ccu_Green.svg signal_ccu_Red.svg \
