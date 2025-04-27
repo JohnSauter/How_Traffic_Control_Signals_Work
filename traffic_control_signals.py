@@ -50,7 +50,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.27 2025-04-20',
+                     version='traffic_control_signals 0.28 2025-04-27',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -89,7 +89,7 @@ parser.add_argument ('--script-input', metavar='script_input',
 parser.add_argument ('--waiting-limit', type=int, metavar='waiting_limit',
                      help='max wait time before getting green preference ' +
                      'for turning green; default 60 seconds.')
-parser.add_argument ('--print_statistics', type=bool,
+parser.add_argument ('--print-statistics', type=bool,
                      metavar='print_statistics',
                      help='print statistics about the simulation ' +
                      'default is False.')
@@ -1494,8 +1494,9 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
 
         permissive_right_shape = shapely.geometry.box (
           entry_intersection_x - (lane_width / 2),
-          exit_intersection_y - (lane_width * 2) - permissive_distance,
-          exit_intersection_x + (lane_width * 2), entry_intersection_y)
+          exit_intersection_y - (lane_width / 2),
+          exit_intersection_x + (lane_width * 2),
+          entry_intersection_y + (lane_width / 2))
                                                        
         permissive_right_info = (("moving East", intersection_shape),
                                  ("present", permissive_right_shape))
@@ -1515,8 +1516,9 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (exit_lane_name, exit_end_x, exit_end_y))
 
         permissive_right_shape = shapely.geometry.box (
-          entry_intersection_x - (lane_width / 2), exit_intersection_y,
           exit_intersection_x - (lane_width * 2),
+          entry_intersection_y,
+          exit_intersection_x + (lane_width * 2),
           exit_intersection_y + (lane_width / 2))
                                                        
         permissive_right_info = (("moving West", intersection_shape),
@@ -1578,9 +1580,9 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (exit_lane_name, exit_end_x, exit_end_y))
 
         permissive_right_shape = shapely.geometry.box (
-          exit_intersection_x - lane_width / 2,
-          exit_intersection_y - lane_width * 2,
-          entry_intersection_x,
+          exit_intersection_x - (lane_width / 2),
+          exit_intersection_y - (lane_width * 2),
+          exit_intersection_x + (lane_width / 2),
           entry_intersection_y + (2.0 * lane_width) + permissive_distance)
                                                        
         permissive_right_info = (("moving East", intersection_shape),
@@ -2857,7 +2859,12 @@ def check_conflicting_traffic (traffic_element, permissive_info):
   
   # We can enter the intersection if it is safe.  First, stop for
   # a second.  A real driver will be checking for oncoming traffic.
-  
+
+  if (do_trace):
+    trace_file.write ("Check for conflicting traffic with " +
+                      traffic_element["name"] + ".\n")
+    pprint.pprint (traffic_element, trace_file)
+    
   if (traffic_element["speed"] > 0):
     if (do_trace):
       trace_file.write (" Still moving.\n\n")
@@ -2889,9 +2896,10 @@ def check_conflicting_traffic (traffic_element, permissive_info):
       stop_shape = other_traffic_element["stop shape"]
       if (stop_shape.intersects(permissive_shape)):
         if (do_trace):
-          trace_file.write ("Possible conflict:\n")
+          trace_file.write ("Possible conflict with " +
+                            other_traffic_element_name + ":\n")
           pprint.pprint (stop_shape, trace_file)
-          pprint.pprint (permissive_shape)
+          pprint.pprint (permissive_shape, trace_file)
           
         if (movement_type == "present"):
           if (do_trace):
@@ -2907,28 +2915,77 @@ def check_conflicting_traffic (traffic_element, permissive_info):
 
         # Check the direction of movement.
         movement_angle = other_traffic_element["angle"]
+        
+        if (do_trace):
+          trace_file.write ("Movement angle: " + str(movement_angle) + ".\n")
       
         match movement_type:
+
           case "moving North":
             if (abs(movement_angle) < math.radians(90)):
+              if (do_trace):
+                trace_file.write ("Permissive turn is blocked " +
+                                  "by North movement.\n")
+                pprint.pprint (other_traffic_element, trace_file)
+                trace_file.write ("\n")
               return False
+            else:
+              if (do_trace):
+                trace_file.write ("Permissive turn is not blocked " +
+                                  "by North movement.\n")
+                pprint.pprint (other_traffic_element, trace_file)           
+
           case "moving South":
             if (abs(movement_angle) > math.radians(90)):
+              if (do_trace):
+                trace_file.write ("Permissive turn is blocked " +
+                                  "by South movement.\n")
+                pprint.pprint (other_traffic_element, trace_file)
+                trace_file.write ("\n")
               return False
+            else:
+              if (do_trace):
+                trace_file.write ("Permissive turn is not blocked " +
+                                  "by South movement.\n")
+                pprint.pprint (other_traffic_element, trace_file)
+            
           case "moving East":
-            if ((movement_angle < math.radians(0)) and
-                (movement_angle > math.radians(-180))):
-              return False
-          case "moving West":
             if ((movement_angle > math.radians(0)) and
                 (movement_angle < math.radians(180))):
+              if (do_trace):
+                trace_file.write ("Permissive turn is blocked " +
+                                  "by East movement.\n")
+                pprint.pprint (other_traffic_element, trace_file)
+                trace_file.write ("\n")
               return False
+            else:
+              if (do_trace):
+                trace_file.write ("Permissive turn is not blocked " +
+                                  " by East movement.\n")
+                pprint.pprint (other_traffic_element, trace_file)
+
+          case "moving West":
+            if ((movement_angle < math.radians(0)) and
+                (movement_angle > math.radians(-180))):
+              if (do_trace):
+                trace_file.write ("Permissive turn is blocked " +
+                                  "by West movement.\n")
+                pprint.pprint (other_traffic_element, trace_file)
+                trace_file.write ("\n")
+              return False
+            else:
+              if (do_trace):
+                trace_file.write ("Permissive turn is not blocked " +
+                                  "by West movement.\n")
+                pprint.pprint (other_traffic_element, trace_file)
             
           case _:
             print ("Invalid conflicting movement: " + movement_type + ".")
             error_counter = error_counter + 1
 
   # If all the tests pass, we can proceed.
+  if (do_trace):
+    trace_file.write ("No conflicts.\n\n")
   return True
 
 # Subroutine to see if a traffic element may change lanes.
@@ -2966,7 +3023,8 @@ def can_change_lanes (traffic_element):
         pprint.pprint (traffic_element, trace_file)
         pprint.pprint (signal_face, trace_file)
         pprint.pprint (travel_path, trace_file)
-        
+
+      # If the lamp is green we can enter the intersection.
       iluminated_lamp_name = signal_face["iluminated lamp name"]
       green_lamps = ("Steady Circular Green", "Steady Left Arrow Green",
                      "Steady Left Arrow Green and Steady Circular Green",
@@ -2975,7 +3033,10 @@ def can_change_lanes (traffic_element):
         if (do_trace):
           trace_file.write (" Lamp is green.\n\n")
         return True
-      
+
+      # If the lamp is a flashing left arrow yellow we can enter the
+      # intersection after a short pause provided there is no traffic
+      # in or approaching the intersection that will interfere with us.
       permissive_left_lamps = "Flashing Left Arrow Yellow (lower)"
       if (iluminated_lamp_name in permissive_left_lamps):
         permissive_info = travel_path ["permissive left turn info"]
@@ -2986,9 +3047,15 @@ def can_change_lanes (traffic_element):
         else:
           return False
 
+      # If the lamp is red, or about to turn red, we can turn right
+      # after a short pause provided there is no conflicting traffic.
       permissive_red_lamps = ("Steady Circular Red", "Steady Left Arrow Red",
                               "Steady Right Arrow Red")
-      if (iluminated_lamp_name in permissive_red_lamps):
+      permissive_yellow_lamps = ("Steady Circular Yellow",
+                                 "Steady Left Arrow Yellow",
+                                 "Steady Right Arrow Yellow")
+      if ((iluminated_lamp_name in permissive_red_lamps) or
+          (iluminated_lamp_name in permissive_yellow_lamps)):
         # If a right turn on red is allowed, the travel path will have
         # permissive info.
         permissive_info = travel_path ["permissive right turn info"]
@@ -3003,7 +3070,7 @@ def can_change_lanes (traffic_element):
           
       # The lamp is neither green nor permissive
       if (do_trace):
-        trace_file.write (" Lamp is nether green nor permissive.\n\n")
+        trace_file.write (" Lamp is neither green nor permissive.\n\n")
       return False
         
     case _:

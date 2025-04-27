@@ -1,5 +1,5 @@
 Name:           How_Traffic_Control_Signals_Work
-Version:        0.27
+Version:        0.28
 Release:        1%{?dist}
 Summary:        Explain traffic control signals
 
@@ -60,8 +60,10 @@ make check VERBOSE=1
 %license COPYING
 
 %changelog
+ * Sat Apr 26 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.28-1 Continue work on right turn on red.
  * Sat Apr 19 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
- - 0.26-1 Work on passing permissive red signals.
+ - 0.27-1 Work on passing permissive red signals.
  * Sat Apr 12 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.26-1 Work on passing permissive yellow signals.
  * Sat Apr 04 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
