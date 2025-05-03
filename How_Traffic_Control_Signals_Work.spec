@@ -1,5 +1,5 @@
 Name:           How_Traffic_Control_Signals_Work
-Version:        0.28
+Version:        0.29
 Release:        1%{?dist}
 Summary:        Explain traffic control signals
 
@@ -60,6 +60,8 @@ make check VERBOSE=1
 %license COPYING
 
 %changelog
+ * Sat May 03 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.29-1 do more waiting for gap.
  * Sat Apr 26 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.28-1 Continue work on right turn on red.
  * Sat Apr 19 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>

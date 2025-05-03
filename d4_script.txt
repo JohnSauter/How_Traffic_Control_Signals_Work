@@ -1,0 +1,2 @@
+time,operator,signal face,operand,count,interval
+200.000,car,D,D4,1,1
