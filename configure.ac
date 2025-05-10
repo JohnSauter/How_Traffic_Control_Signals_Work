@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.67])
-AC_INIT([How_Traffic_Control_Signals_Work],[0.30],
+AC_INIT([How_Traffic_Control_Signals_Work],[0.31],
 [John_Sauter@systemeyescomputerstore.com],
 [How_Traffic_Control_Signals_Work],
 ["github@github.com:How_Traffic_Control_Signals_Work.git"])

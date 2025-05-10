@@ -50,7 +50,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.30 2025-05-04',
+                     version='traffic_control_signals 0.31 2025-05-10',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -1972,18 +1972,20 @@ if (do_trace):
 # Read the script file, if one was specified.
 script_set = set()
 if (do_script_input):
-  with open (script_file_name, 'rt') as scriptfile:
+  with open (script_file_name, 'r') as scriptfile:
     reader = csv.DictReader (scriptfile)
     for row in reader:
       the_time = fractions.Fraction (row['time'])
       the_operator = row['operator']
       signal_face_name = row['signal face']
       the_operand = row['operand']
+      permissive_delay = fractions.Fraction (row['permissive_delay'])
       the_count = int(row['count'])
       the_interval = fractions.Fraction (row['interval'])
       for counter in range(0, the_count):
         this_time = the_time + (the_interval * counter);
-        this_action = (this_time, the_operator, signal_face_name, the_operand)
+        this_action = (this_time, the_operator, signal_face_name, the_operand,
+                       permissive_delay)
         script_set.add(this_action)
  
   if (do_trace):
@@ -2617,7 +2619,7 @@ def new_milestone (traffic_element):
 # A traffic element starts at its first milestone.
 next_traffic_element_number = 0
 
-def add_traffic_element (type, travel_path_name):
+def add_traffic_element (type, travel_path_name, permissive_delay):
   global travel_paths
   global traffic_elements
   global next_traffic_element_number
@@ -2631,6 +2633,7 @@ def add_traffic_element (type, travel_path_name):
   
   traffic_element["type"] = type
   traffic_element["travel path name"] = travel_path_name
+  traffic_element["permissive delay"] = permissive_delay
   travel_path = travel_paths[travel_path_name]
   milestone_list = travel_path["milestones"]
   traffic_element["milestones"] = milestone_list
@@ -2859,7 +2862,7 @@ def check_conflicting_traffic (traffic_element, permissive_info):
   if (do_trace):
     trace_file.write (" Stopped for " + format_time(stopped_duration)
                       + ".\n")
-  if (stopped_duration < 1):
+  if (stopped_duration < traffic_element["permissive delay"]):
     if (do_trace):
       trace_file.write (" Not stopped long enough.\n\n")
     return False
@@ -3400,7 +3403,8 @@ def timer_state (signal_face, timer_name):
       return the_timer["state"]
 
 # Execute an action from the script.
-def perform_script_action (the_operator, signal_face_name, the_operand):
+def perform_script_action (the_operator, signal_face_name, the_operand,
+                           permissive_delay):
   for signal_face in signal_faces_list:
     if ((signal_face["name"] == signal_face_name) or
         (signal_face_name == "all")):
@@ -3428,7 +3432,7 @@ def perform_script_action (the_operator, signal_face_name, the_operand):
                               " by script. \\\\\n")
             
         case "car" | "truck" | "pedestrian":
-          add_traffic_element (the_operator, the_operand)
+          add_traffic_element (the_operator, the_operand, permissive_delay)
           
   return
 
@@ -3643,10 +3647,13 @@ while ((current_time < end_time) and (error_counter == 0)):
     the_operator = the_action[1]
     signal_face_name = the_action[2]
     the_operand = the_action[3]
+    permissive_delay = the_action[4]
     if (the_time <= current_time):
-      perform_script_action (the_operator, signal_face_name, the_operand)
+      perform_script_action (the_operator, signal_face_name, the_operand,
+                             permissive_delay)
       to_remove.add(the_action)
       no_activity = False
+      
   for the_action in to_remove:
     script_set.remove(the_action)
 

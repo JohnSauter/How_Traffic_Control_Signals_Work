@@ -1,6 +1,6 @@
-time,operator,signal face,operand,count,interval
-200.000,car,D,D6,10,5
-201.000,car,C,C3,5,3
-202.000,car,B,B5,10,2
-203.000,car,G,G6,5,5
-204.000,car,F,F2,10,6
+time,operator,signal face,operand,permissive_delay,count,interval
+200.000,car,D,D6,1,10,5
+201.000,car,C,C3,1,5,3
+202.000,car,B,B5,1,10,2
+203.000,car,G,G6,1,5,5
+204.000,car,F,F2,1,10,6

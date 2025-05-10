@@ -51,6 +51,7 @@ signal_cccl.svg \
 signal_llll.svg \
 fix_files.sh autogen.sh \
 left_turn_script.txt \
+left_turn_delayed_script.txt \
 legalcode.txt mutcd11thedition.pdf \
 multiple_script.txt \
 MUTCD_Ped_Signal_-_Hand_with_timer.svg \
@@ -144,6 +145,7 @@ traffic_control_signals.bbl LICENSE legalcode.txt \
 state_diagram.eps red_state_table.tex \
 green_state_table.tex yellow_state_table.tex lamp_map_names.tex \
 sensor_map.tex idle_table.tex left_turn_table.tex \
+left_turn_delayed_table.tex \
 pedestrian_table.tex pedestrian_and_left_turn_table.tex multiple_table.tex \
 MUTCD_Ped_Signal_-_Hand_with_timer.pdf \
 MUTCD_Ped_Signal_-_Hand_with_timer-00.pdf \
@@ -189,6 +191,7 @@ traffic_control_signals.bbl : traffic_control_signals.tex references.bib \
 LICENSE legalcode.txt state_diagram.eps \
 red_state_table.tex green_state_table.tex yellow_state_table.tex \
 lamp_map_names.tex sensor_map.tex idle_table.tex left_turn_table.tex \
+left_turn_delayed_table.tex \
 pedestrian_table.tex pedestrian_and_left_turn_table.tex multiple_table.tex \
 MUTCD_Ped_Signal_-_Hand_with_timer.pdf \
 MUTCD_Ped_Signal_-_Hand_with_timer-00.pdf \
@@ -263,6 +266,13 @@ left_turn_table.tex : traffic_control_signals.py left_turn_script.txt
 	python3 ${srcdir}/traffic_control_signals.py --table-level 4 \
 --table-file ${builddir}/left_turn_table.tex --duration 400 --table-start 199 \
 --script ${srcdir}/left_turn_script.txt --table-caption "Left Turn"
+
+left_turn_delayed_table.tex : traffic_control_signals.py \
+left_turn_delayed_script.txt
+	python3 ${srcdir}/traffic_control_signals.py --table-level 4 \
+--table-file ${builddir}/left_turn_delayed_table.tex --duration 400 \
+--table-start 199 --script ${srcdir}/left_turn_delayed_script.txt \
+--table-caption "Left Turn Delayed"
 
 pedestrian_table.tex : traffic_control_signals.py pedestrian_script.txt
 	python3 ${srcdir}/traffic_control_signals.py --table-level 3 \
