@@ -655,6 +655,21 @@ Red Limit times set to infinity since those signal faces should
 remain red in the absence of traffic.
 Signal faces B, C, F, and G have their Red Limit times set to 60 seconds.
 
+\subsubsection{Traffic Still Present}
+If we are trying to turn green due to a vehicle being present or approaching
+the intersection, but after this much time the vehicle is not present, then
+we stop trying to turn green.  The vehicle has likely made a permissive right
+turn so there is no longer a need to stop the cross traffic.
+
+In our example, signal faces A, B, C, E, F and G have their Traffic Still
+Present timeers set to 10.0 seconds, so a vehicle has time to reach
+the Traffic Present sensor after being detected by the Traffic Approaching
+sensor.  Signal faces D, H, and J have the timer duration set to 3.0 seconds,
+since they don't have a Traffic Approaching sensor. The pedestrian signal
+faces are triggered by push buttons, so they cannot sense whether or not
+a pedestrian is still present, to they have the timer duration set to
+infinity.
+
 \subsubsection{Yellow Change Time}
 To give traffic warning that we are soon turning red, we first turn our light
 yellow for Yellow Change time.  For pedestrian crossings this is the
@@ -1412,6 +1427,9 @@ based on those sizes and speeds.
 \item[Maximum Green]{The maximum green interval for lanes B, C, F, and G
   is 60 seconds; for lanes D, H, and J 40 seconds; for lanes A and E
   20 seconds; for the pedestrian lanes 10 seconds.}
+\item[Traffic Still Present]{The traffic still present interval for
+  lanes A, B, C, E, F, and G is 10.0 seconds; for lanes D, H, and J is
+  3.0 seconds; for the pedestrian lanes is infinity.}
 \item[Yellow Change]{The yellow change interval is 5 seconds on lanes
   B, C, F and G; 4 seconds on A and E; 3.5 seconds on lanes D, H and J;
   19 seconds on the pedestrian lanes.}

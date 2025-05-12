@@ -50,7 +50,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.31 2025-05-10',
+                     version='traffic_control_signals 0.32 2025-05-11',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -293,6 +293,13 @@ action = ("clear toggle", "Preempt Red")
 actions_list.append(action)
 action = ("clear toggle", "Manual Red")
 actions_list.append(action)
+action=("clear toggle", "Request Green")
+actions_list.append(action)
+action = ("clear toggle", "Request Partial Clearance")
+actions_list.append(action)
+actions_list = substate["actions"]
+action = ("clear toggle", "Request Clearance")
+actions_list.append(action)
 
 substate["exits"] = list()
 exits_list = substate["exits"]
@@ -311,19 +318,11 @@ exits_list.append(exit)
 conditional_tests = list()
 conditional_test = ("toggle is true", "Traffic Approaching")
 conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Preempt Red")
-conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Manual Red")
-conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Red", "Going Green 1" )
 exits_list.append(exit)
 
 conditional_tests = list()
 conditional_test = ("toggle is true", "Traffic Present")
-conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Preempt Red")
-conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Manual Red")
 conditional_tests.append(conditional_test)
 exit  = ( conditional_tests, "Red", "Going Green 1" )
 exits_list.append(exit)
@@ -331,23 +330,19 @@ exits_list.append(exit)
 conditional_tests = list()
 conditional_test = ("toggle is true", "Preempt Green")
 conditional_tests.append(conditional_test)
-exit  = ( conditional_tests, "Red", "Going Green 1")
+exit  = ( conditional_tests, "Red", "Going Green 4")
 exits_list.append(exit)
 
 conditional_tests = list()
 conditional_test = ("toggle is true", "Manual Green")
 conditional_tests.append(conditional_test)
-exit  = ( conditional_tests, "Red", "Going Green 1")
+exit  = ( conditional_tests, "Red", "Going Green 4")
 exits_list.append(exit)
 
 conditional_tests = list()
 conditional_test = ("timer is completed", "Red Limit")
 conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Preempt Red")
-conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Manual Red")
-conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Red", "Going Green 1")
+exit = ( conditional_tests, "Red", "Going Green 4")
 exits_list.append(exit)
 
 conditional_tests = list()
@@ -361,41 +356,171 @@ conditional_test = ("toggle is true", "Flash Yellow")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Yellow", "Flashing" )
 exits_list.append(exit)
+
 red_state.append(substate)
 
 substate = dict()
 substate["name"] = "Going Green 1"
 substate["actions"] = list()
 actions_list = substate["actions"]
+
 action=("set toggle", "Request Green")
 actions_list.append(action)
 action=("clear toggle", "Traffic Present")
 actions_list.append(action)
 action=("clear toggle", "Traffic Approaching")
 actions_list.append(action)
+action = ("start timer", "Traffic Still Present")
+actions_list.append(action)
+
 substate["exits"] = list()
 exits_list = substate["exits"]
-
 conditional_tests = list()
-conditional_test = ("toggle is true", "Green Request Granted")
-conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Preempt Red")
-conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Manual Red")
+conditional_test = ("timer not complete", "Traffic Still Present")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Red", "Going Green 2" )
 exits_list.append(exit)
 
+red_state.append(substate)
+
+substate = dict()
+substate["name"] = "Going Green 2"
+substate["actions"] = list()
+actions_list = substate["actions"]
+
+action = ("clear toggle", "Traffic Present")
+actions_list.append(action)
+action = ("clear toggle", "Traffic Approaching")
+actions_list.append(action)
+
+substate["exits"] = list()
+exits_list = substate["exits"]
+
 conditional_tests = list()
-conditional_test = ("toggle is false", "Green Request Granted")
+conditional_test = ("toggle is true", "Preempt Red")
 conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Red", "Going Green 1" )
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Manual Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Green Request Granted")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Going Green 3" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("timer is completed", "Traffic Still Present")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Traffic Present")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("timer not complete", "Traffic Still Present")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Going Green 2" )
 exits_list.append(exit)
 
 red_state.append(substate)
 
 substate=dict()
-substate["name"] = "Going Green 2"
+substate["name"] = "Going Green 3"
+substate["actions"] = list()
+actions_list = substate["actions"]
+
+action=("clear toggle", "Request Green")
+actions_list.append(action)
+action = ("set toggle", "Request Partial Clearance")
+actions_list.append(action)
+action = ("clear toggle", "Traffic Present")
+actions_list.append(action)
+action = ("clear toggle", "Traffic Approaching")
+actions_list.append(action)
+
+substate["exits"] = list()
+exits_list = substate["exits"]
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Preempt Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Manual Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Partial Conflicting Paths are Clear")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Conflicting Paths are Clear")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Left Flashing 1" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Conflicting Paths are Clear")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Green", "Minimum Green" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("timer is completed", "Traffic Still Present")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Traffic Present")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("timer not complete", "Traffic Still Present")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Going Green 3" )
+exits_list.append(exit)
+
+red_state.append(substate)
+
+substate = dict()
+substate["name"] = "Going Green 4"
+substate["actions"] = list()
+actions_list = substate["actions"]
+action=("set toggle", "Request Green")
+actions_list.append(action)
+
+substate["exits"] = list()
+exits_list = substate["exits"]
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Preempt Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Manual Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Green Request Granted")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Going Green 5" )
+exits_list.append(exit)
+
+red_state.append(substate)
+
+substate=dict()
+substate["name"] = "Going Green 5"
 substate["actions"] = list()
 actions_list = substate["actions"]
 action=("clear toggle", "Request Green")
@@ -406,13 +531,21 @@ substate["exits"] = list()
 exits_list = substate["exits"]
 
 conditional_tests = list()
+conditional_test = ("toggle is true", "Preempt Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Manual Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
 conditional_test = ("toggle is true", "Partial Conflicting Paths are Clear")
 conditional_tests.append(conditional_test)
 conditional_test = ("toggle is false", "Conflicting Paths are Clear")
-conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Preempt Red")
-conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Manual Red")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Yellow", "Left Flashing 1" )
 exits_list.append(exit)
@@ -420,12 +553,9 @@ exits_list.append(exit)
 conditional_tests = list()
 conditional_test = ("toggle is true", "Conflicting Paths are Clear")
 conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Preempt Red")
-conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Manual Red")
-conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Green", "Minimum Green" )
 exits_list.append(exit)
+
 red_state.append(substate)
 
 substate = dict()
@@ -495,6 +625,12 @@ exit = ( conditional_tests, "Yellow", "Going Red" )
 exits_list.append(exit)
 
 conditional_tests = list()
+conditional_test = ("toggle is true", "Manual Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
 conditional_test = ("toggle is true", "Flash Red")
 conditional_tests.append(conditional_test)
 exit = (conditional_tests, "Yellow", "Going Red")
@@ -502,10 +638,6 @@ exits_list.append(exit)
 
 conditional_tests = list()
 conditional_test = ("timer is completed", "Minimum Green")
-conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Preempt Red")
-conditional_tests.append(conditional_test)
-conditional_test = ( "toggle is false", "Flash Red")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Green", "Looking for Gap")
 exits_list.append(exit)
@@ -623,6 +755,7 @@ conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Green", "Looking for Gap" )
 exits_list.append(exit)
 
+conditional_tests = list()
 conditional_test = ("toggle is true", "Traffic Present")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Green", "Looking for Gap" )
@@ -699,6 +832,12 @@ exits_list = substate["exits"]
 
 conditional_tests = list()
 conditional_test = ("toggle is true", "Preempt Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Manual Red")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Yellow", "Going Red" )
 exits_list.append(exit)
@@ -943,7 +1082,7 @@ toggle_names = ( "Clearance Requested", "Cleared",
 timer_names = ( "Left Flashing Yellow Waiting", "Red Limit",
                 "Minimum Left Flashing Yellow", "Maximum Green",
                 "Minimum Green", "Passage", "Red Clearance", "Green Limit",
-                "Yellow Change" )
+                "Yellow Change", "Traffic Still Present" )
 
 # Set the duration of each timer in each signal face.
 
@@ -968,6 +1107,8 @@ for signal_face_name in ("B", "C", "F", "G"):
   timer_durations[timer_full_name] = decimal.Decimal ("inf")
   timer_full_name = signal_face_name + "/" + "Yellow Change"
   timer_durations[timer_full_name] = decimal.Decimal ("5.000")
+  timer_full_name = signal_face_name + "/" + "Traffic Still Present"
+  timer_durations[timer_full_name] = decimal.Decimal ("10.000")
 
 for signal_face_name in ("A", "E"):
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Waiting"
@@ -986,6 +1127,8 @@ for signal_face_name in ("A", "E"):
   timer_durations[timer_full_name] = decimal.Decimal ("60.000")
   timer_full_name = signal_face_name + "/" + "Yellow Change"
   timer_durations[timer_full_name] = decimal.Decimal ("3.500")
+  timer_full_name = signal_face_name + "/" + "Traffic Still Present"
+  timer_durations[timer_full_name] = decimal.Decimal ("10.000")
 
 for signal_face_name in ("D", "H"):
   timer_full_name = signal_face_name + "/" + "Maximum Green"
@@ -999,6 +1142,8 @@ for signal_face_name in ("D", "H"):
   timer_full_name = signal_face_name + "/" + "Green Limit"
   timer_durations[timer_full_name] = decimal.Decimal ("60.000")
   timer_full_name = signal_face_name + "/" + "Yellow Change"
+  timer_durations[timer_full_name] = decimal.Decimal ("3.000")
+  timer_full_name = signal_face_name + "/" + "Traffic Still Present"
   timer_durations[timer_full_name] = decimal.Decimal ("3.000")
 
 for signal_face_name in ("J"):
@@ -1014,6 +1159,9 @@ for signal_face_name in ("J"):
   timer_durations[timer_full_name] = decimal.Decimal ("60.000")
   timer_full_name = signal_face_name + "/" + "Yellow Change"
   timer_durations[timer_full_name] = decimal.Decimal ("3.000")
+  timer_full_name = signal_face_name + "/" + "Traffic Still Present"
+  timer_durations[timer_full_name] = decimal.Decimal ("3.000")
+
 
 for signal_face_name in ("pse", "psw", "pne", "pnw"):
   timer_full_name = signal_face_name + "/" + "Maximum Green"
@@ -1028,6 +1176,8 @@ for signal_face_name in ("pse", "psw", "pne", "pnw"):
   timer_durations[timer_full_name] = decimal.Decimal ("60.000")
   timer_full_name = signal_face_name + "/" + "Yellow Change"
   timer_durations[timer_full_name] = decimal.Decimal ("19.000")
+  timer_full_name = signal_face_name + "/" + "Traffic Still Present"
+  timer_durations[timer_full_name] = decimal.Decimal ("inf")
 
 signal_faces_list = list()
 signal_faces_dict = dict()
@@ -1056,6 +1206,8 @@ for signal_face_name in signal_face_names:
     timers_list.append(timer)
   signal_face["timers"] = timers_list
 
+  signal_face["clearance requested by"] = set()
+  
   signal_faces_list.append(signal_face)
   signal_faces_dict[signal_face_name] = signal_face
 
@@ -2039,12 +2191,24 @@ def place_name(traffic_element):
       return ("lane " + current_lane)
   return (None)
 
-# Return the value of a named toggle in a specified signal face
+# Return the value of a named toggle in a specified signal face.
 def toggle_value (signal_face, toggle_name):
-    toggles = signal_face["toggles"]
-    for the_toggle in toggles:
-      if (the_toggle["name"] == toggle_name):
-        return (the_toggle["value"])
+  global error_counter
+
+                                            
+  toggles = signal_face["toggles"]
+  for the_toggle in toggles:
+    if (the_toggle["name"] == toggle_name):
+      if (verbosity_level >= 5):
+        print (format_time(current_time) + " toggle " + signal_face["name"] +
+               "/" + toggle_name + " is " + str(the_toggle["value"]) + ",")
+      return (the_toggle["value"])
+
+  error_counter = error_counter + 1
+  if (verbosity_level >= 1):
+    print (format_time(current_time) + "signal face " + signal_face["name"] +
+           " testing unknown toggle " + toggle_name + ".")
+  return None
 
 # Set the value of a named toggle in a specified signal face.
 def set_toggle_value (signal_face, toggle_name, new_value, source):
@@ -2099,14 +2263,13 @@ def set_toggle_value (signal_face, toggle_name, new_value, source):
               if (wait_time > signal_face["max wait time"]):
                 signal_face["max wait time"] = wait_time
                 signal_face["max wait start"] = signal_face["wait start"]
-              
                         
       return
     
   if (verbosity_level >= 1):
-    print (format_time(current_time) + " toggle " + signal_face["name"] + "/" +
-           toggle_name + " unknown.")
-    error_counter = error_counter + 1
+    print (format_time(current_time) + " setting unknown toggle " +
+           signal_face["name"] + "/" + toggle_name + ".")
+  error_counter = error_counter + 1
   return
 
 # Return True if traffic can not flow through the specified signal
@@ -2140,6 +2303,47 @@ def green_request_granted():
   global had_its_chance
   global no_activity
 
+  # If a signal face is on the requesting green list, but is no longer
+  # requesting green, remove it from the list.  This usually happens
+  # because the signal face has turned green, but can also happen
+  # if a vehicle makes a permissive right turn so the signal face
+  # no longer needs to turn green.
+  
+  to_remove = list()
+  for signal_face in requesting_green:
+    if (not toggle_value(signal_face, "Request Green")):
+      if (verbosity_level >= 5):
+        print (format_time(current_time) + " signal face " +
+               signal_face["name"] + " no longer requesting green.")
+      to_remove.append(signal_face)
+  for signal_face in to_remove:
+    requesting_green.remove(signal_face)
+
+  # Likewise, if a signal face is on the allowed green list, but is no
+  # longer interested in turning green, remove it from the list.
+  to_remove = list()
+  for signal_face in allowed_green:
+    if (not ((toggle_value(signal_face, "Request Clearance")) or
+        toggle_value(signal_face, "Request Partial Clearance"))):
+      if (verbosity_level >= 5):
+        print (format_time(current_time) + " signal face " +
+               signal_face["name"] + " no longer requesting clearance.")
+      to_remove.append(signal_face)
+  for signal_face in to_remove:
+    allowed_green.remove(signal_face)
+    signal_face_name = signal_face["name"]
+    # Remove the clearance request from the signal faces we sent it to.
+    for conflicting_face in signal_faces_list:
+      if (signal_face_name in conflicting_face["clearance requested by"]):
+        if (verbosity_level >= 5):
+          print (format_time[current_time] + "signal face " +
+                 signal_face_name + " no longer requesting clearance from " +
+                 conflicting_face["name"] + ".")
+        conflicting_face["clearance requested by"].remove(signal_face_name)
+        if (len(conflicting_face["clearance requested by"]) == 0):
+          set_toggle_value (conflicting_face, "Clearance Requested", False,
+                            "system program Partial Clearance Requested")
+              
   # If a signal face is requesting green, place it on the list of
   # signal faces requesting green unless it is already on the list
   # or is on the list of signal faces allowed to turn green.
@@ -2206,7 +2410,7 @@ def green_request_granted():
         print (format_time(current_time) + " signal face " +
                signal_face["name"] +
                " is allowed to turn green because it does not conflict" +
-               " with any signal face that is already allowed to turn " +
+               " with any signal face that is already allowed to turn" +
                " green.")
     
   # Allow a signal face to turn green even if it is not its turn
@@ -2270,6 +2474,10 @@ def green_request_granted():
       allowed_green.remove(signal_face)
       set_toggle_value (signal_face, "Green Request Granted", False,
                         "system program Green Request Granted")
+      signal_face["clearance requested by"] = set()
+      if (verbosity_level >= 5):
+        print (format_time[current_time] + " signal face " +
+               signal_face["name"] + " traffic is now flowing.")
       
   for signal_face in allowed_green:
     set_toggle_value (signal_face, "Green Request Granted", True,
@@ -2285,6 +2493,7 @@ def clearance_requested():
         if (not toggle_value (conflicting_face, "Cleared")):
           set_toggle_value (conflicting_face, "Clearance Requested", True,
                             "system program Clearance Requested")
+          conflicting_face["clearance requested by"].add(signal_face["name"])
   return
         
 def partial_clearance_requested():
@@ -2296,6 +2505,7 @@ def partial_clearance_requested():
         if (not toggle_value (conflicting_face, "Cleared")):
           set_toggle_value (conflicting_face, "Clearance Requested", True,
                             "system program Partial Clearance Requested")
+          conflicting_face["clearance requested by"].add(signal_face["name"])
   return
 
 # Maintain the Conflicting Paths are Clear toggle.  It is false
@@ -3448,7 +3658,7 @@ def update_timers():
                            the_timer["signal face name"] + "/" +
                            the_timer["name"])
     print (format_time(current_time) + " Active timers: " + active_timer_list +
-           "(" + str(len(running_timers)) + ").")
+           ".")
     
   for the_timer in running_timers:
     the_timer["remaining time"] = the_timer["completion time"] - current_time

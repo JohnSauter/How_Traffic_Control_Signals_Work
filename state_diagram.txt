@@ -1,4 +1,4 @@
-# File: state_diagram.txt, author: John Sauter, date: April 19, 2025.
+# File: state_diagram.txt, author: John Sauter, date: May 11, 2025.
 
 strict digraph Traffic_Control_Signals {
 fontname="Helvetica,Arial,sans-serif"
@@ -24,6 +24,9 @@ node [color=red, label="Waiting for\nClearance"] "Red\nWaiting for\nClearance";
 node [label="Travel Path\nis Clear"] "Red\nTravel Path\nis Clear";
 node [label="Going Green 1"] "Red\nGoing Green 1";
 node [label="Going Green 2"] "Red\nGoing Green 2";
+node [label="Going Green 3"] "Red\nGoing Green 3";
+node [label="Going Green 4"] "Red\nGoing Green 4";
+node [label="Going Green 5"] "Red\nGoing Green 5";
 #node [label="Flashing"] "Red\nFlashing";
 }
 
@@ -53,12 +56,22 @@ edge [label="traffic\npresent"]
 #edge [label="flash\nyellow"]
 #     "Red\nTravel Path\nis Clear"->"Yellow\nFlashing";
 edge [label="permission\ngranted"] "Red\nGoing Green 1"->"Red\nGoing Green 2";
+edge [label=""]"Red\nGoing Green 2"->"Red\nGoing Green 3";
 edge [label="permissive\nleft turn"]
-     "Red\nGoing Green 2"->"Yellow\nLeft Flashing 1";
+     "Red\nGoing Green 3"->"Yellow\nLeft Flashing 1";
 edge [label="conflicting\npaths clear"]
-     	"Red\nGoing Green 2"->"Green\nMinimum Green";
+     	"Red\nGoing Green 3"->"Green\nMinimum Green";
+edge [label="traffic\ngone"]
+     	"Red\nGoing Green 3"->"Red\nTravel Path\nis Clear";
 #edge [label="stop\nflashing"] "Red\nFlashing"->"Red\nWaiting for\nClearance";
 #edge [label="flash\nyellow"] "Red\nFlashing"->"Yellow\nFlashing";
+edge [label="long\nenough"]
+     "Red\nTravel Path\nis Clear"->"Red\nGoing Green 4";
+edge [label="permission\ngranted"] "Red\nGoing Green 4"->"Red\nGoing Green 5";
+edge [label="conflicting\npaths clear"]
+     	"Red\nGoing Green 5"->"Green\nMinimum Green";
+edge [label="traffic\ngone"]
+     	"Red\nGoing Green 5"->"Red\nTravel Path\nis Clear";
 
 #edge [label="quick\nred"] "Green\nMinimum Green"->"Yellow\nGoing Red";
 edge [label="long\nenough"]
