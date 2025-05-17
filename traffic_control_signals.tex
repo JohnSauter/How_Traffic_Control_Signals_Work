@@ -196,12 +196,12 @@
   pdfcontacturl={https://www.systemeyescomputerstore.com},
   pdfcopyright={Copyright {\copyright} 2025 by John Sauter},
   pdfurl={https://www.systemeyescomputerstore.com/traffic\%5Fsignals/traffic\%5Fsignals.pdf},
-  pdfdate={2025-05-10},
+  pdfdate={2025-05-17},
   pdflicenseurl={https://creativecommons.org/licenses/by-sa/4.0},
   pdfmetalang={en-US}
 }
 
-\date{2025-05-10}
+\date{2025-05-17}
 \maketitle
 \begin{abstract}
   Traffic control signals allow vehicles and pedestrians to move through
@@ -642,7 +642,7 @@ and the last vehicle to enter the intersection from that lane has left the
 intersection, so that a conflicting travel path can be given a green light.
 
 In our example, signal faces A, D, E, H, and J have their Red Clearance
-times set to 1.5 seconds; and signal faces B, C, G and the pesestrian
+times set to 1.5 seconds; and signal faces B, C, F, G and the pesestrian
 signal faces to 0.4 seconds.
 
 \subsubsection{Red Limit Time}
@@ -690,7 +690,9 @@ outside world.  These are:
 \subsubsection{Clearance Requested}
 
 A signal face will set Clearance Requested in conflicting signal faces
-when it wants the conflicting signal face to turn red to it can turn green.
+when it wants the conflicting signal face to turn red so it can turn green.
+When a signal face sees that its own Clearance Reuqested toggle has been
+set, it turns red.
 
 \subsubsection{Cleared}
 
@@ -736,9 +738,9 @@ red, then remain there.
 
 \subsubsection{Partial Conflicting Paths are Clear}
 
-When a signal face sees this toggle set it can switch its light
-from left arrow red to flashing left arrow yellow, thus allowing
-permissive left turns.
+When a signal face sees this toggle set and Conflicting Paths are Clear
+not set, it can switch its light from left arrow red to flashing left arrow
+yellow, thus allowing permissive left turns.
 
 \subsubsection{Preempt Green}
 

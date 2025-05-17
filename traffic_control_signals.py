@@ -50,7 +50,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.32 2025-05-11',
+                     version='traffic_control_signals 0.33 2025-05-17',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -127,6 +127,7 @@ error_counter = 0
 # 3 add state changes and blocking
 # 4 add toggle and sensor changes
 # 5 add lots of other items for debugging
+# 6 add tests of toggles
 
 # Parse the command line.
 arguments = parser.parse_args ()
@@ -602,6 +603,8 @@ substate["actions"] = list()
 actions_list = substate["actions"]
 action=("set lamp", "Steady Circular Green")
 actions_list.append(action)
+action=("clear toggle", "Green Request Granted")
+actions_list.append(action)
 action = ("clear toggle", "Cleared")
 actions_list.append(action)
 action = ("clear toggle", "Request Partial Clearance")
@@ -815,6 +818,8 @@ substate["name"] = "Left Flashing 1"
 substate["actions"] = list()
 actions_list = substate["actions"]
 action = ("set lamp", "Flashing Left Arrow Yellow")
+actions_list.append(action)
+action=("clear toggle", "Green Request Granted")
 actions_list.append(action)
 action = ("clear toggle", "Cleared")
 actions_list.append(action)
@@ -2199,7 +2204,7 @@ def toggle_value (signal_face, toggle_name):
   toggles = signal_face["toggles"]
   for the_toggle in toggles:
     if (the_toggle["name"] == toggle_name):
-      if (verbosity_level >= 5):
+      if (verbosity_level >= 6):
         print (format_time(current_time) + " toggle " + signal_face["name"] +
                "/" + toggle_name + " is " + str(the_toggle["value"]) + ",")
       return (the_toggle["value"])
@@ -2336,7 +2341,7 @@ def green_request_granted():
     for conflicting_face in signal_faces_list:
       if (signal_face_name in conflicting_face["clearance requested by"]):
         if (verbosity_level >= 5):
-          print (format_time[current_time] + "signal face " +
+          print (format_time(current_time) + " signal face " +
                  signal_face_name + " no longer requesting clearance from " +
                  conflicting_face["name"] + ".")
         conflicting_face["clearance requested by"].remove(signal_face_name)
@@ -3685,7 +3690,9 @@ def update_timers():
     remove_timers_list = ""
 
     for the_timer in remove_timers:
-      remove_timers_list = remove_timers_list + " " + the_timer["name"]
+      remove_timers_list = (remove_timers_list + " " +
+                            the_timer["signal face name"] + "/" +
+                            the_timer["name"])
     print (format_time(current_time) + " Timers being removed: " +
            remove_timers_list + ".")
     
@@ -3773,7 +3780,7 @@ while ((current_time < end_time) and (error_counter == 0)):
             toggle_name = conditional[1]
             if (verbosity_level >= 5):
               print (format_time(current_time) + " Testing toggle " +
-                     toggle_name + " for True.")
+                     signal_face["name"] + "/" + toggle_name + " for True.")
             if (not toggle_value(signal_face, toggle_name)):
               if (verbosity_level >= 5):
                 print (format_time(current_time) + "  " + toggle_name +
@@ -3788,7 +3795,7 @@ while ((current_time < end_time) and (error_counter == 0)):
             toggle_name = conditional[1]
             if (verbosity_level >= 5):
               print (format_time(current_time) + " Testing toggle " +
-                     toggle_name + " for False.")
+                     signal_face["name"] + "/" + toggle_name + " for False.")
             if (toggle_value(signal_face, toggle_name)):
               if (verbosity_level >= 5):
                 print (format_time(current_time) + "  " + toggle_name +
@@ -3803,7 +3810,8 @@ while ((current_time < end_time) and (error_counter == 0)):
             timer_name = conditional[1]
             if (verbosity_level >= 5):
               print (format_time(current_time) + " Testing timer " +
-                     timer_name + " for being complete.")
+                     signal_face["name"] + "/" + timer_name +
+                     " for being complete.")
             if (timer_state (signal_face, timer_name) != "completed"):
               if (verbosity_level >= 5):
                 print (format_time(current_time) + "  " + timer_name +
@@ -3818,7 +3826,8 @@ while ((current_time < end_time) and (error_counter == 0)):
             timer_name = conditional[1]
             if (verbosity_level >= 5):
               print (format_time(current_time) + " Testing timer " +
-                     timer_name + " for being not complete.")
+                     signal_face["name"] + "/" + timer_name +
+                     " for being not complete.")
             if (timer_state (signal_face, timer_name) == "completed"):
               if (verbosity_level >= 5):
                 print (format_time(current_time) + "  " + timer_name +

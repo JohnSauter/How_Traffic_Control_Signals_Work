@@ -1,0 +1,6 @@
+time,operator,signal face,operand,permissive_delay,count,interval
+200.000,pedestrian,psw,pswpse,1,10,8
+201.000,pedestrian,pnw,pnwpne,1,10,8
+202.000,pedestrian,pse,psepsw,1,10,8
+203.000,pedestrian,pne,pnepnw,1,10,8
+204.000,car,G,G1,1,1,1
