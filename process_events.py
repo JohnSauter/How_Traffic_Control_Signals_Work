@@ -53,7 +53,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='process_events 0.33 2025-05-17',
+                     version='process_events 0.34 2025-06-08',
                      help='print the version number and exit')
 parser.add_argument ('--animation-directory', metavar='animation_directory',
                      help='write animation output image files ' +
@@ -263,12 +263,13 @@ for event_time in event_times:
       lane_name = event["lane name"]
       the_color = event["color"]
       # If we are changing the color of an existing flasher, we have found
-      # the end time of the flashing.
+      # the end time of the flashing.  Ignore flashers with 0 time.
       if (lane_name in current_flashers):
         flasher = current_flashers[lane_name]
         if (the_color != flasher["color"]):
           flasher["stop time"] = event_time
-          completed_flashers.append(flasher)
+          if (flasher["stop time"] > flasher["start time"]):
+            completed_flashers.append(flasher)
           del current_flashers[lane_name]
       if (do_trace):
         trace_file.write ("Time " + format_time(event_time) + " lane " +
@@ -276,11 +277,15 @@ for event_time in event_times:
       if (the_color[0:8] == "Flashing"):
         if (do_trace):
           trace_file.write ("We have a flasher.\n")
-        flasher = dict()
-        flasher["start time"] = event_time
-        flasher["lane name"] = lane_name
-        flasher["color"] = the_color
-        current_flashers[lane_name] = flasher
+        if (lane_name in current_flashers):
+          if (do_trace):
+            trace_file.write ("Duplicate flasher.\n")
+        else:
+          flasher = dict()
+          flasher["start time"] = event_time
+          flasher["lane name"] = lane_name
+          flasher["color"] = the_color
+          current_flashers[lane_name] = flasher
           
 # Go through the list of flashing lights inserting color changes.
 
@@ -792,6 +797,11 @@ def choose_lamp_image (lane):
   lane_color = lane["color"]
   lane_counter = lane["counter"]
   
+  if (do_trace):
+    trace_file.write ("Choosing an image for lane: " + lane_name +
+                      ", color = " + lane_color + ".\n")
+    pprint.pprint (lane, trace_file)
+
   if (color == "Dark"):
     match lane_name:
       case "A" | "E" | "H" :
@@ -805,13 +815,14 @@ def choose_lamp_image (lane):
     case "A" | "E":
       root = "signal_llll"
       match lane_color:
-        case "Steady Left Arrow Red":
+        case "Steady Left Arrow Red" | "Flashing Left Arrow Red":
           image_name = (root + "_Red.png")
         case "Flashing Left Arrow Yellow (lower)":
           image_name = (root + "_Flashing_Yellow.png")
         case "Steady Left Arrow Green":
           image_name = (root + "_Green.png")
-        case "Steady Left Arrow Yellow (upper)":
+        case "Steady Left Arrow Yellow (upper)" | \
+             "Flashing Left Arrow Yellow (upper)":
           image_name = (root + "_Yellow.png")     
         
     case "psw" | "pse" | "pnw" | "pne":
@@ -827,9 +838,9 @@ def choose_lamp_image (lane):
     case "B" | "F":
       root = "signal_ccc"
       match lane_color:
-        case "Steady Circular Red":
+        case "Steady Circular Red" | "Flashing Circular Red":
           image_name = (root + "_Red.png")
-        case "Steady Circular Yellow":
+        case "Steady Circular Yellow" | "Flashing Circular Yellow":
           image_name = (root + "_Yellow.png")
         case "Steady Circular Green":
           image_name = (root + "_Green.png")
@@ -837,9 +848,9 @@ def choose_lamp_image (lane):
     case "C" | "D" | "G" :
       root = "signal_ccc"
       match lane_color:
-        case "Steady Circular Red":
+        case "Steady Circular Red" | "Flashing Circular Red":
           image_name = (root + "_Red.png")
-        case "Steady Circular Yellow":
+        case "Steady Circular Yellow" | "Flashing Circular Yellow":
           image_name = (root + "_Yellow.png")
         case "Steady Circular Green":
           image_name = (root + "_Green.png")
@@ -847,23 +858,26 @@ def choose_lamp_image (lane):
     case "H":
       root = "signal_cccl"
       match lane_color:
-        case "Steady Circular Red":
+        case "Steady Circular Red" | "Flashing Circular Red":
           image_name = (root + "_Red.png")
         case "Steady Left Arrow Green and Steady Circular Green":
           image_name = (root + "_Green.png")
-        case "Steady Circular Yellow":
+        case "Steady Circular Yellow" | "Flashing Circular Yellow":
           image_name = (root + "_Yellow.png")
 
     case "J":
       root = "signal_rrr"
       match lane_color:
-        case "Steady Right Arrow Red":
+        case "Steady Right Arrow Red" | "Flashing Right Arrow Red":
           image_name = (root + "_Red.png")
         case "Steady Right Arrow Green":
           image_name = (root + "_Green.png")
-        case "Steady Right Arrow Yellow":
+        case "Steady Right Arrow Yellow" | "Flashing Right Arrow Yellow":
           image_name = (root + "_Yellow.png")
 
+  if (do_trace):
+    trace_file.write ("Image chosen is " + image_name + ".\n")
+    
   image_path = pathlib.Path(image_name)
   if (image_path in image_cache):
     image = image_cache[image_path]
