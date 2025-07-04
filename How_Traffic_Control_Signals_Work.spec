@@ -1,5 +1,5 @@
 Name:           How_Traffic_Control_Signals_Work
-Version:        0.34
+Version:        0.37
 Release:        1%{?dist}
 Summary:        Explain traffic control signals
 
@@ -60,6 +60,12 @@ make check VERBOSE=1
 %license COPYING
 
 %changelog
+ * Sun Jun 29 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.37-1 add check_safety, continue work on flashing
+ * Sun Jun 15 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.36-1 continue work on flashing
+ * Tue Jun 10 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.35-1 continue work on flashing
  * Sun Jun 08 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.34-1 fix flashing
  * Sat May 17 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>

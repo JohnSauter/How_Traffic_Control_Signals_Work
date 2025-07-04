@@ -50,7 +50,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.34 2025-06-08',
+                     version='traffic_control_signals 0.37 2025-06-29',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -262,6 +262,8 @@ substate["actions" ] = list()
 actions_list = substate["actions"]
 action = ("set lamp", "Steady Circular Red")
 actions_list.append(action)
+action=("clear toggle", "Cleared")
+actions_list.append(action)
 action = ("start timer", "Red Clearance")
 actions_list.append(action)
 action = ("start timer", "Red Limit")
@@ -294,12 +296,18 @@ action = ("clear toggle", "Preempt Red")
 actions_list.append(action)
 action = ("clear toggle", "Manual Red")
 actions_list.append(action)
+action = ("clear toggle", "Flash Red")
+actions_list.append(action)
+action = ("clear toggle", "Flash Yellow")
+actions_list.append(action)
 action=("clear toggle", "Request Green")
 actions_list.append(action)
 action = ("clear toggle", "Request Partial Clearance")
 actions_list.append(action)
 actions_list = substate["actions"]
 action = ("clear toggle", "Request Clearance")
+actions_list.append(action)
+action=("clear toggle", "Green Request Granted")
 actions_list.append(action)
 
 substate["exits"] = list()
@@ -314,6 +322,18 @@ conditional_tests = list()
 conditional_test = ("toggle is true", "Manual Red")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Red", "Travel Path is Clear" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Flashing" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Yellow")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Flashing" )
 exits_list.append(exit)
 
 conditional_tests = list()
@@ -344,18 +364,6 @@ conditional_tests = list()
 conditional_test = ("timer is completed", "Red Limit")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Red", "Going Green 4")
-exits_list.append(exit)
-
-conditional_tests = list()
-conditional_test = ("toggle is true", "Flash Red")
-conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Red", "Flashing" )
-exits_list.append(exit)
-
-conditional_tests = list()
-conditional_test = ("toggle is true", "Flash Yellow")
-conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Yellow", "Flashing" )
 exits_list.append(exit)
 
 red_state.append(substate)
@@ -410,6 +418,18 @@ exit = ( conditional_tests, "Red", "Travel Path is Clear")
 exits_list.append(exit)
 
 conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Yellow")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
 conditional_test = ("toggle is true", "Green Request Granted")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Red", "Going Green 3" )
@@ -456,6 +476,18 @@ exits_list.append(exit)
 
 conditional_tests = list()
 conditional_test = ("toggle is true", "Manual Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Yellow")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Red", "Travel Path is Clear")
 exits_list.append(exit)
@@ -513,6 +545,18 @@ exit = ( conditional_tests, "Red", "Travel Path is Clear")
 exits_list.append(exit)
 
 conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Yellow")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
 conditional_test = ("toggle is true", "Green Request Granted")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Red", "Going Green 5" )
@@ -539,6 +583,18 @@ exits_list.append(exit)
 
 conditional_tests = list()
 conditional_test = ("toggle is true", "Manual Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Yellow")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Red", "Travel Path is Clear")
 exits_list.append(exit)
@@ -640,6 +696,12 @@ exit = (conditional_tests, "Yellow", "Going Red")
 exits_list.append(exit)
 
 conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Yellow")
+conditional_tests.append(conditional_test)
+exit = (conditional_tests, "Yellow", "Flashing")
+exits_list.append(exit)
+
+conditional_tests = list()
 conditional_test = ("timer is completed", "Minimum Green")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Green", "Looking for Gap")
@@ -674,6 +736,12 @@ conditional_tests = list()
 conditional_test = ("toggle is true", "Flash Red")
 conditional_tests.append(conditional_test)
 exit = (conditional_tests, "Yellow", "Going Red")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Yellow")
+conditional_tests.append(conditional_test)
+exit = (conditional_tests, "Yellow", "Flashing")
 exits_list.append(exit)
 
 conditional_tests = list()
@@ -848,6 +916,18 @@ exit = ( conditional_tests, "Yellow", "Going Red" )
 exits_list.append(exit)
 
 conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Yellow")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Flashing" )
+exits_list.append(exit)
+
+conditional_tests = list()
 conditional_test = ("timer is completed", "Minimum Left Flashing Yellow")
 conditional_tests.append(conditional_test)
 exit = (conditional_tests, "Yellow", "Left Flashing 2")
@@ -877,6 +957,12 @@ conditional_tests = list()
 conditional_test = ("toggle is true", "Flash Red")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Yellow")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Flashing" )
 exits_list.append(exit)
 
 conditional_tests = list()
@@ -973,7 +1059,6 @@ conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Red", "Flashing" )
 exits_list.append(exit)
 
-
 yellow_state.append(substate)
 
 substate = dict()
@@ -993,9 +1078,37 @@ exit = ( conditional_tests, "Yellow", "Going Red" )
 exits_list.append(exit)
 
 conditional_tests = list()
-conditional_test = ("toggle is true", "Conflicting Paths are Clear")
+conditional_test = ("toggle is true", "Manual Red")
 conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Preempt Red")
+exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Preempt Green")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Green", "Minimum Green" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Manual Green")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Green", "Minimum Green" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Yellow")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Flashing" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Conflicting Paths are Clear")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Green", "Minimum Green" )
 exits_list.append(exit)
@@ -1864,6 +1977,7 @@ for signal_face in signal_faces_list:
       lamp_names_map["Flashing Circular Yellow"] = "Don't Walk"
       
   signal_face["lamp names map"] = lamp_names_map
+  signal_face["iluminated lamp name"] = ""
 
 if (do_lamp_map_output):
   lamp_map_file = open (lamp_map_file_name, 'w')
@@ -2172,7 +2286,7 @@ def format_time_N(the_time):
 # The conversion factor from miles per hour to feet per second:
 mph_to_fps = fractions.Fraction(5280, 60*60)
 
-# Format the speed for display.
+# Format a speed for display.
 def format_speed(the_speed_in_fps):
   the_speed_in_mph = the_speed_in_fps / mph_to_fps
   if (the_speed_in_mph < 5.0):
@@ -2180,11 +2294,26 @@ def format_speed(the_speed_in_fps):
   else:
     return ((f'{the_speed_in_mph:04.1f}') + " mph")
 
-# format a location or distance for display.
+# Format a location for display.
 def format_location(the_location):
   return (f'{the_location:.0f}')
 
-# Format the place name for display
+# Format a distance for display.
+def format_distance(the_distance_in_feet):
+  if (the_distance_in_feet == 0):
+    return ("0 ft")
+  if (the_distance_in_feet >= 9):
+    return (format_location(the_distance_in_feet) + " ft")
+  if (the_distance_in_feet >= 1):
+    return (f'{the_distance_in_feet:.1f}' + " ft")
+  the_distance_in_inches = the_distance_in_feet * 12
+  if (the_distance_in_inches >= 9):
+    return (f'{the_distance_in_inches:.0f}' + " in")
+  if (the_distance_in_inches >= 1):
+    return (f'{the_distance_in_inches:.1f}' + " in")
+  return (f'{the_distance_in_inches:.6f}' + " in")
+
+# Format a traffic element's place name for display
 def place_name(traffic_element):
   current_lane = traffic_element["current lane"]
   match current_lane:
@@ -2199,7 +2328,6 @@ def place_name(traffic_element):
 # Return the value of a named toggle in a specified signal face.
 def toggle_value (signal_face, toggle_name):
   global error_counter
-
                                             
   toggles = signal_face["toggles"]
   for the_toggle in toggles:
@@ -2328,12 +2456,13 @@ def green_request_granted():
   # longer interested in turning green, remove it from the list.
   to_remove = list()
   for signal_face in allowed_green:
-    if (not ((toggle_value(signal_face, "Request Clearance")) or
-        toggle_value(signal_face, "Request Partial Clearance"))):
-      if (verbosity_level >= 5):
-        print (format_time(current_time) + " signal face " +
-               signal_face["name"] + " no longer requesting clearance.")
-      to_remove.append(signal_face)
+    if (not toggle_value(signal_face, "Request Green")):
+      if (not ((toggle_value(signal_face, "Request Clearance")) or
+               toggle_value(signal_face, "Request Partial Clearance"))):
+        if (verbosity_level >= 5):
+          print (format_time(current_time) + " signal face " +
+                 signal_face["name"] + " no longer requesting clearance.")
+        to_remove.append(signal_face)
   for signal_face in to_remove:
     allowed_green.remove(signal_face)
     signal_face_name = signal_face["name"]
@@ -2435,13 +2564,14 @@ def green_request_granted():
                " is given preference because it has been waiting for " +
                format_time(waiting_time) + ".")
     else:
+      to_remove = list()
       for signal_face in requesting_green:
         no_conflicts = True
         for conflicting_signal_face in allowed_green:
           if (does_conflict (signal_face, conflicting_signal_face)):
             no_conflicts = False
         if (no_conflicts and (signal_face not in had_its_chance)):
-          requesting_green.remove(signal_face)
+          to_remove.append(signal_face)
           allowed_green.append(signal_face)
           had_its_chance.append(signal_face)
           no_activity = False
@@ -2452,6 +2582,9 @@ def green_request_granted():
                    " with any other face that is already allowed to turn" +
                    " green and has not already turned green while the oldest" +
                    " signal face has been waiting for its turn.")
+            
+      for signal_face in to_remove:
+        requesting_green.remove(signal_face)
 
   if (verbosity_level >= 5):
     requesting_green_names = ""
@@ -2481,7 +2614,7 @@ def green_request_granted():
                         "system program Green Request Granted")
       signal_face["clearance requested by"] = set()
       if (verbosity_level >= 5):
-        print (format_time[current_time] + " signal face " +
+        print (format_time(current_time) + " signal face " +
                signal_face["name"] + " traffic is now flowing.")
       
   for signal_face in allowed_green:
@@ -2532,6 +2665,8 @@ def conflicting_paths_are_clear():
                       "system program Conflicting Paths are Clear")
   return
 
+# Do the same for partial conflicting paths.
+
 def partial_conflicting_paths_are_clear():
   for signal_face in signal_faces_list:
     all_paths_clear = False
@@ -2545,6 +2680,35 @@ def partial_conflicting_paths_are_clear():
     set_toggle_value (signal_face, "Partial Conflicting Paths are Clear",
                       all_paths_clear,
                       "system program Partial Conflicting Paths are Clear")
+  return
+
+# Check for conflicting greens, since this is a safety issue.
+def safety_check ():
+  global error_counter
+
+  conflict_detected = False
+  
+  for signal_face in signal_faces_list:
+    if (signal_face["state"] == "Green"):
+      for conflicting_signal_face in signal_faces_list:
+        if ((conflicting_signal_face != signal_face) and
+            (conflicting_signal_face["state"] == "Green")):
+          if (does_conflict (signal_face, conflicting_signal_face)):
+            if (verbosity_level >= 1):
+              print (format_time(current_time) + " signal faces " +
+               signal_face["name"] + " and " +
+               conflicting_signal_face["name"] + " are both green.")
+            error_counter = error_counter + 1
+            if (do_trace):
+              trace_file.write ("Safety Check detected a failure.\n")
+              pprint.pprint (signal_face, trace_file)
+              pprint.pprint (conflicting_signal_face, trace_file)
+            conflict_detected = True
+            
+  if (conflict_detected):
+    for signal_face in signal_faces_list:
+      set_toggle_value (signal_face, "Flash", True,
+                        "system program Safety Check")
   return
 
 # the traffic signal simulator: run the finite state machines
@@ -2569,27 +2733,33 @@ def perform_actions (signal_face, substate):
           external_lamp_name = lamp_names_map[internal_lamp_name]
         else:
           external_lamp_name = internal_lamp_name
-        signal_face["iluminated lamp name"] = external_lamp_name
-        if (verbosity_level >= 2):
-          print (format_time(current_time) + " signal face " +
-                 signal_face["name"] + " lamp set to " + external_lamp_name +
-                 ".")
-        if ((table_level >= 2) and (current_time > table_start_time)):
-          table_file.write ("\\hline " + format_time_N(current_time) + " & " +
-                            signal_face["name"] +
-                            " & Set lamp to " + external_lamp_name +
-                            ". \\\\\n")
-        if (do_events_output):
-          events_file.write (str(current_time) + "," + signal_face["name"] +
-                             ",lamp," + external_lamp_name + "\n")
-          last_event_time = current_time
+
+        if (signal_face["iluminated lamp name"] == external_lamp_name):
+          if (verbosity_level >= 5):
+            print (format_time(current_time) + " signal face " +
+                   signal_face["name"] + " lamp already set to " +
+                   external_lamp_name + ",")
+        else:
+          signal_face["iluminated lamp name"] = external_lamp_name
+          if (verbosity_level >= 2):
+            print (format_time(current_time) + " signal face " +
+                   signal_face["name"] + " lamp set to " + external_lamp_name +
+                   ".")
+          if ((table_level >= 2) and (current_time > table_start_time)):
+            table_file.write ("\\hline " + format_time_N(current_time) +
+                              " & " + signal_face["name"] +
+                              " & Set lamp to " + external_lamp_name +
+                              ". \\\\\n")
+          if (do_events_output):
+            events_file.write (str(current_time) + "," + signal_face["name"] +
+                               ",lamp," + external_lamp_name + "\n")
+            last_event_time = current_time
           
       case "set toggle":
         set_toggle_value (signal_face, action[1], True, "")
         
       case "clear toggle":
-        # Don't clear the Traffic Present or the Traffic Approaching toggle
-        # if a sensor which sets it is still active.
+        # Don't clear a toggle if a sensor which sets it is still active.
         new_toggle_value = False
         signal_face_name = signal_face["name"]
         toggle_name = action[1]
@@ -2904,7 +3074,7 @@ def add_traffic_element (type, travel_path_name, permissive_delay):
              format_location(traffic_element["position x"]) +
              ", " + format_location(traffic_element["position y"]) +
              ") distance to next milestone " +
-             format_location(traffic_element["distance remaining"]) +
+             format_distance(traffic_element["distance remaining"]) +
              " speed " + format_speed(traffic_element["speed"]) +
              " angle " + str(math.degrees(traffic_element["angle"])) +
              " degrees.")
@@ -3363,9 +3533,9 @@ def move_traffic_element (traffic_element):
              format_location(traffic_element["position x"]) + ", " +
              format_location(traffic_element["position y"]) + 
              ") distance to next milestone " +
-             format_location(traffic_element["distance remaining"]) +
+             format_distance(traffic_element["distance remaining"]) +
              " speed " + format_speed(traffic_element["speed"]) +
-             " moved " + format_location(distance_moved) + ".")
+             " moved " + format_distance(distance_moved) + ".")
     if (do_trace):
       trace_file.write ("Moved from (" + format_location(old_position_x) +
                         ", " + format_location(old_position_y) + ") to (" +
@@ -3391,7 +3561,7 @@ def move_traffic_element (traffic_element):
                format_location(traffic_element["position x"]) + ", " +
                format_location(traffic_element["position y"]) +
                " ) distance to next milestone  " +
-               format_location(traffic_element["distance remaining"]) +
+               format_distance(traffic_element["distance remaining"]) +
                " is blocked by " + blocking_traffic_element_name + ".")
       if ((table_level >= 3) and (current_time > table_start_time)):
         table_file.write ("\\hline " + format_time_N(current_time) + " & " +
@@ -3465,7 +3635,7 @@ def move_traffic_element (traffic_element):
                      ", " +
                      format_location(traffic_element["position y"]) +
                      ") distance to next milestone " +
-                     format_location(
+                     format_distance(
                        traffic_element["distance remaining"]) +
                      " stopped.")
             if ((table_level >= 2) and (current_time > table_start_time)):
@@ -3529,7 +3699,7 @@ def move_traffic_element (traffic_element):
                        format_location(traffic_element["position x"]) + ", " +
                        format_location(traffic_element["position y"]) + 
                        ") distance to next milestone " +
-                       format_location(traffic_element["distance remaining"]) +
+                       format_distance(traffic_element["distance remaining"]) +
                        " speed " + format_speed(traffic_element["speed"]) +
                        tail_text + ".")
               if ((table_level >= 2) and (current_time > table_start_time)):
@@ -3636,6 +3806,7 @@ def perform_script_action (the_operator, signal_face_name, the_operand,
             sensor ["value"] = True
           else:
             sensor ["value"] = False
+            
           if (verbosity_level >= 2):
             print (format_time(current_time)  + " sensor " +
                    signal_face["name"] + "/" + sensor_name + " set to " +
@@ -3858,6 +4029,7 @@ while ((current_time < end_time) and (error_counter == 0)):
   partial_clearance_requested()
   conflicting_paths_are_clear()
   partial_conflicting_paths_are_clear()
+  safety_check()
     
   # Run any ripe actionss in the script.
   to_remove = set()
