@@ -50,7 +50,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.37 2025-06-29',
+                     version='traffic_control_signals 0.38 2025-07-04',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -2313,7 +2313,7 @@ def format_distance(the_distance_in_feet):
     return (f'{the_distance_in_inches:.1f}' + " in")
   return (f'{the_distance_in_inches:.6f}' + " in")
 
-# Format a traffic element's place name for display
+# Format a traffic element's place name for display.
 def place_name(traffic_element):
   current_lane = traffic_element["current lane"]
   match current_lane:
@@ -2406,7 +2406,7 @@ def set_toggle_value (signal_face, toggle_name, new_value, source):
   return
 
 # Return True if traffic can not flow through the specified signal
-# face if traffic is already flowing through the conflicting signal face.
+# face because traffic is already flowing through the conflicting signal face.
 def does_conflict (signal_face, conflicting_signal_face):
   conflict_set = signal_face["conflicts"]
   if (conflicting_signal_face ["name"] in conflict_set):
@@ -2534,7 +2534,12 @@ def green_request_granted():
     for conflicting_signal_face in allowed_green:
       if (does_conflict (signal_face, conflicting_signal_face)):
         no_conflicts = False
-    if (no_conflicts):
+        
+    # Add "or True" to the conditional test below to test safety_check.
+    # Doing that will cause any complex script, including the multiple script
+    # used to build the documentation, to switch to flashing.
+    
+    if (no_conflicts): 
       requesting_green.remove(signal_face)
       allowed_green.append(signal_face)
       had_its_chance.append(signal_face)
@@ -2698,7 +2703,6 @@ def safety_check ():
               print (format_time(current_time) + " signal faces " +
                signal_face["name"] + " and " +
                conflicting_signal_face["name"] + " are both green.")
-            error_counter = error_counter + 1
             if (do_trace):
               trace_file.write ("Safety Check detected a failure.\n")
               pprint.pprint (signal_face, trace_file)
@@ -2707,8 +2711,20 @@ def safety_check ():
             
   if (conflict_detected):
     for signal_face in signal_faces_list:
-      set_toggle_value (signal_face, "Flash", True,
-                        "system program Safety Check")
+      sensors = signal_face["sensors"]
+      sensor = sensors["Flash"]
+      sensor ["value"] = True
+
+      if (verbosity_level >= 2):
+        print (format_time(current_time)  + " sensor " +
+               signal_face["name"] + "/" + "Flash" + " set to " +
+                   str(sensor["value"]) + " by system program safety check.")
+      if ((table_level >= 2) and (current_time > table_start_time)):
+        table_file.write ("\\hline " + format_time_N(current_time) +
+                          " & " + signal_face ["name"] + " & Sensor " +
+                          "Flash" + " set to " + str(sensor["value"]) +
+                          " by system program safety check. \\\\\n")
+        
   return
 
 # the traffic signal simulator: run the finite state machines
