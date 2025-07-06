@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# File: Makefile.am, author: John Sauter, date: April 20, 2025.
+# File: Makefile.am, author: John Sauter, date: July 6, 2025.
 #
 # Build traffic_control_signals.pdf and animations.
 
@@ -525,20 +525,22 @@ EXTRA_DIST = signal_ccc.svg signal_ccu.svg signal_rrr.svg \
 	MUTCD_Ped_Signal_-_Steady_hand.svg MUTCD_Ped_Signal_-_Walk.svg \
 	pedestrian_and_left_turn_script.txt pedestrian_script.txt \
 	references.bib Signal_Timing_Manual_Second_Edition_22097.pdf \
-	traffic_control_signals.py traffic_control_signals.tex \
-	state_diagram.txt signal_ccc_Green.svg signal_ccc_Red.svg \
-	signal_ccc_Yellow.svg signal_ccu_Green.svg signal_ccu_Red.svg \
-	signal_ccu_Yellow.svg signal_Dark_3.svg signal_Dark_4.svg \
-	signal_cccl_Green.svg signal_cccl_Red.svg \
-	signal_cccl_Yellow.svg signal_llll_Flashing_Yellow.svg \
-	signal_llll_Green.svg signal_llll_Red.svg \
-	signal_llll_Yellow.svg signal_rrr_Green.svg signal_rrr_Red.svg \
-	signal_rrr_Yellow.svg car-38800411-right.svg \
-	car-38800411-up.svg truck-51893967-up.svg \
-	truck-51893967-right.svg man_walking_right.svg background.png \
-	process_events.py build_RPMs.sh build_animation.sh \
-	render_animation.sh build_video.sh \
-	How_Traffic_Control_Signals_Work.spec
+	define_traffic_control_signals.py \
+	display_traffic_control_signals.py define_intersection.py \
+	display_intersection.py run_simulation.py \
+	traffic_control_signals.tex state_diagram.txt \
+	signal_ccc_Green.svg signal_ccc_Red.svg signal_ccc_Yellow.svg \
+	signal_ccu_Green.svg signal_ccu_Red.svg signal_ccu_Yellow.svg \
+	signal_Dark_3.svg signal_Dark_4.svg signal_cccl_Green.svg \
+	signal_cccl_Red.svg signal_cccl_Yellow.svg \
+	signal_llll_Flashing_Yellow.svg signal_llll_Green.svg \
+	signal_llll_Red.svg signal_llll_Yellow.svg \
+	signal_rrr_Green.svg signal_rrr_Red.svg signal_rrr_Yellow.svg \
+	car-38800411-right.svg car-38800411-up.svg \
+	truck-51893967-up.svg truck-51893967-right.svg \
+	man_walking_right.svg background.png process_events.py \
+	build_RPMs.sh build_animation.sh render_animation.sh \
+	build_video.sh How_Traffic_Control_Signals_Work.spec
 
 # Support make check and make distcheck
 dist_check_DATA = check_expected_output.txt left_turn_script.txt
@@ -558,6 +560,8 @@ traffic_control_signals.out \
 traffic_control_signals.pdf \
 state_diagram.eps \
 state_diagram-eps-converted-to.pdf \
+finite_state_machine.json \
+intersection.json \
 red_state_table.tex \
 green_state_table.tex \
 yellow_state_table.tex \
@@ -1250,61 +1254,90 @@ state_diagram.eps : state_diagram.txt
 	neato -Teps ${srcdir}/state_diagram.txt \
 -o ${builddir}/state_diagram.eps
 
+# Create a JSON file which describes the finite state machine template.
+finite_state_machine.json : define_traffic_control_signals.py
+	python3 ${srcdir}/define_traffic_control_signals.py \
+--output=${builddir}/finite_state_machine.json
+
 # Generate the state tables from the implementation's finite state machine.
-red_state_table.tex : traffic_control_signals.py
-	python3 ${srcdir}/traffic_control_signals.py \
+red_state_table.tex : display_traffic_control_signals.py \
+finite_state_machine.json
+	python3 ${srcdir}/display_traffic_control_signals.py \
+--input=${builddir}/finite_state_machine.json \
 --red=${builddir}/red_state_table.tex
 
-green_state_table.tex : traffic_control_signals.py
-	python3 ${srcdir}/traffic_control_signals.py \
---green=${builddir}/green_state_table.tex 
+yellow_state_table.tex : display_traffic_control_signals.py \
+finite_state_machine.json
+	python3 ${srcdir}/display_traffic_control_signals.py \
+--input=${builddir}/finite_state_machine.json \
+--yellow=${builddir}/yellow_state_table.tex
 
-yellow_state_table.tex : traffic_control_signals.py
-	python3 ${srcdir}/traffic_control_signals.py \
---yellow=${builddir}/yellow_state_table.tex 
+green_state_table.tex : display_traffic_control_signals.py \
+finite_state_machine.json
+	python3 ${srcdir}/display_traffic_control_signals.py \
+--input=${builddir}/finite_state_machine.json \
+--green=${builddir}/green_state_table.tex
 
-lamp_map_names.tex : traffic_control_signals.py
-	python3 ${srcdir}/traffic_control_signals.py \
+# Create a JSON file which describes the intersection.
+intersection.json : define_intersection.py finite_state_machine.json
+	python3 ${srcdir}/define_intersection.py \
+--input=${builddir}/finite_state_machine.json \
+--output=${builddir}/intersection.json
+
+lamp_map_names.tex : display_intersection.py intersection.json
+	python3 ${srcdir}/display_intersection.py \
+--input=${builddir}/intersection.json \
 --lamp-map=${builddir}/lamp_map_names.tex 
 
-sensor_map.tex : traffic_control_signals.py
-	python3 ${srcdir}/traffic_control_signals.py \
+sensor_map.tex : display_intersection.py intersection.json
+	python3 ${srcdir}/display_intersection.py \
+--input=${builddir}/intersection.json  \
 --sensor-map=${builddir}/sensor_map.tex 
 
 # Generate the table files which detail the operation of the
 # finite state machines
-idle_table.tex : traffic_control_signals.py
-	python3 ${srcdir}/traffic_control_signals.py --table-level 4 \
---table-file ${builddir}/idle_table.tex --duration 200  \
+idle_table.tex : run_simulation.py intersection.json
+	python3 ${srcdir}/run_simulation.py \
+--input ${builddir}/intersection.json \
+--table-level 4 --table-file ${builddir}/idle_table.tex --duration 200  \
 --table-caption "Power On to Idle State"
 
-left_turn_table.tex : traffic_control_signals.py left_turn_script.txt
-	python3 ${srcdir}/traffic_control_signals.py --table-level 4 \
---table-file ${builddir}/left_turn_table.tex --duration 400 --table-start 199 \
---script ${srcdir}/left_turn_script.txt --table-caption "Left Turn"
+left_turn_table.tex : run_simulation.py intersection.json left_turn_script.txt
+	python3 ${srcdir}/run_simulation.py \
+--input=${builddir}/intersection.json \
+--table-level 4 --table-file ${builddir}/left_turn_table.tex --duration 400 \
+--table-start 199 --script ${srcdir}/left_turn_script.txt \
+--table-caption "Left Turn"
 
-left_turn_delayed_table.tex : traffic_control_signals.py \
+left_turn_delayed_table.tex : run_simulation.py intersection.json  \
 left_turn_delayed_script.txt
-	python3 ${srcdir}/traffic_control_signals.py --table-level 4 \
---table-file ${builddir}/left_turn_delayed_table.tex --duration 400 \
---table-start 199 --script ${srcdir}/left_turn_delayed_script.txt \
+	python3 ${srcdir}/run_simulation.py \
+--input=${builddir}/intersection.json \
+--table-level 4 --table-file ${builddir}/left_turn_delayed_table.tex \
+--duration 400 --table-start 199 \
+--script ${srcdir}/left_turn_delayed_script.txt \
 --table-caption "Left Turn Delayed"
 
-pedestrian_table.tex : traffic_control_signals.py pedestrian_script.txt
-	python3 ${srcdir}/traffic_control_signals.py --table-level 3 \
+pedestrian_table.tex : run_simulation.py intersection.json \
+pedestrian_script.txt
+	python3 ${srcdir}/run_simulation.py \
+--input ${builddir}/intersection.json --table-level 3 \
 --table-file ${builddir}/pedestrian_table.tex --duration 400 \
 --table-start 199 --script ${srcdir}/pedestrian_script.txt \
 --table-caption "Pedestrian Crosses"
 
-pedestrian_and_left_turn_table.tex : traffic_control_signals.py \
+pedestrian_and_left_turn_table.tex : run_simulation.py intersection.json \
 pedestrian_and_left_turn_script.txt
-	python3 ${srcdir}/traffic_control_signals.py --table-level 3 \
+	python3 ${srcdir}/run_simulation.py \
+--input=${builddir}/intersection.json --table-level 3 \
 --table-file ${builddir}/pedestrian_and_left_turn_table.tex --duration 400 \
 --table-start 199 --script ${srcdir}/pedestrian_and_left_turn_script.txt \
 --table-caption "Pedestrian then Left Turn"
 
-multiple_table.tex : traffic_control_signals.py multiple_script.txt
-	python3 ${srcdir}/traffic_control_signals.py --table-level 2 \
+multiple_table.tex : run_simulation.py intersection.json multiple_script.txt
+	python3 ${srcdir}/run_simulation.py \
+--input=${builddir}/intersection.json \
+--table-level 2 \
 --table-file ${builddir}/multiple_table.tex --duration 400 --table-start 199 \
 --script ${srcdir}/multiple_script.txt --table-caption "Many Events"
 
@@ -1334,20 +1367,22 @@ verify_files.sh : verify_files_template.sh check_output.txt
 	if [ ! -r "check_expected_output.txt" ] ; then cp $(srcdir)/check_expected_output.txt check_expected_output.txt ; touch copied_from_srcdir ; fi
 	chmod +x verify_files.sh
 
-check_output.txt : traffic_control_signals.py left_turn_script.txt
-	python3 ${srcdir}/traffic_control_signals.py \
+check_output.txt : run_simulation.py intersection.json left_turn_script.txt
+	python3 ${srcdir}/run_simulation.py \
+--input ${builddir}/intersection.json \
 --script ${srcdir}/left_turn_script.txt \
 --duration 1200 --verbose 2 | tee ${builddir}/check_output.txt
 
 # Animations illustrate a scenario.  This csv file describes where each
 # object is located with the passage of time.
-%_animation.csv : %_script.txt traffic_control_signals.py
-	python3 ${srcdir}/traffic_control_signals.py \
---script "${srcdir}/$<" --duration 600 --events-file "$@" \
+%_animation.csv : %_script.txt run_simulation.py intersection.json
+	python3 ${srcdir}/run_simulation.py \
+--input=${builddir}/intersection.json \
+--script "${srcdir}/$<" --duration 1200 --events-file "$@" \
 --last-event-time "last_event_time_$(*F)_animation.txt"
 
 # Render the animation as individual images.  We use the PDF file
-# as a marker to day that the frames have been generated.
+# as a marker to say that the frames have been generated.
 %_animation.pdf : %_animation.csv \
 process_events.py build_animation.sh render_animation.sh \
 signal_ccc_Green.png signal_ccc_Red.png \

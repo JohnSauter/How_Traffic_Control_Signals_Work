@@ -2,12 +2,12 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.67])
-AC_INIT([How_Traffic_Control_Signals_Work],[0.38],
+AC_INIT([How_Traffic_Control_Signals_Work],[0.39],
 [John_Sauter@systemeyescomputerstore.com],
 [How_Traffic_Control_Signals_Work],
 ["github@github.com:How_Traffic_Control_Signals_Work.git"])
 AM_INIT_AUTOMAKE([tar-pax]) 
-AC_CONFIG_SRCDIR([traffic_control_signals.py])
+AC_CONFIG_SRCDIR([traffic_control_signals.tex])
 
 # Use maintainer mode because files extracted from a PDF file
 # lose their modification dates, and we don't want the end user
