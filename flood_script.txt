@@ -3,12 +3,13 @@ time,operator,signal face,operand,permissive_delay,count,interval
 201.000,car,B,A2,1,10,4
 202.000,car,B,A6,1,10,4
 203.000,car,B,B5,1,10,4
+243.000,truck,B,B5,1,80,2
 204.000,car,C,C3,1,10,2
 205.000,car,C,C4,1,10,2
 206.000,car,D,D1,1,10,6
 207.000,car,D,D2,1,10,6
 208.000,car,D,D3,1,10,6
-209.000,truck,D,D4,1,50,6
+209.000,car,D,D4,3,80,6
 210.000,car,D,D5,1,10,6
 211.000,car,D,D6,1,10,6
 212.000,car,E,E3,1,10,4
@@ -27,4 +28,4 @@ time,operator,signal face,operand,permissive_delay,count,interval
 202.000,pedestrian,pse,psepsw,1,30,10
 203.000,pedestrian,pne,pnepnw,1,30,10
 260.000,sensor on,all,Flash,1,1,1
-275.000,sensor off,all,Flash,1,1,1
+270.000,sensor off,all,Flash,1,1,1
