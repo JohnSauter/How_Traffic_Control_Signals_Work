@@ -53,7 +53,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='process_events 0.34 2025-06-08',
+                     version='process_events 0.40 2025-07-19',
                      help='print the version number and exit')
 parser.add_argument ('--animation-directory', metavar='animation_directory',
                      help='write animation output image files ' +
@@ -62,6 +62,8 @@ parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
 parser.add_argument ('--events-file', metavar='events_file',
                      help='read event output from the traffic simulator')
+parser.add_argument ('--background-file', metavar='background_file',
+                     help='the image to draw the animation upon')
 parser.add_argument ('--start-time', type=decimal.Decimal,
                      metavar='start_time',
                      help='when in the simulation to start the animation')
@@ -86,6 +88,8 @@ do_animation_output = False
 animation_directory_name = ""
 do_events_input = False
 events_file_name = ""
+do_background = False
+background_file_name = ""
 start_time = decimal.Decimal("0.000")
 start_frame = 0
 end_frame = None
@@ -115,6 +119,10 @@ if (arguments ['animation_directory'] != None):
 if (arguments ['events_file'] != None):
   do_events_input = True
   events_file_name = arguments ['events_file']
+
+if (arguments ['background_file'] != None):
+  do_background = True
+  background_file_name = arguments ['background_file']
 
 if (arguments ['start_time'] != None):
   start_time = arguments ['start_time']
@@ -432,8 +440,21 @@ if (do_trace):
   trace_file.write ("Events:\n")
   pprint.pprint (events, trace_file)
   trace_file.write ("\n")
+
+# Read the background file.
+if (do_background):
+  background=cv2.imread("background.png", cv2.IMREAD_UNCHANGED)
+else:
+  screen_width = 3840
+  screen_height = 2160
+  color_gray = (40000, 40000, 40000)
+  background = np.full (shape=(screen_height, screen_width, 3),
+                        fill_value = color_gray).astype(np.uint16)
   
-background=cv2.imread("background.png")
+if (do_trace):
+  trace_file.write ("background image:\n")
+  pprint.pprint (background, trace_file)
+  
 canvas_size = background.shape[0:2]
 
 # Subroutine to map ground locations to screen locations.
@@ -467,7 +488,7 @@ def convert_ground_size_to_screen_size (size_in_feet):
   global ground_height
   global background
 
-  screen_height, screen_width = background.shape[0::2]
+  screen_height, screen_width = background.shape[0:2]
   size_in_pixels = size_in_feet * (screen_height / ground_height)
   return (int(size_in_pixels))
           
@@ -645,7 +666,8 @@ def place_image (name, canvas, image_info, target_orientation, x_feet, y_feet):
       trace_file.write (" new anchor x: " + format_screen_position(anchor_x) +
                         " y: " + format_screen_position(anchor_y) + ".\n")
     
-    grey_image = cv2.cvtColor (small_image, cv2.COLOR_BGR2GRAY)
+    eightbit = small_image.astype (np.uint8)
+    grey_image = cv2.cvtColor (eightbit, cv2.COLOR_BGR2GRAY)
     thresholded_image = cv2.threshold (grey_image,226,255,cv2.THRESH_BINARY)[1]
     inverted_image = cv2.bitwise_not (thresholded_image)
     x_min, y_min, width, height = cv2.boundingRect(inverted_image)
@@ -714,10 +736,11 @@ def place_image (name, canvas, image_info, target_orientation, x_feet, y_feet):
           overlay_green = small_image[overlay_y, overlay_x, 1]
           overlay_red = small_image[overlay_y, overlay_x, 2]
 
-          # Element 3 is the alpha channel, 0 to 255, where 0 means transparent
-          # and 255 means opaque.  Values in between are semi-transparent.
+          # Element 3 is the alpha channel, 0 to 65535, where 0 means
+          # transparent and 65535 means opaque.  Values in between are
+          # semi-transparent.
           # We convert the alpha value to the range 0 to 1.
-          overlay_alpha = small_image[overlay_y, overlay_x, 3] / 255.0
+          overlay_alpha = small_image[overlay_y, overlay_x, 3] / 65535.0
           overlay_beta = 1.0 - overlay_alpha
       
           if (do_trace and (trace_level > 1)):
@@ -1201,6 +1224,10 @@ for event_time in event_times:
         root_name = "frame_" + "{:06d}".format(frame_number) + ".png"
         file_path = pathlib.Path(animation_directory_name, root_name)
         canvas = background.copy()
+        if (do_trace):
+          trace_file.write ("Initial canvas for frame " + str(frame_number) +
+                            ":\n")
+          pprint.pprint (canvas, trace_file)
           
         # Draw the signals in their current state.
         for lane_name in lanes_dict:
@@ -1234,6 +1261,7 @@ for event_time in event_times:
         if (do_animation_output):
           if (do_trace):
             trace_file.write ("Writing frame " + str(file_path) + ".\n")
+            pprint.pprint (canvas, trace_file)
           cv2.imwrite (file_path, canvas)
 
         frame_end_time = time.clock_gettime_ns (time.CLOCK_BOOTTIME)

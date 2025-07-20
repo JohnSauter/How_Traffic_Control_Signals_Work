@@ -1,11 +1,13 @@
 #!/bin/bash
-# file: build_animation.sh, author: John Sauter, date: March 30, 2025.
+# file: build_animation.sh, author: John Sauter, date: July 19, 2025.
 
 # Construct an animation from an event log.
 
 source="${1}"
 last_event_time_file=${2}
 animation_temp="${3}"
+intersection_file="${4}"
+background_image="${5}"
 
 last_event_time=$(<${last_event_time_file})
 echo "last event time " ${last_event_time}
@@ -44,7 +46,7 @@ for (( counter=0; counter<=${batch_count}; counter+=1 )); do
     parallel --semaphore --ungroup --halt now,fail=1 --jobs 25 --quote \
 	     bash "render_animation.sh" "${source}" "${animation_temp}" \
 	     ${start_time} ${start_frame} ${end_frame} \
-	     ${frame_rate} ";"
+	     ${frame_rate} ${background_image} ";"
 done
 parallel --semaphore --wait
 

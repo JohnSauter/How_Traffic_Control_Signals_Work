@@ -46,7 +46,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.39 2025-07-06',
+                     version='define_intersection 0.40 2025-07-19',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -106,6 +106,9 @@ if (arguments ['waiting_limit'] != None):
 
 if (arguments ['verbose'] != None):
   verbosity_level = int(arguments ['verbose'])
+
+# The conversion factor from miles per hour to feet per second:
+mph_to_fps = fractions.Fraction(5280, 60*60)
 
 # Read the finite state machine to get the timer and toggle names.
 
@@ -919,6 +922,18 @@ for signal_face in signal_faces_list:
   signal_face["lamp names map"] = lamp_names_map
   signal_face["iluminated lamp name"] = ""
 
+# Classify the lamps for traffic movement purposes.
+green_lamps = ("Steady Circular Green", "Steady Left Arrow Green",
+               "Steady Left Arrow Green and Steady Circular Green",
+               "Steady Right Arrow Green", "Walk")
+permissive_left_lamps = ("Flashing Left Arrow Yellow (lower)",)
+
+permissive_red_lamps = ("Steady Circular Red", "Steady Left Arrow Red",
+                        "Steady Right Arrow Red")
+permissive_yellow_lamps = ("Steady Circular Yellow",
+                           "Steady Left Arrow Yellow",
+                           "Steady Right Arrow Yellow")
+  
 # Set up the mapping from the vehicle sensors to the toggles they set.
 
 # Signal_face["sensors"] is a dictionary whose indexes are sensor names.
@@ -1127,6 +1142,64 @@ for signal_face in signal_faces_list:
     
   signal_face ["sensors"] = sensors
 
+# Record the offsets of the signal faces relative to the top of the lane.
+
+def find_signal_face_offset (signal_face_name):
+  match signal_face_name:
+    case "A" | "B" | "C":
+      return (0, -lane_width * 2.0)
+    case "D":
+      return (-lane_width, -lane_width * 0.5)
+    case "E" | "F" | "G":
+      return (0, lane_width * 1.0)
+    case "H" | "J":
+      return (lane_width * 1.5, -lane_width * 0.5)
+    case "pnw" | "psw":
+      return (-lane_width, -lane_width * 0.5)
+    case "pne" | "pse":
+      return (lane_width, -lane_width * 0.5)
+    
+  return None
+
+for signal_face in signal_faces_list:
+  signal_face_name = signal_face ["name"]
+  offset_x, offset_y = find_signal_face_offset (signal_face_name)
+  signal_face ["offset x"] = offset_x
+  signal_face ["offset y"] = offset_y  
+
+# Specify the speed limit in feet per second based on where the
+# traffic element is.
+intersection_speed_limit = 25 * mph_to_fps
+def compute_speed_limit (lane_name, travel_path_name):
+  match lane_name:
+    case "1" | "2" | "B" | "C" | "4" | "5" | "F" | "G":
+      return (45 * mph_to_fps)
+    case "A" | "D" | "3" | "E" | "6" | "H" | "J":
+      return (25 * mph_to_fps)
+    case "psw" | "pse" | "pnw" | "pne" | "crosswalk":
+      return (fractions.Fraction (35, 10))
+    case "intersection":
+      # If a vehicle is passing through the intersection without
+      # having stopped, it need not slow down.
+      entering_lane_name = travel_path_name[0]
+      exiting_lane_name = travel_path_name[1]
+      entering_speed = compute_speed_limit (entering_lane_name,
+                                            travel_path_name)
+      exiting_speed = compute_speed_limit (exiting_lane_name, travel_path_name)
+      return (min(entering_speed, exiting_speed))
+    
+  return None
+
+speed_limits = dict()
+for travel_path_name in travel_paths:
+  travel_path = travel_paths [travel_path_name]
+  milestones = travel_path ["milestones"]
+  for milestone in milestones:
+    lane_name = milestone[0]
+    speed_limit = compute_speed_limit (lane_name, travel_path_name)
+    speed_limit_ident = travel_path_name + " / " + lane_name
+    speed_limits [speed_limit_ident] = float(speed_limit)
+        
 if (do_trace):
   trace_file.write ("Starting Signal Faces:\n")
   pprint.pprint (signal_faces_list, trace_file)
@@ -1140,7 +1213,37 @@ intersection_info["signal faces"] = signal_faces_list
 intersection_info["travel paths"] = travel_paths
 intersection_info["car length"] = car_length
 intersection_info["truck length"] = truck_length
+intersection_info["lane width"] = lane_width
 intersection_info["crosswalk width"] = crosswalk_width
+intersection_info["speed limits"] = speed_limits
+intersection_info["green lamps"] = green_lamps
+intersection_info["permissive left lamps"] = permissive_left_lamps
+intersection_info["permissive red lamps"] = permissive_red_lamps
+intersection_info["permissive yellow lamps"] = permissive_yellow_lamps
+intersection_info["intersection speed limit"] = float(intersection_speed_limit)
+
+# In addition to information about the signal faces, we need information
+# about each lane to draw the background image.
+
+lanes_info = dict()
+for lane_name in lane_names:
+  top_x, top_y, bottom_x, bottom_y = find_lane_info (lane_name)
+  lane_info = dict()
+  lane_info ["name"] = lane_name
+  lane_info ["top x"] = top_x
+  lane_info ["top y"] = top_y
+  lane_info ["bottom y"] = bottom_y
+  lane_info ["bottom x"] = bottom_x
+
+  match lane_name:
+    case "psw" | "pse" | "pnw" | "pne":
+      lane_info ["width"] = crosswalk_width
+    case _:
+      lane_info ["width"] = lane_width
+    
+  lanes_info [lane_name] = lane_info
+
+intersection_info ["lanes info"] = lanes_info
 
 # Output the information about the intersection for the simulator.
 if (do_output):
