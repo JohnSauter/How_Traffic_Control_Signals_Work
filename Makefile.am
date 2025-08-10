@@ -1,4 +1,4 @@
-# File: Makefile.am, author: John Sauter, date: July 20, 2025.
+# File: Makefile.am, author: John Sauter, date: August 10, 2025.
 #
 # Build traffic_control_signals.pdf and animations.
 
@@ -89,7 +89,8 @@ references.bib \
 Signal_Timing_Manual_Second_Edition_22097.pdf \
 define_traffic_control_signals.py \
 display_traffic_control_signals.py \
-define_intersection.py \
+define_complex_intersection.py \
+define_one_way_bridge.py \
 display_intersection.py \
 simulate_traffic.py \
 draw_background.py \
@@ -377,7 +378,8 @@ verify_files.sh : verify_files_template.sh check_output.txt
 	if [ ! -r "check_expected_output.txt" ] ; then cp $(srcdir)/check_expected_output.txt check_expected_output.txt ; touch copied_from_srcdir ; fi
 	chmod +x verify_files.sh
 
-check_output.txt : simulate_traffic.py intersection.json left_turn_script.txt
+check_output.txt : simulate_traffic.py complex_intersection.json \
+left_turn_script.txt
 	python3 ${srcdir}/simulate_traffic.py \
 --intersection ${builddir}/complex_intersection.json \
 --script ${srcdir}/left_turn_script.txt \
@@ -520,7 +522,8 @@ traffic_control_signals.pdf \
 state_diagram.eps \
 state_diagram-eps-converted-to.pdf \
 finite_state_machine.json \
-intersection.json \
+complex_intersection.json \
+one_way_bridge.json \
 red_state_table.tex \
 green_state_table.tex \
 yellow_state_table.tex \
@@ -540,11 +543,11 @@ truck-51893967-right.png \
 truck-51893967-up.png \
 pedestrian.png \
 man_walking_right.png \
-background.png \
+background_*.png \
 *_table.tex \
-*_animation.csv \
-*_animation.mkv \
-*_animation.pdf \
+*_animation_*.csv \
+*_animation_*.mkv \
+*_animation_*.pdf \
 last_event_time_*_animation.txt \
 check_output.txt \
 verify_files.sh \
