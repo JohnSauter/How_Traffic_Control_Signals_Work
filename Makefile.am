@@ -1,4 +1,4 @@
-# File: Makefile.am, author: John Sauter, date: July 19, 2025.
+# File: Makefile.am, author: John Sauter, date: July 20, 2025.
 #
 # Build traffic_control_signals.pdf and animations.
 
@@ -121,7 +121,6 @@ car-38800411-up.svg \
 truck-51893967-up.svg \
 truck-51893967-right.svg \
 man_walking_right.svg \
-background.png \
 process_events.py 
 
 # Distribute the shell scripts which build the RPMs and the video animations.
@@ -148,8 +147,8 @@ EXTRA_DIST += How_Traffic_Control_Signals_Work.spec
 traffic_control_signals.pdf : traffic_control_signals.tex \
 traffic_control_signals.bbl LICENSE legalcode.txt \
 state_diagram.eps red_state_table.tex \
-green_state_table.tex yellow_state_table.tex lamp_map_names.tex \
-sensor_map.tex idle_table.tex left_turn_table.tex \
+green_state_table.tex yellow_state_table.tex lamp_map_names_02.tex \
+sensor_map_02.tex idle_table.tex left_turn_table.tex \
 left_turn_delayed_table.tex \
 pedestrian_table.tex pedestrian_and_left_turn_table.tex multiple_table.tex \
 MUTCD_Ped_Signal_-_Hand_with_timer.pdf \
@@ -195,7 +194,7 @@ ${srcdir}/traffic_control_signals.tex
 traffic_control_signals.bbl : traffic_control_signals.tex references.bib \
 LICENSE legalcode.txt state_diagram.eps \
 red_state_table.tex green_state_table.tex yellow_state_table.tex \
-lamp_map_names.tex sensor_map.tex idle_table.tex left_turn_table.tex \
+lamp_map_names_02.tex sensor_map_02.tex idle_table.tex left_turn_table.tex \
 left_turn_delayed_table.tex \
 pedestrian_table.tex pedestrian_and_left_turn_table.tex multiple_table.tex \
 MUTCD_Ped_Signal_-_Hand_with_timer.pdf \
@@ -263,66 +262,85 @@ finite_state_machine.json
 --input=${builddir}/finite_state_machine.json \
 --green=${builddir}/green_state_table.tex
 
-# Create a JSON file which describes the intersection.
-intersection.json : define_intersection.py finite_state_machine.json
-	python3 ${srcdir}/define_intersection.py \
+# Create a JSON file which describes the one-way bridge.
+one_way_bridge.json : define_one_way_bridge.py \
+finite_state_machine.json
+	python3 ${srcdir}/define_one_way_bridge.py \
 --input=${builddir}/finite_state_machine.json \
---output=${builddir}/intersection.json
+--output=${builddir}/one_way_bridge.json
 
-lamp_map_names.tex : display_intersection.py intersection.json
-	python3 ${srcdir}/display_intersection.py \
---input=${builddir}/intersection.json \
---lamp-map=${builddir}/lamp_map_names.tex 
+# Create a JSON file which describes the complex intersection.
+complex_intersection.json : define_complex_intersection.py \
+finite_state_machine.json
+	python3 ${srcdir}/define_complex_intersection.py \
+--input=${builddir}/finite_state_machine.json \
+--output=${builddir}/complex_intersection.json
 
-sensor_map.tex : display_intersection.py intersection.json
+lamp_map_names_01.tex : display_intersection.py one_way_bridge.json
 	python3 ${srcdir}/display_intersection.py \
---input=${builddir}/intersection.json  \
---sensor-map=${builddir}/sensor_map.tex 
+--input=${builddir}/one_way_bridge.json \
+--lamp-map=${builddir}/lamp_map_names_01.tex 
+
+lamp_map_names_02.tex : display_intersection.py complex_intersection.json
+	python3 ${srcdir}/display_intersection.py \
+--input=${builddir}/complex_intersection.json \
+--lamp-map=${builddir}/lamp_map_names_02.tex 
+
+sensor_map_01.tex : display_intersection.py one_way_bridge.json
+	python3 ${srcdir}/display_intersection.py \
+--input=${builddir}/one_way_bridge.json  \
+--sensor-map=${builddir}/sensor_map_01.tex 
+
+sensor_map_02.tex : display_intersection.py complex_intersection.json
+	python3 ${srcdir}/display_intersection.py \
+--input=${builddir}/complex_intersection.json  \
+--sensor-map=${builddir}/sensor_map_02.tex 
 
 # Generate the table files which detail the operation of the
 # finite state machines
-idle_table.tex : simulate_traffic.py intersection.json
+idle_table.tex : simulate_traffic.py complex_intersection.json
 	python3 ${srcdir}/simulate_traffic.py \
---intersection ${builddir}/intersection.json \
+--intersection ${builddir}/complex_intersection.json \
 --table-level 4 --table-file ${builddir}/idle_table.tex --duration 200  \
 --table-caption "Power On to Idle State"
 
-left_turn_table.tex : simulate_traffic.py intersection.json \
+left_turn_table.tex : simulate_traffic.py complex_intersection.json \
 left_turn_script.txt
 	python3 ${srcdir}/simulate_traffic.py \
---intersection ${builddir}/intersection.json \
+--intersection ${builddir}/complex_intersection.json \
 --table-level 4 --table-file ${builddir}/left_turn_table.tex --duration 400 \
 --table-start 199 --script ${srcdir}/left_turn_script.txt \
 --table-caption "Left Turn"
 
-left_turn_delayed_table.tex : simulate_traffic.py intersection.json  \
+left_turn_delayed_table.tex : simulate_traffic.py complex_intersection.json  \
 left_turn_delayed_script.txt
 	python3 ${srcdir}/simulate_traffic.py \
---intersection ${builddir}/intersection.json \
+--intersection ${builddir}/complex_intersection.json \
 --table-level 4 --table-file ${builddir}/left_turn_delayed_table.tex \
 --duration 400 --table-start 199 \
 --script ${srcdir}/left_turn_delayed_script.txt \
 --table-caption "Left Turn Delayed"
 
-pedestrian_table.tex : simulate_traffic.py intersection.json \
+pedestrian_table.tex : simulate_traffic.py complex_intersection.json \
 pedestrian_script.txt
 	python3 ${srcdir}/simulate_traffic.py \
---intersection ${builddir}/intersection.json --table-level 3 \
+--intersection ${builddir}/complex_intersection.json --table-level 3 \
 --table-file ${builddir}/pedestrian_table.tex --duration 400 \
 --table-start 199 --script ${srcdir}/pedestrian_script.txt \
 --table-caption "Pedestrian Crosses"
 
-pedestrian_and_left_turn_table.tex : simulate_traffic.py intersection.json \
-pedestrian_and_left_turn_script.txt
+pedestrian_and_left_turn_table.tex : simulate_traffic.py \
+complex_intersection.json pedestrian_and_left_turn_script.txt
 	python3 ${srcdir}/simulate_traffic.py \
---intersection ${builddir}/intersection.json --table-level 3 \
+--intersection ${builddir}/complex_intersection.json --table-level 3 \
 --table-file ${builddir}/pedestrian_and_left_turn_table.tex --duration 400 \
 --table-start 199 --script ${srcdir}/pedestrian_and_left_turn_script.txt \
 --table-caption "Pedestrian then Left Turn"
 
-multiple_table.tex : simulate_traffic.py intersection.json multiple_script.txt
+multiple_table.tex : simulate_traffic.py complex_intersection.json \
+multiple_script.txt
 	python3 ${srcdir}/simulate_traffic.py \
---intersection ${builddir}/intersection.json \
+--intersection ${builddir}/complex_intersection.json \
 --table-level 2 \
 --table-file ${builddir}/multiple_table.tex --duration 400 --table-start 199 \
 --script ${srcdir}/multiple_script.txt --table-caption "Many Events"
@@ -361,28 +379,39 @@ verify_files.sh : verify_files_template.sh check_output.txt
 
 check_output.txt : simulate_traffic.py intersection.json left_turn_script.txt
 	python3 ${srcdir}/simulate_traffic.py \
---intersection ${builddir}/intersection.json \
+--intersection ${builddir}/complex_intersection.json \
 --script ${srcdir}/left_turn_script.txt \
 --duration 1200 --verbose 2 | tee ${builddir}/check_output.txt
 
 # Animations illustrate a scenario.  This csv file describes where each
 # object is located with the passage of time.
-%_animation.csv : %_script.txt simulate_traffic.py intersection.json
+%_animation_01.csv : %_script.txt simulate_traffic.py one_way_bridge.json
 	python3 ${srcdir}/simulate_traffic.py \
---intersection ${builddir}/intersection.json \
+--intersection ${builddir}/one_way_bridge.json \
+--script "${srcdir}/$<" --duration 1200 --events-file "$@" \
+--last-event-time "${builddir}/last_event_time_$(*F)_animation.txt"
+
+%_animation_02.csv : %_script.txt simulate_traffic.py complex_intersection.json
+	python3 ${srcdir}/simulate_traffic.py \
+--intersection ${builddir}/complex_intersection.json \
 --script "${srcdir}/$<" --duration 1200 --events-file "$@" \
 --last-event-time "${builddir}/last_event_time_$(*F)_animation.txt"
 
 # Create the background image for the animation.
-background.png : draw_background.py intersection.json
+background_01.png : draw_background.py one_way_bridge.json
 	python3 ${srcdir}/draw_background.py \
---intersection ${builddir}/intersection.json \
---background ${builddir}/background.png
+--intersection ${builddir}/one_way_bridge.json \
+--background ${builddir}/background_01.png
+
+background_02.png : draw_background.py complex_intersection.json
+	python3 ${srcdir}/draw_background.py \
+--intersection ${builddir}/complex_intersection.json \
+--background ${builddir}/background_02.png
 
 # Render the animation as individual images.  We use the PDF file
 # as a marker to say that the frames have been generated.
-%_animation.pdf : %_animation.csv \
-background.png \
+%_animation_01.pdf : %_animation_01.csv \
+background_01.png \
 process_events.py build_animation.sh render_animation.sh \
 signal_ccc_Green.png signal_ccc_Red.png \
 signal_ccc_Yellow.png signal_ccu_Green.png signal_ccu_Red.png \
@@ -418,15 +447,63 @@ MUTCD_Ped_Signal_-_Hand_with_timer-23.png \
 MUTCD_Ped_Signal_-_Hand_with_timer-24.png \
 MUTCD_Ped_Signal_-_Hand_with_timer-25.png \
 MUTCD_Ped_Signal_-_Steady_hand.png MUTCD_Ped_Signal_-_Walk.png \
-background.png car-38800411-right.png \
+car-38800411-right.png \
 car-38800411-up.png truck-51893967-up.png truck-51893967-right.png \
 man_walking_right.png
 	bash build_animation.sh "$<" \
 "last_event_time_$(*F)_animation.txt" "animation_$(*F)_temp" \
-"${builddir}/intersection.json" "${builddir}/background.png"
+"${builddir}/one_way_bridge.json" "${builddir}/background_01.png"
 	touch "$@"
 
-%_animation.mkv : %_animation.pdf
+%_animation_01.mkv : %_animation_01.pdf
+	bash build_video.sh "$@" "${builddir}/animation_$(*F)_temp"
+
+%_animation_02.pdf : %_animation_02.csv \
+background_02.png \
+process_events.py build_animation.sh render_animation.sh \
+signal_ccc_Green.png signal_ccc_Red.png \
+signal_ccc_Yellow.png signal_ccu_Green.png signal_ccu_Red.png \
+signal_ccu_Yellow.png signal_Dark_3.png signal_Dark_4.png \
+signal_cccl_Green.png signal_cccl_Red.png signal_cccl_Yellow.png \
+signal_llll_Flashing_Yellow.png signal_llll_Green.png signal_llll_Red.png \
+signal_llll_Yellow.png signal_rrr_Green.png signal_rrr_Red.png \
+signal_rrr_Yellow.png MUTCD_Ped_Signal_-_Hand_with_timer.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-00.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-01.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-02.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-03.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-04.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-05.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-06.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-07.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-08.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-09.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-10.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-11.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-12.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-13.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-14.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-15.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-16.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-17.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-18.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-19.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-20.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-21.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-22.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-23.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-24.png \
+MUTCD_Ped_Signal_-_Hand_with_timer-25.png \
+MUTCD_Ped_Signal_-_Steady_hand.png MUTCD_Ped_Signal_-_Walk.png \
+car-38800411-right.png \
+car-38800411-up.png truck-51893967-up.png truck-51893967-right.png \
+man_walking_right.png
+	bash build_animation.sh "$<" \
+"last_event_time_$(*F)_animation.txt" "animation_$(*F)_temp" \
+"${builddir}/complex_intersection.json" "${builddir}/background_02.png"
+	touch "$@"
+
+%_animation_02.mkv : %_animation_02.pdf
 	bash build_video.sh "$@" "${builddir}/animation_$(*F)_temp"
 
 # When removing files, also remove the followins:
@@ -447,8 +524,8 @@ intersection.json \
 red_state_table.tex \
 green_state_table.tex \
 yellow_state_table.tex \
-lamp_map_names.tex \
-sensor_map.tex \
+lamp_map_names_*.tex\
+sensor_map_*.tex \
 MUTCD_Ped_Signal_-_Hand_with_timer*.pdf \
 MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf \

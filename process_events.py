@@ -38,6 +38,7 @@ import decimal
 import fractions
 import csv
 import pathlib
+import json
 import argparse
 
 parser = argparse.ArgumentParser (
@@ -53,7 +54,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='process_events 0.40 2025-07-19',
+                     version='process_events 0.42 2025-08-03',
                      help='print the version number and exit')
 parser.add_argument ('--animation-directory', metavar='animation_directory',
                      help='write animation output image files ' +
@@ -64,6 +65,8 @@ parser.add_argument ('--events-file', metavar='events_file',
                      help='read event output from the traffic simulator')
 parser.add_argument ('--background-file', metavar='background_file',
                      help='the image to draw the animation upon')
+parser.add_argument ('--intersection-file', metavar='intersection_file',
+                     help='the locations and shapes of the signal faces')
 parser.add_argument ('--start-time', type=decimal.Decimal,
                      metavar='start_time',
                      help='when in the simulation to start the animation')
@@ -90,6 +93,8 @@ do_events_input = False
 events_file_name = ""
 do_background = False
 background_file_name = ""
+do_intersection = False
+intersection_file_name = ""
 start_time = decimal.Decimal("0.000")
 start_frame = 0
 end_frame = None
@@ -119,10 +124,17 @@ if (arguments ['animation_directory'] != None):
 if (arguments ['events_file'] != None):
   do_events_input = True
   events_file_name = arguments ['events_file']
+  events_file_name = pathlib.Path(events_file_name)
 
 if (arguments ['background_file'] != None):
   do_background = True
   background_file_name = arguments ['background_file']
+  background_file_name = pathlib.Path(background_file_name)
+
+if (arguments ['intersection_file'] != None):
+  do_intersection = True
+  intersection_file_name = arguments ['intersection_file']
+  intersection_file_name = pathlib.Path(intersection_file_name)
 
 if (arguments ['start_time'] != None):
   start_time = arguments ['start_time']
@@ -242,6 +254,23 @@ if (do_events_input):
 if (duration_time == None):
   duration_time = latest_time - start_time + 1
 end_time = start_time + duration_time
+
+# Read the intersection file, which has information about the
+# signal faces.
+if (do_intersection):
+  intersection_file = open (intersection_file_name, 'r')
+  intersection_info = json.load (intersection_file)
+  intersection_file.close()
+else:
+  intersection_info = None
+
+lanes_info = intersection_info["lanes info"]
+
+signal_faces_list = intersection_info["signal faces"]
+signal_faces_dict = dict()
+for signal_face in signal_faces_list:
+  signal_face_name = signal_face["name"]
+  signal_faces_dict[signal_face_name] = signal_face
 
 # Place markers in the timeline for where we will output a frame.
 frame_interval = fractions.Fraction(1, frames_per_second)
@@ -443,7 +472,7 @@ if (do_trace):
 
 # Read the background file.
 if (do_background):
-  background=cv2.imread("background.png", cv2.IMREAD_UNCHANGED)
+  background=cv2.imread(background_file_name, cv2.IMREAD_UNCHANGED)
 else:
   screen_width = 3840
   screen_height = 2160
@@ -819,87 +848,54 @@ def choose_lamp_image (lane):
   lane_name = lane["name"]
   lane_color = lane["color"]
   lane_counter = lane["counter"]
+
+  signal_face = signal_faces_dict[lane_name]
+  this_lane_info = lanes_info [lane_name]
   
   if (do_trace):
     trace_file.write ("Choosing an image for lane: " + lane_name +
                       ", color = " + lane_color + ".\n")
     pprint.pprint (lane, trace_file)
-
-  if (color == "Dark"):
-    match lane_name:
-      case "A" | "E" | "H" :
-        image_name = ("signal_Dark_4.png")
-      case "B" | "C" | "D" | "F" | "G" | "J":
-        image_name = ("signal_Dark_3.png")
-      case "psw" | "pse" | "pnw" | "pne":
-        image_name = ("MUTCD_Ped_Signal_-_Steady_hand.png")
-        
-  match lane_name:
-    case "A" | "E":
-      root = "signal_llll"
-      match lane_color:
-        case "Steady Left Arrow Red" | "Flashing Left Arrow Red":
-          image_name = (root + "_Red.png")
-        case "Flashing Left Arrow Yellow (lower)":
-          image_name = (root + "_Flashing_Yellow.png")
-        case "Steady Left Arrow Green":
-          image_name = (root + "_Green.png")
-        case "Steady Left Arrow Yellow (upper)" | \
-             "Flashing Left Arrow Yellow (upper)":
-          image_name = (root + "_Yellow.png")     
-        
-    case "psw" | "pse" | "pnw" | "pne":
-      root = "MUTCD_Ped_Signal_-"
-      match lane_color:
-        case "Don't Walk":
-          image_name = (root + "_Steady_hand.png")
-        case "Walk":
-          image_name = (root + "_Walk.png")
-        case "Walk with Countdown":
-          image_name = (root + f'_Hand_with_timer-{lane_counter:02d}.png')
+    pprint.pprint (this_lane_info, trace_file)
+    pprint.pprint (signal_face, trace_file)
+    trace_file.flush()
+    
+  root = this_lane_info["root signal face image"]
+  image_name = "none found"
+    
+  if (root == "MUTCD_Ped_Signal_-"):
+    match lane_color:
+      case "Don't Walk":
+        image_name = (root + "_Steady_hand.png")
+      case "Walk":
+        image_name = (root + "_Walk.png")
+      case "Walk with Countdown":
+        image_name = (root + f'_Hand_with_timer-{lane_counter:02d}.png')
                          
-    case "B" | "F":
-      root = "signal_ccc"
-      match lane_color:
-        case "Steady Circular Red" | "Flashing Circular Red":
-          image_name = (root + "_Red.png")
-        case "Steady Circular Yellow" | "Flashing Circular Yellow":
-          image_name = (root + "_Yellow.png")
-        case "Steady Circular Green":
-          image_name = (root + "_Green.png")
-        
-    case "C" | "D" | "G" :
-      root = "signal_ccc"
-      match lane_color:
-        case "Steady Circular Red" | "Flashing Circular Red":
-          image_name = (root + "_Red.png")
-        case "Steady Circular Yellow" | "Flashing Circular Yellow":
-          image_name = (root + "_Yellow.png")
-        case "Steady Circular Green":
-          image_name = (root + "_Green.png")
-
-    case "H":
-      root = "signal_cccl"
-      match lane_color:
-        case "Steady Circular Red" | "Flashing Circular Red":
-          image_name = (root + "_Red.png")
-        case "Steady Left Arrow Green and Steady Circular Green":
-          image_name = (root + "_Green.png")
-        case "Steady Circular Yellow" | "Flashing Circular Yellow":
-          image_name = (root + "_Yellow.png")
-
-    case "J":
-      root = "signal_rrr"
-      match lane_color:
-        case "Steady Right Arrow Red" | "Flashing Right Arrow Red":
-          image_name = (root + "_Red.png")
-        case "Steady Right Arrow Green":
-          image_name = (root + "_Green.png")
-        case "Steady Right Arrow Yellow" | "Flashing Right Arrow Yellow":
-          image_name = (root + "_Yellow.png")
-
+  else:
+    match lane_color:
+      case "Steady Circular Red" | "Steady Left Arrow Red" | \
+           "Flashing Left Arrow Red" | "Steady Right Arrow Red":
+        image_name = (root + "_Red.png")
+      case "Flashing Left Arrow Yellow (lower)":
+        image_name = (root + "_Flashing_Yellow.png")
+      case "Steady Circular Green" | "Steady Left Arrow Green":
+        image_name = (root + "_Green.png")
+      case "Steady Circular Yellow" | "Steady Left Arrow Yellow (upper)" | \
+           "Flashing Left Arrow Yellow (upper)":
+        image_name = (root + "_Yellow.png")
+      case "Dark":
+        if (len(root) == 10):
+          image_name = "signal_Dark_3.png"
+        else:
+          image_name = "signal_Dark_4.png"
+          
   if (do_trace):
     trace_file.write ("Image chosen is " + image_name + ".\n")
+
+  if ((image_name == "none found") and (verbosity_level >= 1)):
+    print ("No image chosen for root " + root + ", lane name " + lane_name +
+           ", color " + lane_color + ".")
     
   image_path = pathlib.Path(image_name)
   if (image_path in image_cache):
@@ -910,6 +906,11 @@ def choose_lamp_image (lane):
       trace_file.write ("Reading image " + str(image_path) + ".\n")
       
     image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+    if ((image is None) and (verbosity_level >= 1)):
+      print ("Image name " + str(image_path) + " not found.")
+      print (" root " + root + " lane name " + lane_name +
+             " lane color " + lane_color + ",")
+      
     image_height, image_width = image.shape[0:2]
     
     if (do_trace):
@@ -917,11 +918,10 @@ def choose_lamp_image (lane):
                         str(image_height) + ".\n")
     image_cache[image_path] = image
 
-  match lane_name:
-    case "psw" | "pse" | "pnw" | "pne":
-      desired_width = lane_width
-    case _:
-      desired_width = lane_width / 3.0
+  if (root == "MUTCD_Ped_Signal_-"):
+    desired_width = lane_width
+  else:
+    desired_width = lane_width / 3.0
       
   desired_height = desired_width * (image_height / image_width)
   anchor_x = int (image_width / 2)
@@ -992,71 +992,19 @@ def choose_moving_object_image (object_type, orientation, length):
 # the intersection enter the lane.
 # These locations are in the ground coordinate system, which has its origin
 # in the center of the screen and in which distances are measured in feet.
-def find_lane_position (lane):
-
-  center_x = 0
-  center_y = 0
-  
-  match lane:
-    case "1":
-      return (center_x - (2.0 * lane_width), center_y + (4.0 * lane_width))
-    case "2":
-      return (center_x - (1.0 * lane_width), center_y + (4.0 * lane_width))
-    case "A":
-      return (center_x - (0.0 * lane_width), center_y + (4.0 * lane_width))
-    case "B":
-      return (center_x + (1.0 * lane_width), center_y + (4.0 * lane_width))
-    case "C":
-      return (center_x + (2.0 * lane_width), center_y + (4.0 * lane_width))
-    case "3":
-      return (center_x + (2.0 * lane_width), center_y + (0.5 * lane_width))
-    case "D":
-      return (center_x + (5.0 * lane_width), center_y - (0.5 * lane_width))
-    case "4":
-      return (center_x + (2.0 * lane_width), center_y - (4.0 * lane_width))
-    case "5":
-      return (center_x + (1.0 * lane_width), center_y - (4.0 * lane_width))
-    case "E":
-      return (center_x + (0.0 * lane_width), center_y - (4.0 * lane_width))
-    case "F":
-      return (center_x - (1.0 * lane_width), center_y - (4.0 * lane_width))
-    case "G":
-      return (center_x - (2.0 * lane_width), center_y - (4.0 * lane_width))
-    case "6":
-      return (center_x - (5.0 * lane_width), center_y - (1.0 * lane_width))
-    case "H":
-      return (center_x - (5.0 * lane_width), center_y + (0.0 * lane_width))
-    case "J":
-      return (center_x - (5.0 * lane_width), center_y + (1.5 * lane_width))
-    case "pse":
-      return (center_x + (4.0 * lane_width), center_y + (3.5 * lane_width))
-    case "psw":
-      return (center_x - (4.0 * lane_width), center_y + (3.5 * lane_width))
-    case "pne":
-      return (center_x + (4.0 * lane_width), center_y - (3.5 * lane_width))
-    case "pnw":
-      return (center_x - (4.0 * lane_width), center_y - (3.5 * lane_width))
-    
-  return None
+def find_lane_position (lane_name):
+  this_lane_info = lanes_info [lane_name]
+  top_x = this_lane_info["top x"]
+  top_y = this_lane_info["top y"]
+  return (top_x, top_y)
     
 # Subroutine to find the offset of the traffic signal relative to the
 # origin of the lane.
-def find_signal_offset (lane):
-  match lane:
-    case "A" | "B" | "C":
-      return (0, -lane_width * 2.0)
-    case "D":
-      return (-lane_width, -lane_width * 0.5)
-    case "E" | "F" | "G":
-      return (0, lane_width * 1.0)
-    case "H" | "J":
-      return (lane_width * 1.5, -lane_width * 0.5)
-    case "pnw" | "psw":
-      return (-lane_width, -lane_width * 0.5)
-    case "pne" | "pse":
-      return (lane_width, -lane_width * 0.5)
-    
-  return None
+def find_signal_offset (signal_face_name):
+  signal_face = signal_faces_dict[signal_face_name]
+  offset_x = signal_face["offset x"]
+  offset_y = signal_face["offset y"]
+  return (offset_x, offset_y)
   
 # Create the lanes data structures which will record
 # the changing state of the traffic control signal
@@ -1065,20 +1013,18 @@ def find_signal_offset (lane):
 # of that lane.
 
 lanes_dict = dict()
-for lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne", "F",
-                  "G", "H", "J"):
+for lane_name in lanes_info:
   lane = dict()
-  lane["name"] = lane_name
-  lane["color"] = "Dark"
-  lane["position x"], lane["position y"] = find_lane_position (lane_name)
-  lane["signal offset"] = find_signal_offset(lane_name)
-  lanes_dict[lane_name] = lane
-
-  for lane_name in ("1", "2", "3", "4", "5", "6"):
-    lane = dict()
+  if (lane_name in signal_faces_dict):
+    lane["name"] = lane_name
+    lane["color"] = "Dark"
+    lane["position x"], lane["position y"] = find_lane_position (lane_name)
+    lane["signal offset"] = find_signal_offset(lane_name)
+    lanes_dict[lane_name] = lane
+  else:
     lane["name"] = lane_name
     lane["color"] = "Blank"
-    lane["position x"], lane["position y"] = find_lane_position(lane_name)
+    lane["position x"], lane["position y"] = find_lane_position (lane_name)
     lanes_dict[lane_name] = lane
 
 if (do_trace):

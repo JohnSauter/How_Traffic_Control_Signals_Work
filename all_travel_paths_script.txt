@@ -1,4 +1,4 @@
-time,operator,signal face,operand,permissive_delay,count.interval
+time,operator,signal face,operand,permissive_delay,count,interval
 200.000,car,B,A1,1,1,1
 201.000,car,B,A2,1,1,1
 202.000,car,B,A6,1,1,1

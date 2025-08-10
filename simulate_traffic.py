@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='simulate_traffic 0.40 2025-07-19',
+                     version='simulate_traffic 0.42 2025-08-02',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -2138,6 +2138,7 @@ while ((current_time < end_time) and (error_counter == 0)):
                         " to " + format_time(next_clock_time) + ".\n")
       
     current_time = next_clock_time
+    last_event_time = current_time
   else:
     no_activity = True
   

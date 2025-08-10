@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_traffic_control_signals 0.39 2025-07-06',
+                     version='define_traffic_control_signals 0.42 2025-08-03',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -509,6 +509,8 @@ action = ("start timer", "Minimum Green")
 actions_list.append(action)
 action = ("start timer", "Maximum Green")
 actions_list.append(action)
+action = ("start timer", "Green Limit")
+actions_list.append(action)
 action = ("set toggle", "Traffic Flowing")
 actions_list.append(action)
 
@@ -620,6 +622,12 @@ conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Yellow", "Going Red")
 exits_list.append(exit)
 
+conditional_tests = list()
+conditional_test = ("timer is completed", "Green Limit")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
 green_state.append(substate)
 
 substate = dict()
@@ -629,8 +637,6 @@ actions_list = substate["actions"]
 action = ("clear toggle", "Preempt Green")
 actions_list.append(action)
 action = ("clear toggle", "Manual Green")
-actions_list.append(action)
-action = ("start timer", "Maximum Green")
 actions_list.append(action)
 
 substate["exits"] = list()
@@ -671,16 +677,6 @@ exit = ( conditional_tests, "Green", "Looking for Gap" )
 exits_list.append(exit)
 
 conditional_tests = list()
-conditional_test = ("timer is completed", "Green Limit")
-conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Preempt Green")
-conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Manual Green")
-conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Yellow", "Going Red" )
-exits_list.append(exit)
-
-conditional_tests = list()
 conditional_test = ("toggle is true", "Flash Red")
 conditional_tests.append(conditional_test)
 exit = (conditional_tests, "Yellow", "Going Red")
@@ -690,6 +686,16 @@ conditional_tests = list()
 conditional_test = ("toggle is true", "Flash Yellow")
 conditional_tests.append(conditional_test)
 exit = (conditional_tests, "Yellow", "Flashing")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("timer is completed", "Green Limit")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Preempt Green")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Manual Green")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red" )
 exits_list.append(exit)
 
 green_state.append(substate)

@@ -53,7 +53,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='draw_background 0.40 2025-07-19',
+                     version='draw_background 0.42 2025-08-02',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -180,7 +180,8 @@ def convert_screen_size_to_ground_size (size_in_pixels):
 # Draw a line from (x1, y1) to (x2, y2) with the specified color
 # and line width.
 def draw_line (the_image, x1, y1, x2, y2, line_color, line_width,
-               with_arrowhead): 
+               with_arrowhead):
+  
   screen_y1, screen_x1 = map_location_ground_to_screen (y1, x1)
   screen_y2, screen_x2 = map_location_ground_to_screen (y2, x2)
 
@@ -188,6 +189,8 @@ def draw_line (the_image, x1, y1, x2, y2, line_color, line_width,
   # don't draw anything.
   if ((screen_x1 == screen_x2) and (screen_y1 == screen_y2)):
     return
+
+  screen_line_width = convert_ground_size_to_screen_size (line_width)
   
   if (with_arrowhead):
     line_length = math.sqrt (((screen_x2 - screen_x1)**2) +
@@ -196,17 +199,18 @@ def draw_line (the_image, x1, y1, x2, y2, line_color, line_width,
       tracefile.write ("Line length: " + str(line_length) + ".\n")
       
     cv2.arrowedLine (the_image, (screen_x1, screen_y1), (screen_x2, screen_y2),
-                     line_color, line_width, cv2.LINE_AA,
+                     line_color, screen_line_width, cv2.LINE_AA,
                      tipLength = 25.0 / line_length)
   else:
     cv2.line (the_image, (screen_x1, screen_y1), (screen_x2, screen_y2),
-              line_color, line_width, cv2.LINE_AA)
+              line_color, screen_line_width, cv2.LINE_AA)
   return
 
 color_black = (0, 0, 0)
 color_green = (0, 65535, 0)
 color_light_blue = (50000, 30000, 30000)
 color_gray = (40000, 40000, 40000)
+color_dark_gray = (30000, 30000, 30000)
 color_white = (65535, 65535, 65535)
 
 if (do_intersection):
@@ -231,6 +235,29 @@ if (do_trace):
   trace_file.write ("blank image:\n")
   pprint.pprint (image, trace_file)
 
+# Draw travel paths.
+for travel_path_name in travel_paths:
+  travel_path = travel_paths [travel_path_name]
+  milestones = travel_path ["milestones"]
+  previous_position = None
+  for milestone in milestones:
+    lane_name = milestone[0]
+    if (lane_name in lanes_info):
+      lane = lanes_info [lane_name]
+      lane_width = float(lane["width"])
+    x_position = milestone[1]
+    y_position = milestone[2]
+    if (previous_position != None):
+      if (do_trace):
+        trace_file.write ("travel path " + travel_path_name +
+                          " lane " + lane_name + ":\n")
+        pprint.pprint ((x_position, y_position), trace_file)
+      draw_line (image, previous_position[0], previous_position[1],
+                 x_position, y_position,  color_dark_gray, lane_width,
+                 False)
+    previous_position = (x_position, y_position)
+
+# Outline each lane.
 for lane_name in lanes_info:
   lane = lanes_info [lane_name]
   top_x = int(lane["top x"])
@@ -261,32 +288,14 @@ for lane_name in lanes_info:
     p4_x = p2_x
     p4_y = p3_y
 
-  draw_line (image, p1_x, p1_y, p2_x, p2_y, color_black, 10, False)
-  draw_line (image, p3_x, p3_y, p4_x, p4_y, color_black, 10, False)
+  draw_line (image, p1_x, p1_y, p2_x, p2_y, color_black, 0.5, False)
+  draw_line (image, p3_x, p3_y, p4_x, p4_y, color_black, 0.5, False)
   
   if (do_trace):
     trace_file.write ("Line " + lane_name + ":\n")
     pprint.pprint ((top_x, top_y, bottom_x, bottom_y), trace_file)
     pprint.pprint ((p1_x, p1_y, p2_x, p2_y), trace_file)
     pprint.pprint ((p3_x, p3_y, p4_x, p4_y), trace_file)
-
-# Add travel paths.
-for travel_path_name in travel_paths:
-  travel_path = travel_paths [travel_path_name]
-  milestones = travel_path ["milestones"]
-  previous_position = None
-  for milestone in milestones:
-    lane_name = milestone[0]
-    x_position = milestone[1]
-    y_position = milestone[2]
-    if (previous_position != None):
-      if (do_trace):
-        trace_file.write ("travel path " + travel_path_name +
-                          " lane " + lane_name + ":\n")
-        pprint.pprint ((x_position, y_position), trace_file)
-      draw_line (image, previous_position[0], previous_position[1],
-                 x_position, y_position,  color_light_blue, 2, True)
-    previous_position = (x_position, y_position)
 
 # Place names on the lanes.
 font_face = cv2.FONT_HERSHEY_SIMPLEX
