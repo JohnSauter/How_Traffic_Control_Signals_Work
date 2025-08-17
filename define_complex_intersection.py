@@ -47,7 +47,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_complex_intersection 0.42 2025-08-03',
+                     version='define_complex_intersection 0.44 2025-08-10',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -142,6 +142,8 @@ for signal_face_name in ("B", "C", "F", "G"):
   timer_durations[timer_full_name] = float ("60.000")
   timer_full_name = signal_face_name + "/" + "Maximum Green"
   timer_durations[timer_full_name] = float ("60.000")
+  timer_full_name = signal_face_name + "/" + "Maximum Green Extra"
+  timer_durations[timer_full_name] = float ("3.500")
   timer_full_name = signal_face_name + "/" + "Minimum Green"
   timer_durations[timer_full_name] = float ("12.000")
   timer_full_name = signal_face_name + "/" + "Passage"
@@ -162,6 +164,8 @@ for signal_face_name in ("A", "E"):
   timer_durations[timer_full_name] = float ("5.000")
   timer_full_name = signal_face_name + "/" + "Maximum Green"
   timer_durations[timer_full_name] = float ("20.000")
+  timer_full_name = signal_face_name + "/" + "Maximum Green Extra"
+  timer_durations[timer_full_name] = float ("1.900")
   timer_full_name = signal_face_name + "/" + "Minimum Green"
   timer_durations[timer_full_name] = float ("5.000")
   timer_full_name = signal_face_name + "/" + "Passage"
@@ -178,6 +182,8 @@ for signal_face_name in ("A", "E"):
 for signal_face_name in ("D", "H"):
   timer_full_name = signal_face_name + "/" + "Maximum Green"
   timer_durations[timer_full_name] = float ("30.000")
+  timer_full_name = signal_face_name + "/" + "Maximum Green Extra"
+  timer_durations[timer_full_name] = float ("1.900")
   timer_full_name = signal_face_name + "/" + "Minimum Green"
   timer_durations[timer_full_name] = float ("7.000")
   timer_full_name = signal_face_name + "/" + "Passage"
@@ -194,6 +200,8 @@ for signal_face_name in ("D", "H"):
 for signal_face_name in ("J"):
   timer_full_name = signal_face_name + "/" + "Maximum Green"
   timer_durations[timer_full_name] = float ("30.000")
+  timer_full_name = signal_face_name + "/" + "Maximum Green Extra"
+  timer_durations[timer_full_name] = float ("1.900")
   timer_full_name = signal_face_name + "/" + "Minimum Green"
   timer_durations[timer_full_name] = float ("7.000")
   timer_full_name = signal_face_name + "/" + "Passage"
@@ -211,6 +219,8 @@ for signal_face_name in ("J"):
 for signal_face_name in ("pse", "psw", "pne", "pnw"):
   timer_full_name = signal_face_name + "/" + "Maximum Green"
   timer_durations[timer_full_name] = float ("10.000")
+  timer_full_name = signal_face_name + "/" + "Maximum Green Extra"
+  timer_durations[timer_full_name] = float ("1.000")
   timer_full_name = signal_face_name + "/" + "Minimum Green"
   timer_durations[timer_full_name] = float ("6.000")
   timer_full_name = signal_face_name + "/" + "Passage"

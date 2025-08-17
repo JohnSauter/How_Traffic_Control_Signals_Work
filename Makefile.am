@@ -1,4 +1,4 @@
-# File: Makefile.am, author: John Sauter, date: August 10, 2025.
+# File: Makefile.am, author: John Sauter, date: August 17, 2025.
 #
 # Build traffic_control_signals.pdf and animations.
 
@@ -125,8 +125,8 @@ man_walking_right.svg \
 process_events.py 
 
 # Distribute the shell scripts which build the RPMs and the video animations.
-EXTRA_DIST += build_RPMs.sh build_animation.sh render_animation.sh \
-build_video.sh
+EXTRA_DIST += build_RPMs.sh build_animation.sh build_animation_serial.sh \
+render_animation.sh build_video.sh
 
 # Build the RPM if the developer types "make RPMs".
 .phoney: RPMs
@@ -414,7 +414,8 @@ background_02.png : draw_background.py complex_intersection.json
 # as a marker to say that the frames have been generated.
 %_animation_01.pdf : %_animation_01.csv \
 background_01.png \
-process_events.py build_animation.sh render_animation.sh \
+process_events.py build_animation.sh build_animation_serial.sh \
+render_animation.sh \
 signal_ccc_Green.png signal_ccc_Red.png \
 signal_ccc_Yellow.png signal_ccu_Green.png signal_ccu_Red.png \
 signal_ccu_Yellow.png signal_Dark_3.png signal_Dark_4.png \
@@ -462,7 +463,8 @@ man_walking_right.png
 
 %_animation_02.pdf : %_animation_02.csv \
 background_02.png \
-process_events.py build_animation.sh render_animation.sh \
+process_events.py build_animation.sh build_animation_serial.sh \
+render_animation.sh \
 signal_ccc_Green.png signal_ccc_Red.png \
 signal_ccc_Yellow.png signal_ccu_Green.png signal_ccu_Red.png \
 signal_ccu_Yellow.png signal_Dark_3.png signal_Dark_4.png \

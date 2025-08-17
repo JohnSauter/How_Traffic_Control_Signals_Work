@@ -1,5 +1,5 @@
 #!/bin/bash
-# file: build_animation.sh, author: John Sauter, date: July 20, 2025.
+# file: build_animation.sh, author: John Sauter, date: August 11, 2025.
 
 # Construct an animation from an event log.
 
@@ -43,7 +43,7 @@ for (( counter=0; counter<=${batch_count}; counter+=1 )); do
     let "temp= ${counter} + 1"
     let "temp= ${temp} * ${batch_size}"
     let "end_frame= ${temp} - 1"
-    parallel --semaphore --ungroup --halt now,fail=1 --jobs 25 --quote \
+    parallel --semaphore --ungroup --halt now,fail=1 --jobs 20 --quote \
 	     bash "render_animation.sh" "${source}" "${animation_temp}" \
 	     ${start_time} ${start_frame} ${end_frame} \
 	     ${frame_rate} ${background_image} ${intersection_file} ";"

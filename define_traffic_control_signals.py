@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_traffic_control_signals 0.42 2025-08-03',
+                     version='define_traffic_control_signals 0.44 2025-08-16',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -518,38 +518,14 @@ substate["exits"] = list()
 exits_list = substate["exits"]
 
 conditional_tests = list()
-conditional_test = ("toggle is true", "Preempt Red")
-conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Yellow", "Going Red" )
-exits_list.append(exit)
-
-conditional_tests = list()
-conditional_test = ("toggle is true", "Manual Red")
-conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Yellow", "Going Red" )
-exits_list.append(exit)
-
-conditional_tests = list()
-conditional_test = ("toggle is true", "Flash Red")
-conditional_tests.append(conditional_test)
-exit = (conditional_tests, "Yellow", "Going Red")
-exits_list.append(exit)
-
-conditional_tests = list()
-conditional_test = ("toggle is true", "Flash Yellow")
-conditional_tests.append(conditional_test)
-exit = (conditional_tests, "Yellow", "Flashing")
-exits_list.append(exit)
-
-conditional_tests = list()
 conditional_test = ("timer is completed", "Minimum Green")
 conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Green", "Looking for Gap")
+exit = ( conditional_tests, "Green", "Looking for Gap 1")
 exits_list.append(exit)
 green_state.append(substate)
 
 substate = dict()
-substate["name"] = "Looking for Gap"
+substate["name"] = "Looking for Gap 1"
 substate["actions"] = list()
 actions_list = substate["actions"]
 action = ("start timer", "Passage")
@@ -585,33 +561,15 @@ exit = (conditional_tests, "Yellow", "Flashing")
 exits_list.append(exit)
 
 conditional_tests = list()
-conditional_test = ("timer is completed", "Maximum Green")
-conditional_tests.append(conditional_test)
-exit = (conditional_tests, "Green", "Waiting for Clearance Request")
-exits_list.append(exit)
-
-conditional_tests = list()
-conditional_test = ("toggle is true", "Traffic Approaching")
-conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Green", "Looking for Gap")
-exits_list.append(exit)
-
-conditional_tests = list()
-conditional_test = ("toggle is true", "Traffic Present")
-conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Green", "Looking for Gap")
-exits_list.append(exit)
-
-conditional_tests = list()
 conditional_test = ("toggle is true", "Preempt Green")
 conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Green", "Looking for Gap")
+exit = ( conditional_tests, "Green", "Looking for Gap 2")
 exits_list.append(exit)
 
 conditional_tests = list()
 conditional_test = ("toggle is true", "Manual Green")
 conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Green", "Looking for Gap")
+exit = ( conditional_tests, "Green", "Looking for Gap 2")
 exits_list.append(exit)
 
 conditional_tests = list()
@@ -628,10 +586,32 @@ conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Yellow", "Going Red" )
 exits_list.append(exit)
 
+conditional_tests = list()
+conditional_test = ("timer is completed", "Maximum Green")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is true", "Clearance Requested")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("timer is completed", "Maximum Green")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Clearance Requested")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Green", "Looking for Gap 2" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Traffic Approaching")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Green", "Looking for Gap 1")
+exits_list.append(exit)
+
 green_state.append(substate)
 
 substate = dict()
-substate["name"] = "Waiting for Clearance Request"
+substate["name"] = "Looking for Gap 2"
 substate["actions"] = list()
 actions_list = substate["actions"]
 action = ("clear toggle", "Preempt Green")
@@ -643,16 +623,6 @@ substate["exits"] = list()
 exits_list = substate["exits"]
 
 conditional_tests = list()
-conditional_test = ("toggle is true", "Clearance Requested")
-conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Manual Green")
-conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Preempt Green")
-conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Yellow", "Going Red" )
-exits_list.append(exit)
-
-conditional_tests = list()
 conditional_test = ("toggle is true", "Preempt Red")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Yellow", "Going Red" )
@@ -662,18 +632,6 @@ conditional_tests = list()
 conditional_test = ("toggle is true", "Manual Red")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Yellow", "Going Red")
-exits_list.append(exit)
-
-conditional_tests = list()
-conditional_test = ("toggle is true", "Traffic Approaching")
-conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Green", "Looking for Gap" )
-exits_list.append(exit)
-
-conditional_tests = list()
-conditional_test = ("toggle is true", "Traffic Present")
-conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Green", "Looking for Gap" )
 exits_list.append(exit)
 
 conditional_tests = list()
@@ -689,6 +647,18 @@ exit = (conditional_tests, "Yellow", "Flashing")
 exits_list.append(exit)
 
 conditional_tests = list()
+conditional_test = ("toggle is true", "Clearance Requested")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Green", "Looking for Gap 3" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Traffic Approaching")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Green", "Looking for Gap 4" )
+exits_list.append(exit)
+
+conditional_tests = list()
 conditional_test = ("timer is completed", "Green Limit")
 conditional_tests.append(conditional_test)
 conditional_test = ("toggle is false", "Preempt Green")
@@ -696,6 +666,230 @@ conditional_tests.append(conditional_test)
 conditional_test = ("toggle is false", "Manual Green")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+green_state.append(substate)
+
+substate = dict()
+substate["name"] = "Looking for Gap 3"
+substate["actions"] = list()
+actions_list = substate["actions"]
+action = ("clear toggle", "Preempt Green")
+actions_list.append(action)
+action = ("clear toggle", "Manual Green")
+actions_list.append(action)
+action = ("start timer", "Maximum Green Extra")
+actions_list.append(action)
+
+substate["exits"] = list()
+exits_list = substate["exits"]
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Preempt Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Manual Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Red")
+conditional_tests.append(conditional_test)
+exit = (conditional_tests, "Yellow", "Going Red")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Yellow")
+conditional_tests.append(conditional_test)
+exit = (conditional_tests, "Yellow", "Flashing")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Clearance Requested")
+conditional_tests.append(conditional_test)
+conditional_test = ("timer is completed", "Passage")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Clearance Requested")
+conditional_tests.append(conditional_test)
+conditional_test = ("timer is completed", "Maximum Green Extra")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("timer is completed", "Green Limit")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Preempt Green")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Manual Green")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Traffic Approaching")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Green", "Looking for Gap 5" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is false", "Clearance Requested")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Green", "Looking for Gap 2" )
+exits_list.append(exit)
+
+green_state.append(substate)
+
+substate = dict()
+substate["name"] = "Looking for Gap 4"
+substate["actions"] = list()
+actions_list = substate["actions"]
+action = ("clear toggle", "Preempt Green")
+actions_list.append(action)
+action = ("clear toggle", "Manual Green")
+actions_list.append(action)
+action = ("clear toggle", "Traffic Approaching")
+actions_list.append(action)
+action = ("start timer", "Passage")
+actions_list.append(action)
+
+substate["exits"] = list()
+exits_list = substate["exits"]
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Preempt Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Manual Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Red")
+conditional_tests.append(conditional_test)
+exit = (conditional_tests, "Yellow", "Going Red")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Yellow")
+conditional_tests.append(conditional_test)
+exit = (conditional_tests, "Yellow", "Flashing")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Clearance Requested")
+conditional_tests.append(conditional_test)
+conditional_test = ("timer is completed", "Passage")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("timer is completed", "Green Limit")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Preempt Green")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Manual Green")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Traffic Approaching")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Green", "Looking for Gap 4" )
+exits_list.append(exit)
+
+green_state.append(substate)
+
+substate = dict()
+substate["name"] = "Looking for Gap 5"
+substate["actions"] = list()
+actions_list = substate["actions"]
+action = ("clear toggle", "Preempt Green")
+actions_list.append(action)
+action = ("clear toggle", "Manual Green")
+actions_list.append(action)
+action = ("clear toggle", "Traffic Approaching")
+actions_list.append(action)
+action = ("start timer", "Passage")
+actions_list.append(action)
+
+substate["exits"] = list()
+exits_list = substate["exits"]
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Preempt Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Manual Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Red")
+conditional_tests.append(conditional_test)
+exit = (conditional_tests, "Yellow", "Going Red")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Yellow")
+conditional_tests.append(conditional_test)
+exit = (conditional_tests, "Yellow", "Flashing")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Clearance Requested")
+conditional_tests.append(conditional_test)
+conditional_test = ("timer is completed", "Passage")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Clearance Requested")
+conditional_tests.append(conditional_test)
+conditional_test = ("timer is completed", "Maximum Green Extra")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("timer is completed", "Green Limit")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Preempt Green")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Manual Green")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Traffic Approaching")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Green", "Looking for Gap 5" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is false", "Clearance Requested")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Green", "Looking for Gap 2" )
 exits_list.append(exit)
 
 green_state.append(substate)
@@ -974,6 +1168,7 @@ finite_state_machine["toggles"] = toggle_names
 
 timer_names = ( "Left Flashing Yellow Waiting", "Red Limit",
                 "Minimum Left Flashing Yellow", "Maximum Green",
+                "Maximum Green Extra",
                 "Minimum Green", "Passage", "Red Clearance", "Green Limit",
                 "Yellow Change", "Traffic Still Present" )
 finite_state_machine["timers"] = timer_names

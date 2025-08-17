@@ -1,5 +1,5 @@
 % File: traffic_control_signals.tex, author: John Sauter,
-% date: August 3, 2025.
+% date: August 10, 2025.
 
 % Copyright © 2025 by John Sauter.
 % Licensed under the Creative Commons Attribution-ShareAlike 4.0 International
@@ -196,12 +196,12 @@
   pdfcontacturl={https://www.systemeyescomputerstore.com},
   pdfcopyright={Copyright {\copyright} 2025 by John Sauter},
   pdfurl={https://www.systemeyescomputerstore.com/traffic\%5Fsignals/traffic\%5Fsignals.pdf},
-  pdfdate={2025-08-03},
+  pdfdate={2025-08-16},
   pdflicenseurl={https://creativecommons.org/licenses/by-sa/4.0},
   pdfmetalang={en-US}
 }
 
-\date{2025-08-03}
+\date{2025-08-16}
 \maketitle
 \begin{abstract}
   Traffic control signals allow vehicles and pedestrians to move through
@@ -600,6 +600,14 @@ traffic waiting for us to turn red, turn red anyway.
 In our example, signal faces B, C, F, and G have their Maximum Green
 times set to 60 seconds; signal faces A, D, E, H, and J to 30 seconds;
 and the pedestrian signal faces to 7 seconds.
+
+\subsubsection{Maximum Green Extra time}
+IF there is no conflicting traffic waiting for us to turn red and we have
+passed Maximum Green time, rather than turn red immediately when conflicting
+traffic appears, wait up to Maximum Green Extra time for a gap.
+
+In our example, all of the signal faces have their Maximum Green Extra times
+set the same as the Passage time.
 
 \subsubsection{Minimum Green time}
 When a signal face turns green we want to give the traffic some time

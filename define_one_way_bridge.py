@@ -46,7 +46,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_one_way_bridge 0.42 2025-08-02',
+                     version='define_one_way_bridge 0.44 2025-08-10',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -136,6 +136,8 @@ for signal_face_name in signal_face_names:
   timer_durations[timer_full_name] = float ("inf")
   timer_full_name = signal_face_name + "/" + "Maximum Green"
   timer_durations[timer_full_name] = float ("60.000")
+  timer_full_name = signal_face_name + "/" + "Maximum Green Extra"
+  timer_durations[timer_full_name] = float ("3.500")
   timer_full_name = signal_face_name + "/" + "Minimum Green"
   timer_durations[timer_full_name] = float ("12.000")
   timer_full_name = signal_face_name + "/" + "Passage"

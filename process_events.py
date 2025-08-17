@@ -54,7 +54,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='process_events 0.42 2025-08-03',
+                     version='process_events 0.44 2025-08-11',
                      help='print the version number and exit')
 parser.add_argument ('--animation-directory', metavar='animation_directory',
                      help='write animation output image files ' +
@@ -875,14 +875,16 @@ def choose_lamp_image (lane):
   else:
     match lane_color:
       case "Steady Circular Red" | "Steady Left Arrow Red" | \
-           "Flashing Left Arrow Red" | "Steady Right Arrow Red":
+           "Flashing Left Arrow Red" | "Steady Right Arrow Red" | \
+           "Flashing Circular Red":
         image_name = (root + "_Red.png")
       case "Flashing Left Arrow Yellow (lower)":
         image_name = (root + "_Flashing_Yellow.png")
-      case "Steady Circular Green" | "Steady Left Arrow Green":
+      case "Steady Circular Green" | "Steady Left Arrow Green" | \
+           "Steady Left Arrow Green and Steady Circular Green":
         image_name = (root + "_Green.png")
       case "Steady Circular Yellow" | "Steady Left Arrow Yellow (upper)" | \
-           "Flashing Left Arrow Yellow (upper)":
+           "Flashing Left Arrow Yellow (upper)" | "Flashing Circular Yellow":
         image_name = (root + "_Yellow.png")
       case "Dark":
         if (len(root) == 10):

@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='simulate_traffic 0.42 2025-08-02',
+                     version='simulate_traffic 0.44 2025-08-16',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -371,7 +371,7 @@ def set_toggle_value (signal_face, toggle_name, new_value, source):
             
         if ((table_level >= 4) and (current_time > table_start_time)):
           table_file.write ("\\hline " + format_time_N(current_time) + " & " +
-                            signal_face["name"] + "& " + operator + 
+                            signal_face["name"] + " & " + operator + 
                             toggle_name + byline + ". \\\\\n")
         no_activity = False
         the_toggle["value"] = new_value
@@ -506,7 +506,7 @@ def green_request_granted():
                  signal_face["name"] + " starts waiting.")
         if ((table_level >= 5) and (current_time > table_start_time)):
           table_file.write ("\\hline " + format_time_N(current_time) + " & " +
-                            signal_face ["name"] + "& starts waiting. \\\\\n")
+                            signal_face ["name"] + " & starts waiting. \\\\\n")
 
   # If the list of signal faces allowed to turn green is empty,
   # allow the oldest signal face on the list of signal faces
@@ -696,7 +696,9 @@ def safety_check ():
   global error_counter
 
   conflict_detected = False
-  
+  if (verbosity_level >= 5):
+    print (format_time(current_time) + " start safety check.")
+    
   for signal_face in signal_faces_list:
     if (signal_face["state"] == "Green"):
       for conflicting_signal_face in signal_faces_list:
@@ -730,6 +732,9 @@ def safety_check ():
                           "Flash" + " set to " + str(sensor["value"]) +
                           " by system program safety check. \\\\\n")
         
+  if (verbosity_level >= 5):
+    print (format_time(current_time) + " end safety check.")
+
   return
 
 # the traffic signal simulator: run the finite state machines
@@ -1128,7 +1133,7 @@ def check_overlap_sensor (traffic_element, sensor):
       trace_file.write ("These objects intersect at " +
                         format_time(current_time) + ":\n")
       pprint.pprint (traffic_element, trace_file)
-      pprint.pprint (shape_B)
+      pprint.pprint (shape_B, trace_file)
       pprint.pprint (sensor, trace_file)
       trace_file.write ("\n")
       
@@ -2163,7 +2168,7 @@ if (do_table_output):
 # to the nearest second.
 if (do_last_event_time_output):
   last_event_time_file = open (last_event_time_file_name, "w")
-  last_event_time_file.write (str(int(last_event_time) + 1) + "\n")
+  last_event_time_file.write (str(int(last_event_time) + 2) + "\n")
   last_event_time_file.close()
   
 if (do_trace):

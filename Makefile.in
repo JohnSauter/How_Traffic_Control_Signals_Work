@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# File: Makefile.am, author: John Sauter, date: August 10, 2025.
+# File: Makefile.am, author: John Sauter, date: August 17, 2025.
 #
 # Build traffic_control_signals.pdf and animations.
 
@@ -540,7 +540,8 @@ EXTRA_DIST = signal_ccc.svg signal_ccu.svg signal_rrr.svg \
 	car-38800411-right.svg car-38800411-up.svg \
 	truck-51893967-up.svg truck-51893967-right.svg \
 	man_walking_right.svg process_events.py build_RPMs.sh \
-	build_animation.sh render_animation.sh build_video.sh \
+	build_animation.sh build_animation_serial.sh \
+	render_animation.sh build_video.sh \
 	How_Traffic_Control_Signals_Work.spec
 
 # Support make check and make distcheck
@@ -1426,7 +1427,8 @@ background_02.png : draw_background.py complex_intersection.json
 # as a marker to say that the frames have been generated.
 %_animation_01.pdf : %_animation_01.csv \
 background_01.png \
-process_events.py build_animation.sh render_animation.sh \
+process_events.py build_animation.sh build_animation_serial.sh \
+render_animation.sh \
 signal_ccc_Green.png signal_ccc_Red.png \
 signal_ccc_Yellow.png signal_ccu_Green.png signal_ccu_Red.png \
 signal_ccu_Yellow.png signal_Dark_3.png signal_Dark_4.png \
@@ -1474,7 +1476,8 @@ man_walking_right.png
 
 %_animation_02.pdf : %_animation_02.csv \
 background_02.png \
-process_events.py build_animation.sh render_animation.sh \
+process_events.py build_animation.sh build_animation_serial.sh \
+render_animation.sh \
 signal_ccc_Green.png signal_ccc_Red.png \
 signal_ccc_Yellow.png signal_ccu_Green.png signal_ccu_Red.png \
 signal_ccu_Yellow.png signal_Dark_3.png signal_Dark_4.png \

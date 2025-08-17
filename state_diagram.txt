@@ -1,4 +1,4 @@
-# File: state_diagram.txt, author: John Sauter, date: May 11, 2025.
+# File: state_diagram.txt, author: John Sauter, date: August 16, 2025.
 
 strict digraph Traffic_Control_Signals {
 fontname="Helvetica,Arial,sans-serif"
@@ -34,9 +34,11 @@ subgraph Cluster_Green {
 style=filled; fillcolor=lightgreen;
 label="Green State";
 node [color=green, label="Minimum Green"] "Green\nMinimum Green";
-node [label="Looking for Gap"] "Green\nLooking for Gap";
-node [label="Waiting for\nClearance Request"]
-     "Green\nWaiting for\nClearance Request";
+node [label="Looking for Gap 1"] "Green\nLooking for Gap 1";
+node [label="Looking for Gap 2"] "Green\nLooking for Gap 2";
+node [label="Looking for Gap 3"] "Green\nLooking for Gap 3";
+node [label="Looking for Gap 4"] "Green\nLooking for Gap 4";
+node [label="Looking for Gap 5"] "Green\nLooking for Gap 5";
 }
 
 subgraph Cluster_Yellow {
@@ -74,16 +76,34 @@ edge [label="traffic\ngone"]
      	"Red\nGoing Green 5"->"Red\nTravel Path\nis Clear";
 
 #edge [label="quick\nred"] "Green\nMinimum Green"->"Yellow\nGoing Red";
-edge [label="long\nenough"]
-     "Green\nMinimum Green"->"Green\nLooking for Gap";
-edge [label="conflicting\ntraffic\nwaiting"]
-     "Green\nLooking for Gap"->"Yellow\nGoing Red";
-edge [label="no conflicting\ntraffic"] "Green\nLooking for Gap"->
-     "Green\nWaiting for\nClearance Request";
+edge [label="waited\nlong enough"]
+     "Green\nMinimum Green"->"Green\nLooking for Gap 1";
+edge [label="found gap"]
+     "Green\nLooking for Gap 1"->"Yellow\nGoing Red";
+edge [label="no conflicting\ntraffic"] "Green\nLooking for Gap 1"->
+     "Green\nLooking for Gap 2";
 edge [label="still\nlooking"]
-     "Green\nLooking for Gap"->"Green\nLooking for Gap";
+     "Green\nLooking for Gap 1"->"Green\nLooking for Gap 1";
 edge [label="conflicting\ntraffic\nwaiting"]
-     "Green\nWaiting for\nClearance Request"->"Yellow\nGoing Red";
+     "Green\nLooking for Gap 2"->"Green\nLooking for Gap 3";
+edge [label="lost gap"]
+     "Green\nLooking for Gap 2"->"Green\nLooking for Gap 4";
+edge [label="lost gap"]
+     "Green\nLooking for Gap 3"->"Green\nLooking for Gap 5";
+edge [label="conflicting traffic gone"]
+     "Green\nLooking for Gap 3"->"Green\nLooking for Gap 2";
+edge [label="found gap"]
+     "Green\nLooking for Gap 4"->"Yellow\nGoing Red";
+edge [label="lost gap"]
+     "Green\nLooking for Gap 4"->"Green\nLooking for Gap 4";
+edge [label="found gap"]
+     "Green\nLooking for Gap 5"->"Yellow\nGoing Red";
+edge [label="no gap"]
+     "Green\nLooking for Gap 5"->"Yellow\nGoing Red";
+edge [label="lost gap"]
+     "Green\nLooking for Gap 5"->"Green\nLooking for Gap 5";
+edge [label="conflicting traffic gone"]
+     "Green\nLooking for Gap 5"->"Green\nLooking for Gap 2";
 #edge [label="flash\nyellow"]
 #     "Green\nWaiting for\nClearance Request"->"Yellow\nFlashing";
 
@@ -105,5 +125,3 @@ edge [label="clear"] "Yellow\nGoing Green"->"Green\nMinimum Green";
 }
 
 # End of file traffic_control_signals_state_diagram.txt
-
-
