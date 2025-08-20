@@ -54,7 +54,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='process_events 0.44 2025-08-11',
+                     version='process_events 0.45 2025-08-19',
                      help='print the version number and exit')
 parser.add_argument ('--animation-directory', metavar='animation_directory',
                      help='write animation output image files ' +
@@ -876,15 +876,18 @@ def choose_lamp_image (lane):
     match lane_color:
       case "Steady Circular Red" | "Steady Left Arrow Red" | \
            "Flashing Left Arrow Red" | "Steady Right Arrow Red" | \
-           "Flashing Circular Red":
+           "Flashing Circular Red" | "Flashing Right Arrow Red":
         image_name = (root + "_Red.png")
       case "Flashing Left Arrow Yellow (lower)":
         image_name = (root + "_Flashing_Yellow.png")
       case "Steady Circular Green" | "Steady Left Arrow Green" | \
-           "Steady Left Arrow Green and Steady Circular Green":
+           "Steady Left Arrow Green and Steady Circular Green" | \
+           "Steady Right Arrow Green":
         image_name = (root + "_Green.png")
       case "Steady Circular Yellow" | "Steady Left Arrow Yellow (upper)" | \
-           "Flashing Left Arrow Yellow (upper)" | "Flashing Circular Yellow":
+           "Steady Right Arrow Yellow" | \
+           "Flashing Left Arrow Yellow (upper)" | \
+           "Flashing Circular Yellow" | "Flashing Right Arrow Yellow":
         image_name = (root + "_Yellow.png")
       case "Dark":
         if (len(root) == 10):
@@ -1214,7 +1217,7 @@ for event_time in event_times:
 
         frame_end_time = time.clock_gettime_ns (time.CLOCK_BOOTTIME)
         frame_process_time = frame_end_time - frame_start_time
-        if (verbosity_level > 2):
+        if (verbosity_level >= 2):
           print ("Frame " + str(frame_number) + " created in " +
                  str(int(frame_process_time / 1e9)) + " seconds.")
         if (do_trace):

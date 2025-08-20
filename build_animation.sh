@@ -1,5 +1,5 @@
 #!/bin/bash
-# file: build_animation.sh, author: John Sauter, date: August 11, 2025.
+# file: build_animation.sh, author: John Sauter, date: August 19, 2025.
 
 # Construct an animation from an event log.
 
