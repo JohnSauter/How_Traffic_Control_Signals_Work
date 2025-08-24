@@ -1,5 +1,5 @@
 Name:           How_Traffic_Control_Signals_Work
-Version:        0.45
+Version:        0.46
 Release:        1%{?dist}
 Summary:        Explain traffic control signals
 
@@ -59,6 +59,8 @@ make check VERBOSE=1
 %license COPYING
 
 %changelog
+ * Sat Aug 23 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.46-1 Start work on four corners example.
  * Sat Aug 23 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.45-1 Add forgotten lamp colors to the renderer.
  * Sun Aug 10 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>

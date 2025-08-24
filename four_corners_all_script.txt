@@ -1,0 +1,17 @@
+time,operator,signal face,operand,permissive_delay,count,interval
+200.000,car,A,A1,1,1,1
+201.000,car,A,A2,1,1,1
+202.000,car,A,A3,1,1,1
+203.000,car,A,A4,1,1,1
+204.000,car,B,B1,1,1,1
+205.000,car,B,B2,1,1,1
+206.000,car,B,B3,1,1,1
+207.000,car,B,B4,1,1,1
+208.000,car,C,C1,1,1,1
+209.000,car,C,C2,1,1,1
+210.000,car,C,C3,1,1,1
+211.000,car,C,C4,1,1,1
+212.000,car,D,D1,1,1,1
+213.000,car,D,D2,1,1,1
+214.000,car,D,D3,1,1,1
+215.000,car,D,D4,1,1,1

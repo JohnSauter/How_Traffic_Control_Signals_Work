@@ -46,7 +46,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_one_way_bridge 0.44 2025-08-10',
+                     version='define_one_way_bridge 0.46 2025-08-24',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -341,8 +341,9 @@ for entry_lane_name in ("A", "B"):
     travel_path["entry lane name"] = entry_lane_name
     travel_path["exit lane name"] = exit_lane_name
 
-    permissive_left_info = None
-    permissive_right_info = None
+    permissive_turn_info = None
+    permissive_colors = None
+    green_colors = None
     permissive_distance = 250
     travel_path_valid = False
     
@@ -363,6 +364,8 @@ for entry_lane_name in ("A", "B"):
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
+        green_colors = ("Steady Circular Green",)
+        
       case "A2":
         # U turn eastbound
         travel_path_valid = True
@@ -377,6 +380,8 @@ for entry_lane_name in ("A", "B"):
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
+        green_colors = ("Steady Circular Green",)
+        
       case "B2":
         # Cross the bridge westbound
         travel_path_valid = True
@@ -393,6 +398,8 @@ for entry_lane_name in ("A", "B"):
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
+        green_colors = ("Steady Circular Green",)
+        
       case "B1":
         # U turn westbound
         travel_path_valid = True
@@ -407,12 +414,15 @@ for entry_lane_name in ("A", "B"):
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
+        green_colors = ("Steady Circular Green",)
+        
       case _:
         milestones = None
 
     travel_path["milestones"] = milestones
-    travel_path["permissive left turn info"] = permissive_left_info
-    travel_path["permissive right turn info"] = permissive_right_info
+    travel_path["permissive turn info"] = permissive_turn_info
+    travel_path["permissive colors"] = permissive_colors
+    travel_path["green colors"] = green_colors
 
     if (travel_path_valid):
       travel_paths[travel_path_name] = travel_path
@@ -441,12 +451,6 @@ for signal_face in signal_faces_list:
       
   signal_face["lamp names map"] = lamp_names_map
   signal_face["iluminated lamp name"] = ""
-
-# Classify the lamps for traffic movement purposes.
-green_lamps = ("Steady Circular Green",)
-permissive_left_lamps = tuple()
-permissive_red_lamps = tuple()
-permissive_yellow_lamps = tuple()
   
 # Set up the mapping from the vehicle sensors to the toggles they set.
 
@@ -605,10 +609,6 @@ intersection_info["truck length"] = truck_length
 intersection_info["lane width"] = lane_width
 intersection_info["crosswalk width"] = crosswalk_width
 intersection_info["speed limits"] = speed_limits
-intersection_info["green lamps"] = green_lamps
-intersection_info["permissive left lamps"] = permissive_left_lamps
-intersection_info["permissive red lamps"] = permissive_red_lamps
-intersection_info["permissive yellow lamps"] = permissive_yellow_lamps
 intersection_info["intersection speed limit"] = float(intersection_speed_limit)
 
 # In addition to information about the signal faces, we need information

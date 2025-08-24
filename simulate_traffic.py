@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='simulate_traffic 0.44 2025-08-16',
+                     version='simulate_traffic 0.46 2025-08-24',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -1120,7 +1120,7 @@ def check_overlap_sensor (traffic_element, sensor):
 
   shape_A = traffic_element["shape"]
 
-  # If the traffic element has left the intersection it has no shape.
+  # If the traffic element has left the simulation it has no shape.
   if (shape_A == None):
     return (False)
   
@@ -1253,7 +1253,11 @@ def check_conflicting_traffic (traffic_element, permissive_info):
     trace_file.write ("Check for conflicting traffic with " +
                       traffic_element["name"] + ".\n")
     pprint.pprint (traffic_element, trace_file)
-    
+
+  # If there is nothing to check we do not need to wait.
+  if (permissive_info == None):
+    return True
+  
   if (traffic_element["speed"] > 0):
     if (do_trace):
       trace_file.write (" Still moving.\n\n")
@@ -1418,50 +1422,36 @@ def can_change_lanes (traffic_element):
         pprint.pprint (signal_face, trace_file)
         pprint.pprint (travel_path, trace_file)
 
-      # If the lamp is green we can enter the intersection.
-      iluminated_lamp_name = signal_face["iluminated lamp name"]
-      green_lamps = intersection_info ["green lamps"]
-      if (iluminated_lamp_name in green_lamps):
+      iluminated_lamp_name = signal_face ["iluminated lamp name"]
+
+      # If the signal face is showing a green light, we can proceed
+      # without regard to any permissife turn rules.
+      green_colors = travel_path ["green colors"]
+      if (iluminated_lamp_name in green_colors):
         if (do_trace):
-          trace_file.write (" Lamp is green.\n\n")
+          trace_file.write (" Lamp is " + iluminated_lamp_name +
+                            " so we can proceed.\n")
         return True
-
-      # If the lamp is a flashing left arrow yellow we can enter the
-      # intersection after a short pause provided there is no traffic
-      # in or approaching the intersection that will interfere with us.
-      permissive_left_lamps = intersection_info ["permissive left lamps"]
-      if (iluminated_lamp_name in permissive_left_lamps):
-        permissive_info = travel_path ["permissive left turn info"]
-        if (check_conflicting_traffic (traffic_element, permissive_info)):
-          if (do_trace):
-            trace_file.write (" No conflicting traffic elements.\n\n")
-          return True
-        else:
-          return False
-
-      # If the lamp is red, or about to turn red, we can turn right
-      # after a short pause provided there is no conflicting traffic.
-      permissive_red_lamps = intersection_info ["permissive red lamps"]
-      permissive_yellow_lamps = intersection_info ["permissive yellow lamps"]
-      if ((iluminated_lamp_name in permissive_red_lamps) or
-          (iluminated_lamp_name in permissive_yellow_lamps)):
-        # If a right turn on red is allowed, the travel path will have
-        # permissive info.
-        permissive_info = travel_path ["permissive right turn info"]
-        if (permissive_info == None):
-          return False
-        if (check_conflicting_traffic (traffic_element, permissive_info)):
-          if (do_trace):
-            trace_file.write (" No conflicting trafficc elements.\n\n")
-          return True
-        else:
-          return False
+      
+      # If the signal face allows permissive turns when its lights
+      # are a certain color, allow entering the intersection if
+      # the lights are right and the path is clear.
+      permissive_info = travel_path ["permissive turn info"]
+      if (permissive_info != None):
+        permissive_colors = travel_path ["permissive colors"]
+        if (iluminated_lamp_name in permissive_colors):
+          if (check_conflicting_traffic (traffic_element, permissive_info)):
+            if (do_trace):
+              trace_file.write (" Lamp is " + iluminated_lamp_name +
+                                " and no conflicting traffic.\n")
+            return True
           
-      # The lamp is neither green nor permissive
+      # Otherwise we cannot enter the intersection or crosswalk.
       if (do_trace):
-        trace_file.write (" Lamp is neither green nor permissive.\n\n")
+        trace_file.write (" Lamp is " + iluminated_lamp_name +
+                          " so we cannot proceed.\n")
       return False
-        
+      
     case _:
       # The milestone is neither the entrance to the intersection nor
       # the entrance to the crosswalk.  Always allow it.

@@ -47,7 +47,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_complex_intersection 0.44 2025-08-10',
+                     version='define_complex_intersection 0.46 2025-08-24',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -548,10 +548,11 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
     travel_path["entry lane name"] = entry_lane_name
     travel_path["exit lane name"] = exit_lane_name
 
-    permissive_left_info = None
-    permissive_right_info = None
+    permissive_turn_info = None
     permissive_distance = 250
     travel_path_valid = False
+    permissive_colors = None
+    green_colors = None
     
     match travel_path_name:
       case "A6":
@@ -572,12 +573,15 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
-        permissive_left_shape = (
+        permissive_turn_shape = (
           entry_intersection_x - (2.5 * lane_width),
           entry_intersection_y - (3 * lane_width) - permissive_distance,
           entry_intersection_x - (0.5 * lane_width), entry_intersection_y)
-        permissive_left_info = (("present", permissive_left_shape),)
         
+        permissive_turn_info = (("present", permissive_turn_shape),)
+        permissive_colors = ("Flashing Left Arrow Yellow (lower)",)
+        green_colors = ("Steady Left Arrow Green",)
+
       case "A1" | "A2":
         # Northbound U turn
         travel_path_valid = True
@@ -596,11 +600,14 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
-        permissive_left_shape = (
+        permissive_turn_shape = (
           entry_intersection_x - (2.5 * lane_width),
           entry_intersection_y - (3 * lane_width) - permissive_distance,
           entry_intersection_x - (0.5 * lane_width), entry_intersection_y)
-        permissive_left_info = (("present", permissive_left_shape),)
+
+        permissive_turn_info = (("present", permissive_turn_shape),)
+        permissive_colors = ("Flashing Left Arrow Yellow (lower)",)
+        green_colors = ("Steady Left Arrow Green",)
         
       case "E4" | "E5":
         # Southbound U turn
@@ -620,12 +627,15 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
-        permissive_left_shape = (
+        permissive_turn_shape = (
           entry_intersection_x + (0.5 * lane_width), entry_intersection_y,
           entry_intersection_x + (2.5 * lane_width),
           entry_intersection_y + (3.0 * lane_width) + permissive_distance)
-        permissive_left_info = (("present", permissive_left_shape),)
-        
+
+        permissive_turn_info = (("present", permissive_turn_shape),)
+        permissive_colors = ("Flashing Left Arrow Yellow (lower)",)
+        green_colors = ("Steady Left Arrow Green",)
+
       case "E3":
         # Southbound left turn
         travel_path_valid = True
@@ -644,12 +654,15 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
-        permissive_left_shape = (
+        permissive_turn_shape = (
           entry_intersection_x + (0.5 * lane_width), entry_intersection_y,
           entry_intersection_x + (2.5 * lane_width),
           entry_intersection_y + (3.0 * lane_width) + permissive_distance)
-        permissive_left_info = (("present", permissive_left_shape),)
-        
+
+        permissive_turn_info = (("present", permissive_turn_shape),)
+        permissive_colors = ("Flashing Left Arrow Yellow (lower)",)
+        green_colors = ("Steady Left Arrow Green",)
+
       case "B5" | "C4":
         # Northbound through lanes
         travel_path_valid = True
@@ -662,6 +675,8 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
+        green_colors = ("Steady Circular Green",)
+
       case "F2" | "G1":
         # Soundbound through lanes
         travel_path_valid = True
@@ -673,6 +688,8 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
+
+        green_colors = ("Steady Circular Green",)
 
       case "C3":
         # Northbound right turn
@@ -690,14 +707,17 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
-        permissive_right_shape = (
+        permissive_turn_shape = (
           entry_intersection_x - (lane_width / 2),
           exit_intersection_y - (lane_width / 2),
           exit_intersection_x + (lane_width * 2),
           entry_intersection_y + (lane_width / 2))
                                                        
-        permissive_right_info = (("moving East", intersection_shape),
-                                 ("present", permissive_right_shape))
+        permissive_turn_info = (("moving East", intersection_shape),
+                                ("present", permissive_turn_shape))
+        permissive_colors = ("Steady Circular Red", "Steady Circular Yellow")
+        green_colors = ("Steady Circular Green",)
+
       case "G6":
         # Soundbound right turn
         travel_path_valid = True
@@ -714,14 +734,17 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
-        permissive_right_shape = (
+        permissive_turn_shape = (
           exit_intersection_x - (lane_width * 2),
           entry_intersection_y,
           exit_intersection_x + (lane_width * 2),
           exit_intersection_y + (lane_width / 2))
                                                        
-        permissive_right_info = (("moving West", intersection_shape),
-                                 ("present", permissive_right_shape))
+        permissive_turn_info = (("moving West", intersection_shape),
+                                ("present", permissive_turn_shape))
+        permissive_colors = ("Steady Circular Red", "Steady Circular Yellow")
+        green_colors = ("Steady Circular Green",)
+
       case "D2" | "D1":
         # Westbound left turn
         travel_path_valid = True
@@ -738,6 +761,8 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
+        green_colors = ("Steady Circular Green",)
+
       case "D6":
         # Westbound straight through
         travel_path_valid = True
@@ -749,6 +774,8 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
+
+        green_colors = ("Steady Circular Green",)
 
       case "D3":
         # Westbound U turn
@@ -766,6 +793,8 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
         
+        green_colors = ("Steady Circular Green",)
+
       case "D4" | "D5":
         # Westbound right turn
         travel_path_valid = True
@@ -782,14 +811,16 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
-        permissive_right_shape = (
+        permissive_turn_shape = (
           exit_intersection_x - (lane_width / 2),
           exit_intersection_y - (lane_width * 2),
           exit_intersection_x + (lane_width / 2),
           entry_intersection_y + (2.0 * lane_width) + permissive_distance)
                                                        
-        permissive_right_info = (("moving East", intersection_shape),
-                                 ("present", permissive_right_shape))
+        permissive_turn_info = (("moving East", intersection_shape),
+                                ("present", permissive_turn_shape))
+        permissive_colors = ("Steady Circular Red", "Steady Circular Yellow")
+        green_colors = ("Steady Circular Green",)
         
       case "H4" | "H5":
         # Eastbound left turn
@@ -807,6 +838,9 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
+        green_colors = ("Steady Left Arrow Green" +
+                        " and Steady Circular Green")
+        
       case "H3":
         # Eastbound striaght through
         travel_path_valid = True
@@ -819,6 +853,8 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
+        green_colors = ("Steady Left Arrow Green" +
+                        " and Steady Circular Green")
       case "J1" | "J2":
         # Eastbound right turn
         travel_path_valid = True
@@ -837,6 +873,8 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
+
+        green_colors = ("Steady Right Arrow Green",)
         
       case "psepsw" | "pnepnw":
         # pedestrian crossing westbound:
@@ -858,6 +896,8 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
            exit_intersection_y - (crosswalk_width / 4.0)),
           (exit_lane_name, exit_end_x, exit_end_y - (crosswalk_width / 4.0)))
 
+        green_colors = ("Walk",)
+
       case "pswpse" | "pnwpne":
         # Pedestrian crossing eastbound
         # Eastbound pedestrians walk on the south side of the crosswalk.
@@ -876,12 +916,15 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
            exit_intersection_y + (crosswalk_width / 4.0)),
           (exit_lane_name, exit_end_x, exit_end_y + (crosswalk_width / 4.0)))
         
+        green_colors = ("Walk",)
+
       case _:
         milestones = None
 
     travel_path["milestones"] = milestones
-    travel_path["permissive left turn info"] = permissive_left_info
-    travel_path["permissive right turn info"] = permissive_right_info
+    travel_path["permissive turn info"] = permissive_turn_info
+    travel_path["permissive colors"] = permissive_colors
+    travel_path["green colors"] = green_colors
 
     if (travel_path_valid):
       travel_paths[travel_path_name] = travel_path
@@ -937,13 +980,6 @@ for signal_face in signal_faces_list:
 green_lamps = ("Steady Circular Green", "Steady Left Arrow Green",
                "Steady Left Arrow Green and Steady Circular Green",
                "Steady Right Arrow Green", "Walk")
-permissive_left_lamps = ("Flashing Left Arrow Yellow (lower)",)
-
-permissive_red_lamps = ("Steady Circular Red", "Steady Left Arrow Red",
-                        "Steady Right Arrow Red")
-permissive_yellow_lamps = ("Steady Circular Yellow",
-                           "Steady Left Arrow Yellow",
-                           "Steady Right Arrow Yellow")
   
 # Set up the mapping from the vehicle sensors to the toggles they set.
 
@@ -1227,10 +1263,6 @@ intersection_info["truck length"] = truck_length
 intersection_info["lane width"] = lane_width
 intersection_info["crosswalk width"] = crosswalk_width
 intersection_info["speed limits"] = speed_limits
-intersection_info["green lamps"] = green_lamps
-intersection_info["permissive left lamps"] = permissive_left_lamps
-intersection_info["permissive red lamps"] = permissive_red_lamps
-intersection_info["permissive yellow lamps"] = permissive_yellow_lamps
 intersection_info["intersection speed limit"] = float(intersection_speed_limit)
 
 # In addition to information about the signal faces, we need information
