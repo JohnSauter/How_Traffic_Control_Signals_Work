@@ -610,6 +610,7 @@ state_diagram-eps-converted-to.pdf \
 finite_state_machine.json \
 complex_intersection.json \
 one_way_bridge.json \
+four_corners.json \
 red_state_table.tex \
 green_state_table.tex \
 yellow_state_table.tex \
