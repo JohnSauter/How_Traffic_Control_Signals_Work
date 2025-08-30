@@ -46,7 +46,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_one_way_bridge 0.46 2025-08-24',
+                     version='define_one_way_bridge 0.47 2025-08-30',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -146,6 +146,8 @@ for signal_face_name in signal_face_names:
   timer_durations[timer_full_name] = float ("10.000")
   timer_full_name = signal_face_name + "/" + "Green Limit"
   timer_durations[timer_full_name] = float ("60.0")
+  timer_full_name = signal_face_name + "/" + "Traffic Gone"
+  timer_durations[timer_full_name] = float ("10.0")
   timer_full_name = signal_face_name + "/" + "Yellow Change"
   timer_durations[timer_full_name] = float ("5.000")
   timer_full_name = signal_face_name + "/" + "Traffic Still Present"

@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_traffic_control_signals 0.44 2025-08-16',
+                     version='define_traffic_control_signals 0.47 2025-08-30',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -530,6 +530,8 @@ substate["actions"] = list()
 actions_list = substate["actions"]
 action = ("start timer", "Passage")
 actions_list.append(action)
+action = ("start timer", "Traffic Gone")
+actions_list.append(action)
 action = ("clear toggle", "Traffic Present")
 actions_list.append(action)
 action = ("clear toggle", "Traffic Approaching")
@@ -587,17 +589,13 @@ exit = ( conditional_tests, "Yellow", "Going Red" )
 exits_list.append(exit)
 
 conditional_tests = list()
-conditional_test = ("timer is completed", "Maximum Green")
-conditional_tests.append(conditional_test)
-conditional_test = ("toggle is true", "Clearance Requested")
+conditional_test = ("timer is completed", "Traffic Gone")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Yellow", "Going Red" )
 exits_list.append(exit)
 
 conditional_tests = list()
 conditional_test = ("timer is completed", "Maximum Green")
-conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Clearance Requested")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Green", "Looking for Gap 2" )
 exits_list.append(exit)
@@ -760,6 +758,8 @@ action = ("clear toggle", "Traffic Approaching")
 actions_list.append(action)
 action = ("start timer", "Passage")
 actions_list.append(action)
+action = ("start timer", "Traffic Gone")
+actions_list.append(action)
 
 substate["exits"] = list()
 exits_list = substate["exits"]
@@ -807,6 +807,16 @@ exit = ( conditional_tests, "Yellow", "Going Red" )
 exits_list.append(exit)
 
 conditional_tests = list()
+conditional_test = ("timer is completed", "Traffic Gone")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Preempt Green")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Manual Green")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
 conditional_test = ("toggle is true", "Traffic Approaching")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Green", "Looking for Gap 4" )
@@ -825,6 +835,8 @@ actions_list.append(action)
 action = ("clear toggle", "Traffic Approaching")
 actions_list.append(action)
 action = ("start timer", "Passage")
+actions_list.append(action)
+action = ("start timer", "Traffic Gone")
 actions_list.append(action)
 
 substate["exits"] = list()
@@ -872,6 +884,16 @@ exits_list.append(exit)
 
 conditional_tests = list()
 conditional_test = ("timer is completed", "Green Limit")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Preempt Green")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Manual Green")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("timer is completed", "Traffic Gone")
 conditional_tests.append(conditional_test)
 conditional_test = ("toggle is false", "Preempt Green")
 conditional_tests.append(conditional_test)
@@ -1170,7 +1192,7 @@ timer_names = ( "Left Flashing Yellow Waiting", "Red Limit",
                 "Minimum Left Flashing Yellow", "Maximum Green",
                 "Maximum Green Extra",
                 "Minimum Green", "Passage", "Red Clearance", "Green Limit",
-                "Yellow Change", "Traffic Still Present" )
+                "Yellow Change", "Traffic Gone", "Traffic Still Present" )
 finite_state_machine["timers"] = timer_names
 
 if (do_trace):
