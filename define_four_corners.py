@@ -47,7 +47,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_four_corners 0.47 2025-08-30',
+                     version='define_four_corners 0.48 2025-08-31',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -715,8 +715,12 @@ for signal_face in signal_faces_list:
   
   match signal_face["name"]:
     case "A" | "B" | "C" | "D":
+      lamp_names_map["Steady Circular Red"] = "Steady Circular Red"
+      lamp_names_map["Steady Circular Yellow"] = "Steady Circular Yellow"
       lamp_names_map["Steady Circular Green"] = "Steady Circular Green"
-      
+      lamp_names_map["Flashing Circular Red"] = "Flashing Circular Red"
+      lamp_names_map["Flashing Circular Yellow"] = "Flashing Circular Yellow"
+
   signal_face["lamp names map"] = lamp_names_map
   signal_face["iluminated lamp name"] = ""
   

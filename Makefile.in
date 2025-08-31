@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# File: Makefile.am, author: John Sauter, date: August 23, 2025.
+# File: Makefile.am, author: John Sauter, date: August 31, 2025.
 #
 # Build traffic_control_signals.pdf and animations.
 
@@ -1168,8 +1168,10 @@ RPMs:
 traffic_control_signals.pdf : traffic_control_signals.tex \
 traffic_control_signals.bbl LICENSE legalcode.txt \
 state_diagram.eps red_state_table.tex \
-green_state_table.tex yellow_state_table.tex lamp_map_names_03.tex \
-sensor_map_03.tex idle_table.tex left_turn_table.tex \
+green_state_table.tex yellow_state_table.tex \
+lamp_map_names_01.tex lamp_map_names_02.tex lamp_map_names_03.tex \
+sensor_map_01.tex sensor_map_02.tex sensor_map_03.tex \
+idle_01_table.tex idle_03_table.tex left_turn_table.tex \
 left_turn_delayed_table.tex \
 pedestrian_table.tex pedestrian_and_left_turn_table.tex multiple_table.tex \
 MUTCD_Ped_Signal_-_Hand_with_timer.pdf \
@@ -1201,7 +1203,8 @@ MUTCD_Ped_Signal_-_Hand_with_timer-24.pdf \
 MUTCD_Ped_Signal_-_Hand_with_timer-25.pdf \
 MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf signal_ccc.pdf signal_ccu.pdf signal_rrr.pdf \
-signal_cccl.pdf signal_llll.pdf
+signal_cccl.pdf signal_llll.pdf background_01.png background_02.png \
+background_03.png
 	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
 ${srcdir}/traffic_control_signals.tex
 	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
@@ -1215,7 +1218,9 @@ ${srcdir}/traffic_control_signals.tex
 traffic_control_signals.bbl : traffic_control_signals.tex references.bib \
 LICENSE legalcode.txt state_diagram.eps \
 red_state_table.tex green_state_table.tex yellow_state_table.tex \
-lamp_map_names_03.tex sensor_map_03.tex idle_table.tex left_turn_table.tex \
+lamp_map_names_01.tex lamp_map_names_02.tex lamp_map_names_03.tex \
+sensor_map_01.tex sensor_map_02.tex sensor_map_03.tex \
+idle_01_table.tex idle_03_table.tex left_turn_table.tex \
 left_turn_delayed_table.tex \
 pedestrian_table.tex pedestrian_and_left_turn_table.tex multiple_table.tex \
 MUTCD_Ped_Signal_-_Hand_with_timer.pdf \
@@ -1247,7 +1252,8 @@ MUTCD_Ped_Signal_-_Hand_with_timer-24.pdf \
 MUTCD_Ped_Signal_-_Hand_with_timer-25.pdf \
 MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf signal_ccc.pdf signal_ccu.pdf signal_rrr.pdf \
-signal_cccl.pdf signal_llll.pdf
+signal_cccl.pdf signal_llll.pdf background_01.png background_02.png \
+background_03.png
 	echo " " >${builddir}/traffic_control_signals.bbl
 	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
 ${srcdir}/traffic_control_signals.tex
@@ -1307,42 +1313,54 @@ finite_state_machine.json
 lamp_map_names_01.tex : display_intersection.py one_way_bridge.json
 	python3 ${srcdir}/display_intersection.py \
 --input=${builddir}/one_way_bridge.json \
+--table-label "lamp_map_01" \
 --lamp-map=${builddir}/lamp_map_names_01.tex 
 
 lamp_map_names_02.tex : display_intersection.py four_corners.json
 	python3 ${srcdir}/display_intersection.py \
 --input=${builddir}/four_corners.json \
---lamp-map=${builddir}/lamp_map_names_01.tex 
+--table-label "lamp_map_02" \
+--lamp-map=${builddir}/lamp_map_names_02.tex 
 
 lamp_map_names_03.tex : display_intersection.py complex_intersection.json
 	python3 ${srcdir}/display_intersection.py \
 --input=${builddir}/complex_intersection.json \
+--table-label "lamp_map_03" \
 --lamp-map=${builddir}/lamp_map_names_03.tex 
 
 sensor_map_01.tex : display_intersection.py one_way_bridge.json
 	python3 ${srcdir}/display_intersection.py \
 --input=${builddir}/one_way_bridge.json  \
+--table-label "sensor_map_01" \
 --sensor-map=${builddir}/sensor_map_01.tex 
 
 sensor_map_02.tex : display_intersection.py complex_intersection.json
 	python3 ${srcdir}/display_intersection.py \
 --input=${builddir}/four_corners.json  \
+--table-label "sensor_map_02" \
 --sensor-map=${builddir}/sensor_map_02.tex 
 
 sensor_map_03.tex : display_intersection.py complex_intersection.json
 	python3 ${srcdir}/display_intersection.py \
 --input=${builddir}/complex_intersection.json  \
+--table-label "sensor_map_03" \
 --sensor-map=${builddir}/sensor_map_03.tex 
 
 # Generate the table files which detail the operation of the
 # finite state machines.
-idle_table.tex : simulate_traffic.py complex_intersection.json
+idle_01_table.tex : simulate_traffic.py one_way_bridge.json
+	python3 ${srcdir}/simulate_traffic.py \
+--intersection ${builddir}/one_way_bridge.json \
+--table-level 4 --table-file ${builddir}/idle_01_table.tex --duration 200  \
+--table-caption "Power On to Idle State, example 01"
+
+idle_03_table.tex : simulate_traffic.py complex_intersection.json
 	python3 ${srcdir}/simulate_traffic.py \
 --intersection ${builddir}/complex_intersection.json \
---table-level 4 --table-file ${builddir}/idle_table.tex --duration 200  \
---table-caption "Power On to Idle State"
+--table-level 4 --table-file ${builddir}/idle_03_table.tex --duration 200  \
+--table-caption "Power On to Idle State, example 03"
 
-left_turn_table.tex : simulate_traffic.py complex_intersection.json \
+eft_turn_table.tex : simulate_traffic.py complex_intersection.json \
 left_turn_script.txt
 	python3 ${srcdir}/simulate_traffic.py \
 --intersection ${builddir}/complex_intersection.json \

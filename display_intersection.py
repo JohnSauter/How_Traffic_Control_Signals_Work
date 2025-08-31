@@ -45,7 +45,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.39 2025-07-06',
+                     version='traffic_control_signals 0.48 2025-08-31',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -56,6 +56,8 @@ parser.add_argument ('--lamp-map-file', metavar='lamp_map_file',
                      help='write the lamp map as a LaTex table')
 parser.add_argument ('--sensor-map-file', metavar='sensor_map_file',
                      help='write the sensor map as a LaTex table')
+parser.add_argument ('--table-label', metavar='table_label',
+                     help='label the table with this label')
 parser.add_argument ('--verbose', type=int, metavar='verbosity_level',
                      help='control the amount of output from the program: ' +
                      '1 is normal, 0 suppresses summary messages')
@@ -65,6 +67,8 @@ trace_file_name = ""
 do_input = False
 do_lamp_map_output = False
 do_sensor_map_output = False
+have_table_label = False
+table_label = None
 verbosity_level = 1
 error_counter = 0
 
@@ -102,6 +106,10 @@ if (arguments ['sensor_map_file'] != None):
   sensor_map_file_name = arguments ['sensor_map_file']
   sensor_map_file_name = pathlib.Path(sensor_map_file_name)
 
+if (arguments ['table_label'] != None):
+  have_table_label = True
+  table_label = arguments ['table_label']
+
 if (arguments ['verbose'] != None):
   verbosity_level = int(arguments ['verbose'])
 
@@ -115,7 +123,10 @@ signal_faces_list = intersection_info ["signal faces"]
 if (do_lamp_map_output):
   lamp_map_file = open (lamp_map_file_name, 'w')
   lamp_map_file.write ("\\begin{longtable}{P{1.0cm} | P{5cm} | P{5cm}}\n")
-  lamp_map_file.write ("  \\caption{Lamp Wiring}\\label{lamp_wiring} \\\\\n")
+  lamp_map_file.write ("  \\caption{Lamp Wiring}")
+  if (have_table_label):
+    lamp_map_file.write ("\\label{" + table_label + "}")
+  lamp_map_file.write ("\\\\\n")
   lamp_map_file.write ("  Signal Face & Signal Face Output Name & " +
                        "Actual Lamp Name \\endfirsthead\n")
   lamp_map_file.write ("  \\caption{Lamp Wiring continued} \\\\\n")
@@ -136,7 +147,10 @@ if (do_lamp_map_output):
 if (do_sensor_map_output):
   sensor_file = open (sensor_map_file_name, 'w')
   sensor_file.write ("\\begin{longtable}{P{1.0cm} | P{4.0cm} | P{6.0cm}}\n")
-  sensor_file.write ("  \\caption{Sensor Wiring} \\\\\n")
+  sensor_file.write ("  \\caption{Sensor Wiring}")
+  if (have_table_label):
+    sensor_file.write ("\\label{" + table_label + "}")
+  sensor_file.write ("\\\\\n")
   sensor_file.write ("  Signal Face & Sensor & " +
                        "Toggles \\endfirsthead\n")
   sensor_file.write ("  \\caption{Sensor Wiring continued} \\\\\n")
