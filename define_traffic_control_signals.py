@@ -1183,7 +1183,7 @@ toggle_names = ( "Clearance Requested", "Cleared",
                  "Green Request Granted",
                  "Manual Green", "Manual Red",
                  "Partial Conflicting Paths are Clear", "Preempt Green",
-                 "Preempt Red", "Request Clearance", "Request Green Granted",
+                 "Preempt Red", "Request Clearance",
                  "Request Green", "Request Partial Clearance",
                  "Traffic Approaching", "Traffic Flowing", "Traffic Present" )
 finite_state_machine["toggles"] = toggle_names

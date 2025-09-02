@@ -91,6 +91,7 @@ define_traffic_control_signals.py \
 display_traffic_control_signals.py \
 define_complex_intersection.py \
 define_one_way_bridge.py \
+define_four_corners.py \
 display_intersection.py \
 simulate_traffic.py \
 draw_background.py \
@@ -340,7 +341,7 @@ idle_03_table.tex : simulate_traffic.py complex_intersection.json
 --table-level 4 --table-file ${builddir}/idle_03_table.tex --duration 200  \
 --table-caption "Power On to Idle State, example 03"
 
-eft_turn_table.tex : simulate_traffic.py complex_intersection.json \
+left_turn_table.tex : simulate_traffic.py complex_intersection.json \
 left_turn_script.txt
 	python3 ${srcdir}/simulate_traffic.py \
 --intersection ${builddir}/complex_intersection.json \
