@@ -494,7 +494,7 @@ dist_doc_DATA = \
 EXTRA_DIST = signal_ccc.svg signal_ccu.svg signal_rrr.svg \
 	signal_cccl.svg signal_llll.svg fix_files.sh autogen.sh \
 	left_turn_script.txt left_turn_delayed_script.txt \
-	legalcode.txt mutcd11thedition.pdf multiple_script.txt \
+	legalcode.txt multiple_script.txt \
 	MUTCD_Ped_Signal_-_Hand_with_timer.svg \
 	MUTCD_Ped_Signal_-_Hand_with_timer-00.svg \
 	MUTCD_Ped_Signal_-_Hand_with_timer-01.svg \
@@ -524,8 +524,7 @@ EXTRA_DIST = signal_ccc.svg signal_ccu.svg signal_rrr.svg \
 	MUTCD_Ped_Signal_-_Hand_with_timer-25.svg \
 	MUTCD_Ped_Signal_-_Steady_hand.svg MUTCD_Ped_Signal_-_Walk.svg \
 	pedestrian_and_left_turn_script.txt pedestrian_script.txt \
-	references.bib Signal_Timing_Manual_Second_Edition_22097.pdf \
-	define_traffic_control_signals.py \
+	references.bib define_traffic_control_signals.py \
 	display_traffic_control_signals.py \
 	define_complex_intersection.py define_one_way_bridge.py \
 	define_four_corners.py display_intersection.py \

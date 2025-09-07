@@ -52,7 +52,7 @@ signal_llll.svg \
 fix_files.sh autogen.sh \
 left_turn_script.txt \
 left_turn_delayed_script.txt \
-legalcode.txt mutcd11thedition.pdf \
+legalcode.txt \
 multiple_script.txt \
 MUTCD_Ped_Signal_-_Hand_with_timer.svg \
 MUTCD_Ped_Signal_-_Hand_with_timer-00.svg \
@@ -86,7 +86,6 @@ MUTCD_Ped_Signal_-_Walk.svg \
 pedestrian_and_left_turn_script.txt \
 pedestrian_script.txt \
 references.bib \
-Signal_Timing_Manual_Second_Edition_22097.pdf \
 define_traffic_control_signals.py \
 display_traffic_control_signals.py \
 define_complex_intersection.py \

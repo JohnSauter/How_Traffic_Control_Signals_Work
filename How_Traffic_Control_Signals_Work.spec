@@ -1,5 +1,5 @@
 Name:           How_Traffic_Control_Signals_Work
-Version:        0.48
+Version:        0.49
 Release:        1%{?dist}
 Summary:        Explain traffic control signals
 
@@ -11,11 +11,12 @@ BuildArch: noarch
 
 BuildRequires:  gcc
 BuildRequires:  make
-BuildRequires:  python3 >= 3.10
+BuildRequires:  python3 >= 3.13
 BuildRequires:  git
 BuildRequires: graphviz
 BuildRequires: inkscape
 BuildRequires: python3-shapely
+BuildRequires: python3-opencv
 BuildRequires: texlive-scheme-full
 BuildRequires: sil-andika-fonts
 BuildRequires: sil-charis-fonts
@@ -59,6 +60,8 @@ make check VERBOSE=1
 %license COPYING
 
 %changelog
+ * Tue Sep 02 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.49-1 fix the spec file and Makefile.rm file
  * Sun Aug 31 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.48-1 start rewriting the document
  * Sat Aug 30 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
