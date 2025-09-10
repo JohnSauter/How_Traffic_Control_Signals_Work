@@ -1,5 +1,5 @@
 % File: traffic_control_signals.tex, author: John Sauter,
-% date: September 9, 2025.
+% date: September 10, 2025.
 
 % Copyright © 2025 by John Sauter.
 % Licensed under the Creative Commons Attribution-ShareAlike 4.0 International
@@ -30,6 +30,7 @@
 \usepackage{relsize}
 \usepackage{hyperxmp}
 %\usepackage{flexisym}
+\usepackage{media9}
 \usepackage{tikz}
 \usetikzlibrary {babel}
 
@@ -196,12 +197,12 @@
   pdfcontacturl={https://www.systemeyescomputerstore.com},
   pdfcopyright={Copyright {\copyright} 2025 by John Sauter},
   pdfurl={https://www.systemeyescomputerstore.com/traffic\%5Fsignals/traffic\%5Fsignals.pdf},
-  pdfdate={2025-09-09},
+  pdfdate={2025-09-10},
   pdflicenseurl={https://creativecommons.org/licenses/by-sa/4.0},
   pdfmetalang={en-US}
 }
 
-\date{2025-09-09}
+\date{2025-09-10}
 \maketitle
 \begin{abstract}
   Traffic control signals allow vehicles and pedestrians to move through
@@ -249,7 +250,7 @@ or making a U-turn and exit on lane 1.
 
 We need to examine the intersection to see where, when traffic is moving
 in one way, it must not be permitted to move in another way.  We call each
-way that venicles can move a travel path, and each travel path is named
+way that vehicles can move a travel path, and each travel path is named
 for the entering and exiting lane.  Here we have travel paths A1, A2, B1,
 and B2.  The two U-turns, A2 and B1, do not interfere with each other, but
 all the others do since they place two vehicles in the same place at the
@@ -481,6 +482,35 @@ toggle in either signal face, and sets the Green Request Granted
 toggle.  Other system programs mediate the other stages of moving
 information between the signal faces.  These system programs become
 more complex when the intersection is more complex.
+
+\subsection{Illustrations}
+
+\subsubsection{Single Car}
+
+Consider a single car approaching the bridge from the west.
+
+\noindent\includemedia[width=\textwidth,
+  addresource=bridge_one_car_animation_01.mkv,
+  activate=pageopen,
+  passcontext,
+  flashvars={source=bridge_one_car_animation_01.mkv &loop=true}
+]{{\includegraphics[width=\textwidth]{background_01}}}{VPlayer.swf}
+
+In the above animation, the car coming from the west activates the Traffic
+Approaching sensor for lane A.  The signal face for lane B has been red
+for some time, so signal face A immediately turns green.  The car passes
+across the bridge without stopping after which signal face A turns red.
+
+\subsubsection{Two Cars}
+
+If two cars approach the bridge at the same time one of them must stop.
+
+\noindent\includemedia[width=\textwidth,
+  addresource=bridge_two_cars_animation_01.mkv,
+  activate=pageopen,
+  passcontext,
+  flashvars={source=bridge_two_cars_animation_01.mkv &loop=true}
+]{{\includegraphics[width=\textwidth]{background_01}}}{VPlayer.swf}
 
 \section{Example 02: four-way intersection}
 
