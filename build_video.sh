@@ -6,12 +6,11 @@
 
 animation_file="${1}"
 animation_temp="${2}"
-frame_rate="${3}"
-
 start_time="200"
 duration="100"
 batch_size="50"
 batch_count="60"
+frame_rate=30
 
 # UHD, 30 frames per second, 10 bits per color, yuv420p, x265.
 rm -f ${animation_file}

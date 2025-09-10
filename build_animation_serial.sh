@@ -1,6 +1,5 @@
 #!/bin/bash
-# file: build_animation_serial.sh, author: John Sauter,
-# date: September 10, 2025.
+# file: build_animation_serial.sh, author: John Sauter, date: August 17, 2025.
 
 # Construct an animation from an event log.
 
@@ -9,13 +8,15 @@ last_event_time_file=${2}
 animation_temp="${3}"
 intersection_file="${4}"
 background_image="${5}"
-frame_rate="${6}"
 
 last_event_time=$(<${last_event_time_file})
 echo "last event time " ${last_event_time}
 
 # Start time is in seconds.
 start_time="200"
+
+# Frame rate is the number of frames per second.
+frame_rate="30"
 
 rm -rf ${animation_temp}/
 mkdir ${animation_temp}
