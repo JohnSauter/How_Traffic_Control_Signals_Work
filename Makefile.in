@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# File: Makefile.am, author: John Sauter, date: August 31, 2025.
+# File: Makefile.am, author: John Sauter, date: September 9, 2025.
 #
 # Build traffic_control_signals.pdf and animations.
 
@@ -571,6 +571,7 @@ green_state_table.tex \
 yellow_state_table.tex \
 lamp_map_names_*.tex\
 sensor_map_*.tex \
+timer_durations_*.tex \
 MUTCD_Ped_Signal_-_Hand_with_timer*.pdf \
 MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf \
@@ -1171,6 +1172,7 @@ state_diagram.eps red_state_table.tex \
 green_state_table.tex yellow_state_table.tex \
 lamp_map_names_01.tex lamp_map_names_02.tex lamp_map_names_03.tex \
 sensor_map_01.tex sensor_map_02.tex sensor_map_03.tex \
+timer_durations_01.tex timer_durations_02.tex timer_durations_03.tex \
 idle_01_table.tex idle_03_table.tex left_turn_table.tex \
 left_turn_delayed_table.tex \
 pedestrian_table.tex pedestrian_and_left_turn_table.tex multiple_table.tex \
@@ -1220,6 +1222,7 @@ LICENSE legalcode.txt state_diagram.eps \
 red_state_table.tex green_state_table.tex yellow_state_table.tex \
 lamp_map_names_01.tex lamp_map_names_02.tex lamp_map_names_03.tex \
 sensor_map_01.tex sensor_map_02.tex sensor_map_03.tex \
+timer_durations_01.tex timer_durations_02.tex timer_durations_03.tex \
 idle_01_table.tex idle_03_table.tex left_turn_table.tex \
 left_turn_delayed_table.tex \
 pedestrian_table.tex pedestrian_and_left_turn_table.tex multiple_table.tex \
@@ -1312,39 +1315,57 @@ finite_state_machine.json
 
 lamp_map_names_01.tex : display_intersection.py one_way_bridge.json
 	python3 ${srcdir}/display_intersection.py \
---input=${builddir}/one_way_bridge.json \
+${builddir}/one_way_bridge.json \
 --table-label "lamp_map_01" \
 --lamp-map=${builddir}/lamp_map_names_01.tex 
 
 lamp_map_names_02.tex : display_intersection.py four_corners.json
 	python3 ${srcdir}/display_intersection.py \
---input=${builddir}/four_corners.json \
+${builddir}/four_corners.json \
 --table-label "lamp_map_02" \
 --lamp-map=${builddir}/lamp_map_names_02.tex 
 
 lamp_map_names_03.tex : display_intersection.py complex_intersection.json
 	python3 ${srcdir}/display_intersection.py \
---input=${builddir}/complex_intersection.json \
+${builddir}/complex_intersection.json \
 --table-label "lamp_map_03" \
 --lamp-map=${builddir}/lamp_map_names_03.tex 
 
 sensor_map_01.tex : display_intersection.py one_way_bridge.json
 	python3 ${srcdir}/display_intersection.py \
---input=${builddir}/one_way_bridge.json  \
+${builddir}/one_way_bridge.json  \
 --table-label "sensor_map_01" \
 --sensor-map=${builddir}/sensor_map_01.tex 
 
-sensor_map_02.tex : display_intersection.py complex_intersection.json
+sensor_map_02.tex : display_intersection.py four_corners.json
 	python3 ${srcdir}/display_intersection.py \
---input=${builddir}/four_corners.json  \
+${builddir}/four_corners.json  \
 --table-label "sensor_map_02" \
 --sensor-map=${builddir}/sensor_map_02.tex 
 
 sensor_map_03.tex : display_intersection.py complex_intersection.json
 	python3 ${srcdir}/display_intersection.py \
---input=${builddir}/complex_intersection.json  \
+${builddir}/complex_intersection.json  \
 --table-label "sensor_map_03" \
 --sensor-map=${builddir}/sensor_map_03.tex 
+
+timer_durations_01.tex : display_intersection.py one_way_bridge.json
+	python3 ${srcdir}/display_intersection.py \
+${builddir}/one_way_bridge.json  \
+--table-label "timer_duratons_01" --only-important \
+--timer-durations=${builddir}/timer_durations_01.tex 
+
+timer_durations_02.tex : display_intersection.py four_corners.json
+	python3 ${srcdir}/display_intersection.py \
+${builddir}/four_corners.json \
+--table-label "timer_durations_02" --only-important \
+--timer-durations=${builddir}/timer_durations_02.tex 
+
+timer_durations_03.tex : display_intersection.py complex_intersection.json
+	python3 ${srcdir}/display_intersection.py \
+${builddir}/complex_intersection.json  \
+--table-label "timer_durations_03" \
+--timer-durations=${builddir}/timer_durations_03.tex 
 
 # Generate the table files which detail the operation of the
 # finite state machines.

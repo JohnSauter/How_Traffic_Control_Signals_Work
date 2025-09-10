@@ -47,7 +47,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_four_corners 0.48 2025-08-31',
+                     version='define_four_corners 0.50 2025-09-09',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -118,7 +118,7 @@ if (do_input):
     finite_state_machine = json.load (input_file)
     input_file.close()
     toggle_names = finite_state_machine["toggles"]
-    timer_names = finite_state_machine["timers"]
+    timer_names = finite_state_machine["timer names"]
 else:
     finite_state_machine = dict()
     toggle_names = list()
@@ -153,6 +153,12 @@ for signal_face_name in ("A", "B", "C", "D"):
   timer_durations[timer_full_name] = float ("5.000")
   timer_full_name = signal_face_name + "/" + "Traffic Still Present"
   timer_durations[timer_full_name] = float ("10.000")
+  timer_full_name = signal_face_name + "/" + "Traffic Still Present"
+  timer_durations[timer_full_name] = float ("10.000")
+  timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Waiting"
+  timer_durations[timer_full_name] = float ("inf")
+  timer_full_name = signal_face_name + "/" + "Minimum Left Flashing Yellow"
+  timer_durations[timer_full_name] = float ("inf")
 
 signal_faces_list = list()
 signal_faces_dict = dict()
@@ -176,9 +182,19 @@ for signal_face_name in signal_face_names:
     timer["state"] = "off"
     timer["signal face name"] = signal_face_name
     timer_full_name = signal_face_name + "/" + timer_name
-    if timer_full_name in timer_durations:
-      timer["duration"] = timer_durations[timer_full_name]
+    timer["duration"] = timer_durations[timer_full_name]
+    match timer_name:
+      case "Red Clearance" | "Yellow Change" | "Minimum Green" | \
+           "Passage" | "Maximum Green" | "Maximum Green Extra" | \
+           "Traffic Gone" | "Green Limit" | "Traffic Still Present":
+        important = True
+      case _:
+        important = False
+
+    timer["important"] = important
+    
     timers_list.append(timer)
+    
   signal_face["timers"] = timers_list
 
   signal_faces_list.append(signal_face)

@@ -46,7 +46,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_one_way_bridge 0.47 2025-08-30',
+                     version='define_one_way_bridge 0.50 2025-09-09',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -117,7 +117,7 @@ if (do_input):
     finite_state_machine = json.load (input_file)
     input_file.close()
     toggle_names = finite_state_machine["toggles"]
-    timer_names = finite_state_machine["timers"]
+    timer_names = finite_state_machine["timer names"]
 else:
     finite_state_machine = dict()
     toggle_names = list()
@@ -179,19 +179,26 @@ for signal_face_name in signal_face_names:
     timer["state"] = "off"
     timer["signal face name"] = signal_face_name
     timer_full_name = signal_face_name + "/" + timer_name
-    if timer_full_name in timer_durations:
-      timer["duration"] = timer_durations[timer_full_name]
+    timer["duration"] = timer_durations[timer_full_name]
+
+    match timer_name:
+      case "Red Clearance" | "Yellow Change" | "Minimum Green" | \
+           "Passage" | "Maximum Green" | "Maximum Green Extra" | \
+           "Traffic Gone" | "Green Limit":
+        important = True
+        
+      case _:
+        important = False
+
+    timer["important"] = important
+    
     timers_list.append(timer)
+
   signal_face["timers"] = timers_list
 
   signal_faces_list.append(signal_face)
   signal_faces_dict[signal_face_name] = signal_face
-
-if (do_trace):
-  trace_file.write ("Timer durations:\n")
-  pprint.pprint (timer_durations, trace_file)
-  trace_file.write ("\n")
-  
+      
 # Construct the conflict and partial conflict tables.
   
 for signal_face in signal_faces_list:
@@ -595,10 +602,6 @@ for travel_path_name in travel_paths:
     speed_limit_ident = travel_path_name + " / " + lane_name
     speed_limits [speed_limit_ident] = float(speed_limit)
         
-if (do_trace):
-  trace_file.write ("Starting Signal Faces:\n")
-  pprint.pprint (signal_faces_list, trace_file)
-
 # Gather the information about the intersection, including
 # the finite state machine template for the signal faces
 # to keep everything in a single file.
@@ -631,6 +634,10 @@ for lane_name in lane_names:
   lanes_info [lane_name] = lane_info
 
 intersection_info ["lanes info"] = lanes_info
+
+if (do_trace):
+  trace_file.write ("Intersection info::\n")
+  pprint.pprint (intersection_info, trace_file)
 
 # Output the information about the intersection for the simulator.
 if (do_output):

@@ -45,30 +45,36 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.48 2025-08-31',
+                     version='traffic_control_signals 0.50 2025-09-09',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
-parser.add_argument ('--input-file', metavar='input_file',
-                     help='read the intersection descrpption from this ' +
+parser.add_argument ('intersection-file', metavar='intersection_file',
+                     help='read the intersection description from this ' +
                      'JSON file.')
 parser.add_argument ('--lamp-map-file', metavar='lamp_map_file',
                      help='write the lamp map as a LaTex table')
 parser.add_argument ('--sensor-map-file', metavar='sensor_map_file',
                      help='write the sensor map as a LaTex table')
+parser.add_argument ('--timer-durations-file', metavar='timer_durations_file',
+                     help='write the timer durations as a LaTex table')
 parser.add_argument ('--table-label', metavar='table_label',
                      help='label the table with this label')
+parser.add_argument ('--only-important', action="store_true",
+                     help='only output important timers')
 parser.add_argument ('--verbose', type=int, metavar='verbosity_level',
                      help='control the amount of output from the program: ' +
                      '1 is normal, 0 suppresses summary messages')
 
 do_trace = False
 trace_file_name = ""
-do_input = False
+do_intersection = False
 do_lamp_map_output = False
 do_sensor_map_output = False
+do_timer_durations_output = False
 have_table_label = False
 table_label = None
+only_important = False
 verbosity_level = 1
 error_counter = 0
 
@@ -91,10 +97,10 @@ if (arguments ['trace_file'] != None):
   trace_file_name = pathlib.Path(trace_file_name)
   trace_file = open (trace_file_name, 'w')
 
-if (arguments ['input_file'] != None):
-  do_input = True
-  input_file_name = arguments ['input_file']
-  input_file_name = pathlib.Path(input_file_name)
+if (arguments ['intersection-file'] != None):
+  do_intersection = True
+  intersection_file_name = arguments ['intersection-file']
+  intersection_file_name = pathlib.Path(intersection_file_name)
 
 if (arguments ['lamp_map_file'] != None):
   do_lamp_map_output = True
@@ -106,19 +112,29 @@ if (arguments ['sensor_map_file'] != None):
   sensor_map_file_name = arguments ['sensor_map_file']
   sensor_map_file_name = pathlib.Path(sensor_map_file_name)
 
+if (arguments ['timer_durations_file'] != None):
+  do_timer_durations_output = True
+  timer_durations_file_name = arguments ['timer_durations_file']
+  timer_durations_file_name = pathlib.Path(timer_durations_file_name)
+
 if (arguments ['table_label'] != None):
   have_table_label = True
   table_label = arguments ['table_label']
 
+if (arguments ['only_important'] != None):
+  only_important = arguments ['only_important']
+  
 if (arguments ['verbose'] != None):
   verbosity_level = int(arguments ['verbose'])
 
-if (do_input):
-  input_file = open (input_file_name, 'r')
-  intersection_info = json.load (input_file)
-  input_file.close()
+if (do_intersection):
+  intersection_file = open (intersection_file_name, 'r')
+  intersection_info = json.load (intersection_file)
+  intersection_file.close()
 
 signal_faces_list = intersection_info ["signal faces"]
+finite_state_machine = intersection_info ["finite state machine"]
+timer_names = finite_state_machine ["timer names"]
 
 if (do_lamp_map_output):
   lamp_map_file = open (lamp_map_file_name, 'w')
@@ -174,6 +190,45 @@ if (do_sensor_map_output):
 
   sensor_file.write ("\\hline \\end{longtable}\n")
   sensor_file.close()
+  
+if (do_timer_durations_output):
+  timer_durations_file = open (timer_durations_file_name, 'w')
+  timer_durations_file.write (
+    "\\begin{longtable}{c | c | c}" + "\n")
+  timer_durations_file.write ("  \\caption{Timer Durations}")
+  if (have_table_label):
+    timer_durations_file.write ("\\label{" + table_label + "}")
+  timer_durations_file.write ("\\\\\n")
+  timer_durations_file.write ("  Signal Face & Timer & Duration " +
+                              "\\endfirsthead\n")
+  timer_durations_file.write ("  \\caption{Timer Durations continued} \\\\\n")
+  timer_durations_file.write ("  Signal Face & Timer & Duration \\endhead\n")
+  
+  for signal_face in signal_faces_list:
+    timers_list = signal_face["timers"]
+    for timer in timers_list:
+      timer_name = timer["name"]
+
+      do_write = True
+      value_is_finite = True
+      if (only_important):
+        do_write = timer["important"]
+      if (timer["duration"] == float("inf")):
+        value_is_finite = False
+      
+      if (do_write):
+        timer_durations_file.write ("   \\hline " + signal_face["name"] +
+                                    " & " + timer_name + " & ")
+        if (value_is_finite):
+          timer_durations_file.write ("\\tablenum{" + str(timer["duration"]) +
+                                      "}")
+        else:
+          timer_durations_file.write ("unlimited")
+          
+        timer_durations_file.write ("\\\\\n")
+
+  timer_durations_file.write ("\\hline \\end{longtable}\n")
+  timer_durations_file.close()
   
 if (do_trace):
   trace_file.write ("Starting Signal Faces:\n")

@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_traffic_control_signals 0.48 2025-08-31',
+                     version='define_traffic_control_signals 0.50 2025-09-09',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -1188,12 +1188,14 @@ toggle_names = ( "Clearance Requested", "Cleared",
                  "Traffic Approaching", "Traffic Flowing", "Traffic Present" )
 finite_state_machine["toggles"] = toggle_names
 
-timer_names = ( "Left Flashing Yellow Waiting", "Red Limit",
-                "Minimum Left Flashing Yellow", "Maximum Green",
-                "Maximum Green Extra",
-                "Minimum Green", "Passage", "Red Clearance", "Green Limit",
-                "Yellow Change", "Traffic Gone", "Traffic Still Present" )
-finite_state_machine["timers"] = timer_names
+timer_names = ( "Red Clearance", "Yellow Change", "Minimum Green",
+                "Maximum Green Extra", "Traffic Gone", 
+                "Passage", "Maximum Green",
+                "Green Limit", "Traffic Still Present",
+                "Left Flashing Yellow Waiting", 
+                "Minimum Left Flashing Yellow", "Red Limit")
+
+finite_state_machine["timer names"] = timer_names
 
 if (do_trace):
   trace_file.write ("Finite State Machine template:\n")
