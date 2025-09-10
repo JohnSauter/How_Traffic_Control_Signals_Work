@@ -1,5 +1,5 @@
 Name:           How_Traffic_Control_Signals_Work
-Version:        0.50
+Version:        0.51
 Release:        1%{?dist}
 Summary:        Explain traffic control signals
 
@@ -17,6 +17,7 @@ BuildRequires: graphviz
 BuildRequires: inkscape
 BuildRequires: python3-shapely
 BuildRequires: python3-opencv
+BuildRequires: python3-img2pdf
 BuildRequires: texlive-scheme-full
 BuildRequires: sil-andika-fonts
 BuildRequires: sil-charis-fonts
@@ -60,6 +61,8 @@ make check VERBOSE=1
 %license COPYING
 
 %changelog
+ * Wed Sep 10 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.51-1 start work on animations in the documentation
  * Tue Sep 09 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.50-1 add timer values to the documentation
  * Tue Sep 02 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>

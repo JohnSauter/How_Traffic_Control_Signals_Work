@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# File: Makefile.am, author: John Sauter, date: September 9, 2025.
+# File: Makefile.am, author: John Sauter, date: September 10, 2025.
 #
 # Build traffic_control_signals.pdf and animations.
 
@@ -594,6 +594,8 @@ background_*.png \
 last_event_time_*_animation.txt \
 check_output.txt \
 verify_files.sh \
+files.txt \
+frames_of_*_animation.txt \
 *trace.txt 
 
 all: all-am
@@ -1206,15 +1208,16 @@ MUTCD_Ped_Signal_-_Hand_with_timer-25.pdf \
 MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf signal_ccc.pdf signal_ccu.pdf signal_rrr.pdf \
 signal_cccl.pdf signal_llll.pdf background_01.png background_02.png \
-background_03.png
-	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
-${srcdir}/traffic_control_signals.tex
-	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
-${srcdir}/traffic_control_signals.tex
-	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
-${srcdir}/traffic_control_signals.tex
-	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
-${srcdir}/traffic_control_signals.tex
+background_03.png \
+bridge_one_car_animation_01.mkv bridge_two_cars_animation_01.mkv
+	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex \
+--draftmode -draftmode -shell-escape ${srcdir}/traffic_control_signals.tex
+	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex \
+--draftmode -draftmode -shell-escape ${srcdir}/traffic_control_signals.tex
+	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex \
+--draftmode -draftmode -shell-escape ${srcdir}/traffic_control_signals.tex
+	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex \
+-shell-escape "${srcdir}/traffic_control_signals.tex"
 
 # Build the bbl file by running LaTeX without it, then running bibtex.
 traffic_control_signals.bbl : traffic_control_signals.tex references.bib \
@@ -1256,12 +1259,13 @@ MUTCD_Ped_Signal_-_Hand_with_timer-25.pdf \
 MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf signal_ccc.pdf signal_ccu.pdf signal_rrr.pdf \
 signal_cccl.pdf signal_llll.pdf background_01.png background_02.png \
-background_03.png
-	echo " " >${builddir}/traffic_control_signals.bbl
-	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex -shell-escape \
-${srcdir}/traffic_control_signals.tex
+background_03.png \
+bridge_one_car_animation_01.mkv bridge_two_cars_animation_01.mkv
+	echo " " >"${builddir}/traffic_control_signals.bbl"
+	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex \
+--draftmode -draftmode -shell-escape "${srcdir}/traffic_control_signals.tex"
 	BIBINPUTS=${TEXINPUTS}:${builddir}:${srcdir} bibtex \
-${builddir}/traffic_control_signals.aux
+"${builddir}/traffic_control_signals.aux"
 
 # Build a chart of states of the finite state machines
 state_diagram.eps : state_diagram.txt
@@ -1495,8 +1499,8 @@ background_03.png : draw_background.py complex_intersection.json
 --intersection ${builddir}/complex_intersection.json \
 --background ${builddir}/background_03.png
 
-# Render the animation as individual images.  We use the PDF file
-# as a marker to say that the frames have been generated.
+# Render the animation as individual images.
+
 # One-way bridge example.
 %_animation_01.pdf : %_animation_01.csv \
 background_01.png \
@@ -1540,12 +1544,15 @@ car-38800411-right.png \
 car-38800411-up.png truck-51893967-up.png truck-51893967-right.png \
 man_walking_right.png
 	bash build_animation.sh "$<" \
-"last_event_time_$(*F)_animation.txt" "animation_$(*F)_temp" \
-"${builddir}/one_way_bridge.json" "${builddir}/background_01.png"
-	touch "$@"
+"${builddir}/last_event_time_$(*F)_animation.txt" \
+"${builddir}/animation_$(*F)_temp" \
+"${builddir}/one_way_bridge.json" "${builddir}/background_01.png" 5
+	find "${builddir}/animation_$(*F)_temp/" -type f -print0 | sort -z \
+> "${builddir}/frames_of_$(*F)_animation.txt"
+	img2pdf -o "$@" --from-file "${builddir}/frames_of_$(*F)_animation.txt"
 
 %_animation_01.mkv : %_animation_01.pdf
-	bash build_video.sh "$@" "${builddir}/animation_$(*F)_temp"
+	bash build_video.sh "$@" "${builddir}/animation_$(*F)_temp" 5
 
 # Four corners example.
 %_animation_02.pdf : %_animation_02.csv \
@@ -1590,12 +1597,15 @@ car-38800411-right.png \
 car-38800411-up.png truck-51893967-up.png truck-51893967-right.png \
 man_walking_right.png
 	bash build_animation.sh "$<" \
-"last_event_time_$(*F)_animation.txt" "animation_$(*F)_temp" \
-"${builddir}/four_corners.json" "${builddir}/background_02.png"
-	touch "$@"
+"${builddir}/last_event_time_$(*F)_animation.txt" \
+"${builddir}/animation_$(*F)_temp" \
+"${builddir}/one_way_bridge.json" "${builddir}/background_01.png" 5
+	find "${builddir}/animation_$(*F)_temp/" -type f -print0 | sort -z \
+> "${builddir}/frames_of_$(*F)_animation.txt"
+	img2pdf -o "$@" --from-file "${builddir}/frames_of_$(*F)_animation.txt"
 
 %_animation_02.mkv : %_animation_02.pdf
-	bash build_video.sh "$@" "${builddir}/animation_$(*F)_temp"
+	bash build_video.sh "$@" "${builddir}/animation_$(*F)_temp" 5
 
 # Complex intersection example
 %_animation_03.pdf : %_animation_03.csv \
@@ -1640,12 +1650,15 @@ car-38800411-right.png \
 car-38800411-up.png truck-51893967-up.png truck-51893967-right.png \
 man_walking_right.png
 	bash build_animation.sh "$<" \
-"last_event_time_$(*F)_animation.txt" "animation_$(*F)_temp" \
-"${builddir}/complex_intersection.json" "${builddir}/background_03.png"
-	touch "$@"
+"${builddir}/last_event_time_$(*F)_animation.txt" \
+"${builddir}/animation_$(*F)_temp" \
+"${builddir}/one_way_bridge.json" "${builddir}/background_01.png" 5
+	find "${builddir}/animation_$(*F)_temp/" -type f -print0 | sort -z \
+> "${builddir}/frames_of_$(*F)_animation.txt"
+	img2pdf -o "$@" --from-file "${builddir}/frames_of_$(*F)_animation.txt"
 
 %_animation_03.mkv : %_animation_03.pdf
-	bash build_video.sh "$@" "${builddir}/animation_$(*F)_temp"
+	bash build_video.sh "$@" "${builddir}/animation_$(*F)_temp" 5
 
 clean-local: clean-local-check
 .PHONEY: clean-local-check
