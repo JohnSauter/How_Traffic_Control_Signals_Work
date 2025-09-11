@@ -90,6 +90,8 @@ define_traffic_control_signals.py \
 display_traffic_control_signals.py \
 define_complex_intersection.py \
 define_one_way_bridge.py \
+bridge_one_car_script.txt \
+bridge_two_cars_script.txt \
 define_four_corners.py \
 display_intersection.py \
 simulate_traffic.py \
@@ -451,19 +453,19 @@ left_turn_script.txt
 %_animation_01.csv : %_script.txt simulate_traffic.py one_way_bridge.json
 	python3 ${srcdir}/simulate_traffic.py \
 --intersection ${builddir}/one_way_bridge.json \
---script "${srcdir}/$<" --duration 1200 --events-file "$@" \
+--script "$<" --duration 1200 --events-file "$@" \
 --last-event-time "${builddir}/last_event_time_$(*F)_animation.txt"
 
 %_animation_02.csv : %_script.txt simulate_traffic.py four_corners.json
 	python3 ${srcdir}/simulate_traffic.py \
 --intersection ${builddir}/four_corners.json \
---script "${srcdir}/$<" --duration 1200 --events-file "$@" \
+--script "$<" --duration 1200 --events-file "$@" \
 --last-event-time "${builddir}/last_event_time_$(*F)_animation.txt"
 
 %_animation_03.csv : %_script.txt simulate_traffic.py complex_intersection.json
 	python3 ${srcdir}/simulate_traffic.py \
 --intersection ${builddir}/complex_intersection.json \
---script "${srcdir}/$<" --duration 1200 --events-file "$@" \
+--script "$<" --duration 1200 --events-file "$@" \
 --last-event-time "${builddir}/last_event_time_$(*F)_animation.txt"
 
 # Create the background image for the animation.
@@ -526,16 +528,19 @@ MUTCD_Ped_Signal_-_Steady_hand.png MUTCD_Ped_Signal_-_Walk.png \
 car-38800411-right.png \
 car-38800411-up.png truck-51893967-up.png truck-51893967-right.png \
 man_walking_right.png
-	bash build_animation.sh "$<" \
-"${builddir}/last_event_time_$(*F)_animation.txt" \
+	bash "${srcdir}/build_animation.sh" "${srcdir}/render_animation.sh" \
+"${srcdir}/process_events.py" \
+"$<" "${builddir}/last_event_time_$(*F)_animation.txt" \
 "${builddir}/animation_$(*F)_temp" \
 "${builddir}/one_way_bridge.json" "${builddir}/background_01.png" 5
-	find "${builddir}/animation_$(*F)_temp/" -type f -print0 | sort -z \
+	find "${builddir}/animation_$(*F)_temp/" -type f -print0 | \
+xargs --null realpath --zero | sort -z \
 > "${builddir}/frames_of_$(*F)_animation.txt"
 	img2pdf -o "$@" --from-file "${builddir}/frames_of_$(*F)_animation.txt"
 
 %_animation_01.mkv : %_animation_01.pdf
-	bash build_video.sh "$@" "${builddir}/animation_$(*F)_temp" 5
+	bash "${srcdir}/build_video.sh" "$@" \
+"${builddir}/animation_$(*F)_temp" 5
 
 # Four corners example.
 %_animation_02.pdf : %_animation_02.csv \
@@ -579,16 +584,19 @@ MUTCD_Ped_Signal_-_Steady_hand.png MUTCD_Ped_Signal_-_Walk.png \
 car-38800411-right.png \
 car-38800411-up.png truck-51893967-up.png truck-51893967-right.png \
 man_walking_right.png
-	bash build_animation.sh "$<" \
-"${builddir}/last_event_time_$(*F)_animation.txt" \
+	bash "${srcdir}/build_animation.sh" "${srcdir}/render_animation.sh" \
+"${srcdir}/process_events.py" \
+"$<" "${builddir}/last_event_time_$(*F)_animation.txt" \
 "${builddir}/animation_$(*F)_temp" \
 "${builddir}/one_way_bridge.json" "${builddir}/background_01.png" 5
-	find "${builddir}/animation_$(*F)_temp/" -type f -print0 | sort -z \
+	find "${builddir}/animation_$(*F)_temp/" -type f -print0 | \
+xargs --null realpath --zero | sort -z \
 > "${builddir}/frames_of_$(*F)_animation.txt"
 	img2pdf -o "$@" --from-file "${builddir}/frames_of_$(*F)_animation.txt"
 
 %_animation_02.mkv : %_animation_02.pdf
-	bash build_video.sh "$@" "${builddir}/animation_$(*F)_temp" 5
+	bash "${srcdir}/build_video.sh" "$@" \
+"${builddir}/animation_$(*F)_temp" 5
 
 # Complex intersection example
 %_animation_03.pdf : %_animation_03.csv \
@@ -632,16 +640,19 @@ MUTCD_Ped_Signal_-_Steady_hand.png MUTCD_Ped_Signal_-_Walk.png \
 car-38800411-right.png \
 car-38800411-up.png truck-51893967-up.png truck-51893967-right.png \
 man_walking_right.png
-	bash build_animation.sh "$<" \
-"${builddir}/last_event_time_$(*F)_animation.txt" \
+	bash "${srcdir}/build_animation.sh" "${srcdir}/render_animation" \
+"${srcdir}/process_events.py" \
+"$<" "${builddir}/last_event_time_$(*F)_animation.txt" \
 "${builddir}/animation_$(*F)_temp" \
 "${builddir}/one_way_bridge.json" "${builddir}/background_01.png" 5
-	find "${builddir}/animation_$(*F)_temp/" -type f -print0 | sort -z \
+	find "${builddir}/animation_$(*F)_temp/" -type f -print0 | \
+xargs --null realpath --zero | sort -z \
 > "${builddir}/frames_of_$(*F)_animation.txt"
 	img2pdf -o "$@" --from-file "${builddir}/frames_of_$(*F)_animation.txt"
 
 %_animation_03.mkv : %_animation_03.pdf
-	bash build_video.sh "$@" "${builddir}/animation_$(*F)_temp" 5
+	bash "${srcdir}/build_video.sh" "$@" \
+"${builddir}/animation_$(*F)_temp" 5
 
 # When removing files, also remove the followins:
 CLEANFILES = \

@@ -4,12 +4,14 @@
 
 # Construct an animation from an event log.
 
-source="${1}"
-last_event_time_file=${2}
-animation_temp="${3}"
-intersection_file="${4}"
-background_image="${5}"
-frame_rate="${6}"
+renderer="${1}"
+processor="${2}"
+source="${3}"
+last_event_time_file=${4}
+animation_temp="${5}"
+intersection_file="${6}"
+background_image="${7}"
+frame_rate="${8}"
 
 last_event_time=$(<${last_event_time_file})
 echo "last event time " ${last_event_time}
@@ -26,7 +28,7 @@ let "temp = ${last_event_time} - ${start_time}"
 # Duration in frames
 let "end_frame = ${temp} * ${frame_rate}"
 
-bash "render_animation.sh" "${source}" "${animation_temp}" \
+bash "${renderer}" "${processor}" "${source}" "${animation_temp}" \
      ${start_time} ${start_frame} ${end_frame} \
      ${frame_rate} ${background_image} ${intersection_file}
 
