@@ -1,3 +1,3 @@
 time,operator,signal face,operand,permissive_delay,count,interval
 200.000,car,A,A1,1,1,1
-201.000,car,A,B2,1,1,1
+200.000,car,A,B2,1,1,1

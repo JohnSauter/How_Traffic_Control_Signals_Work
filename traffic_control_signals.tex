@@ -1,5 +1,5 @@
 % File: traffic_control_signals.tex, author: John Sauter,
-% date: September 10, 2025.
+% date: September 11, 2025.
 
 % Copyright © 2025 by John Sauter.
 % Licensed under the Creative Commons Attribution-ShareAlike 4.0 International
@@ -197,12 +197,12 @@
   pdfcontacturl={https://www.systemeyescomputerstore.com},
   pdfcopyright={Copyright {\copyright} 2025 by John Sauter},
   pdfurl={https://www.systemeyescomputerstore.com/traffic\%5Fsignals/traffic\%5Fsignals.pdf},
-  pdfdate={2025-09-10},
+  pdfdate={2025-09-11},
   pdflicenseurl={https://creativecommons.org/licenses/by-sa/4.0},
   pdfmetalang={en-US}
 }
 
-\date{2025-09-10}
+\date{2025-09-11}
 \maketitle
 \begin{abstract}
   Traffic control signals allow vehicles and pedestrians to move through
@@ -493,7 +493,7 @@ Consider a single car approaching the bridge from the west.
   addresource=bridge_one_car_animation_01.mkv,
   activate=pageopen,
   passcontext,
-  flashvars={source=bridge_one_car_animation_01.mkv &loop=true}
+  flashvars={source=bridge_one_car_animation_01.mkv &loop=false}
 ]{{\includegraphics[width=\textwidth]{background_01}}}{VPlayer.swf}
 
 In the above animation, the car coming from the west activates the Traffic
@@ -509,8 +509,11 @@ If two cars approach the bridge at the same time one of them must stop.
   addresource=bridge_two_cars_animation_01.mkv,
   activate=pageopen,
   passcontext,
-  flashvars={source=bridge_two_cars_animation_01.mkv &loop=true}
+  flashvars={source=bridge_two_cars_animation_01.mkv &loop=false}
 ]{{\includegraphics[width=\textwidth]{background_01}}}{VPlayer.swf}
+
+One car is allowed to cross the bridge immediately, and when it is
+clear of the bridge the other car is allowed to cross.
 
 \section{Example 02: four-way intersection}
 
@@ -636,6 +639,23 @@ However, because we have tied the traffic sensors of signal faces A and C
 together, and the same for B and D, they will actually operate
 as though they were a single signal face, except in the presence
 of an emergency vehicle.
+
+\subsection{Illustrations}
+
+\subsubsection{Traffic from All Directions}
+
+Suppose four lines of cars approach the intersection, one
+line from each direction.
+
+\noindent\includemedia[width=\textwidth,
+  addresource=four_corners_many_animation_02.mkv,
+  activate=pageopen,
+  passcontext,
+  flashvars={source=four_corners_many_animation_02.mkv &loop=false}
+]{{\includegraphics[width=\textwidth]{background_02}}}{VPlayer.swf}
+
+The traffic control signal allows traffic to pass in one direction
+only when it is stopped in the perpendicular direction.
 
 \section{Example 03: Complex Suburban Intersection}
 

@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# File: Makefile.am, author: John Sauter, date: September 10, 2025.
+# File: Makefile.am, author: John Sauter, date: September 11, 2025.
 #
 # Build traffic_control_signals.pdf and animations.
 
@@ -528,8 +528,8 @@ EXTRA_DIST = signal_ccc.svg signal_ccu.svg signal_rrr.svg \
 	display_traffic_control_signals.py \
 	define_complex_intersection.py define_one_way_bridge.py \
 	bridge_one_car_script.txt bridge_two_cars_script.txt \
-	define_four_corners.py display_intersection.py \
-	simulate_traffic.py draw_background.py \
+	four_corners_many_script.txt define_four_corners.py \
+	display_intersection.py simulate_traffic.py draw_background.py \
 	traffic_control_signals.tex state_diagram.txt \
 	signal_ccc_Green.svg signal_ccc_Red.svg signal_ccc_Yellow.svg \
 	signal_ccu_Green.svg signal_ccu_Red.svg signal_ccu_Yellow.svg \
@@ -1210,7 +1210,8 @@ MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf signal_ccc.pdf signal_ccu.pdf signal_rrr.pdf \
 signal_cccl.pdf signal_llll.pdf background_01.png background_02.png \
 background_03.png \
-bridge_one_car_animation_01.mkv bridge_two_cars_animation_01.mkv
+bridge_one_car_animation_01.mkv bridge_two_cars_animation_01.mkv \
+four_corners_many_animation_02.mkv
 	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex \
 --draftmode -draftmode -shell-escape ${srcdir}/traffic_control_signals.tex
 	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex \
@@ -1261,7 +1262,8 @@ MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf signal_ccc.pdf signal_ccu.pdf signal_rrr.pdf \
 signal_cccl.pdf signal_llll.pdf background_01.png background_02.png \
 background_03.png \
-bridge_one_car_animation_01.mkv bridge_two_cars_animation_01.mkv
+bridge_one_car_animation_01.mkv bridge_two_cars_animation_01.mkv \
+four_corners_many_animation_02.mkv 
 	echo " " >"${builddir}/traffic_control_signals.bbl"
 	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex \
 --draftmode -draftmode -shell-escape "${srcdir}/traffic_control_signals.tex"
@@ -1270,13 +1272,13 @@ bridge_one_car_animation_01.mkv bridge_two_cars_animation_01.mkv
 
 # Build a chart of states of the finite state machines
 state_diagram.eps : state_diagram.txt
-	neato -Teps ${srcdir}/state_diagram.txt \
--o ${builddir}/state_diagram.eps
+	neato -Teps "${srcdir}/state_diagram.txt" \
+-o "${builddir}/state_diagram.eps"
 
 # Create a JSON file which describes the finite state machine template.
 finite_state_machine.json : define_traffic_control_signals.py
-	python3 ${srcdir}/define_traffic_control_signals.py \
---output=${builddir}/finite_state_machine.json
+	python3 "${srcdir}/define_traffic_control_signals.py" \
+--output="${builddir}/finite_state_machine.json"
 
 # Generate the state tables from the implementation's finite state machine.
 red_state_table.tex : display_traffic_control_signals.py \
@@ -1473,8 +1475,8 @@ left_turn_script.txt
 --last-event-time "${builddir}/last_event_time_$(*F)_animation.txt"
 
 %_animation_02.csv : %_script.txt simulate_traffic.py four_corners.json
-	python3 ${srcdir}/simulate_traffic.py \
---intersection ${builddir}/four_corners.json \
+	python3 "${srcdir}/simulate_traffic.py" \
+--intersection "${builddir}/four_corners.json" \
 --script "$<" --duration 1200 --events-file "$@" \
 --last-event-time "${builddir}/last_event_time_$(*F)_animation.txt"
 
@@ -1604,7 +1606,7 @@ man_walking_right.png
 "${srcdir}/process_events.py" \
 "$<" "${builddir}/last_event_time_$(*F)_animation.txt" \
 "${builddir}/animation_$(*F)_temp" \
-"${builddir}/one_way_bridge.json" "${builddir}/background_01.png" 5
+"${builddir}/four_corners.json" "${builddir}/background_02.png" 5
 	find "${builddir}/animation_$(*F)_temp/" -type f -print0 | \
 xargs --null realpath --zero | sort -z \
 > "${builddir}/frames_of_$(*F)_animation.txt"
@@ -1660,7 +1662,7 @@ man_walking_right.png
 "${srcdir}/process_events.py" \
 "$<" "${builddir}/last_event_time_$(*F)_animation.txt" \
 "${builddir}/animation_$(*F)_temp" \
-"${builddir}/one_way_bridge.json" "${builddir}/background_01.png" 5
+"${builddir}/complex_intersection.json" "${builddir}/background_03.png" 5
 	find "${builddir}/animation_$(*F)_temp/" -type f -print0 | \
 xargs --null realpath --zero | sort -z \
 > "${builddir}/frames_of_$(*F)_animation.txt"

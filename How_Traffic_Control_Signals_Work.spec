@@ -1,5 +1,5 @@
 Name:           How_Traffic_Control_Signals_Work
-Version:        0.51
+Version:        0.52
 Release:        1%{?dist}
 Summary:        Explain traffic control signals
 
@@ -23,6 +23,7 @@ BuildRequires: sil-andika-fonts
 BuildRequires: sil-charis-fonts
 BuildRequires: liberation-mono-fonts
 BuildRequires: parallel
+BuildRequires: ffmpeg-free
 
 %global _hardened_build 1
 
@@ -61,6 +62,8 @@ make check VERBOSE=1
 %license COPYING
 
 %changelog
+ * Thu Sep 11 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.52-1 fix the spec file
  * Wed Sep 10 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.51-1 start work on animations in the documentation
  * Tue Sep 09 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
