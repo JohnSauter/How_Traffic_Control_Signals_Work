@@ -45,7 +45,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.50 2025-09-09',
+                     version='display_intersection 0.53 2025-09-15',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -177,16 +177,23 @@ if (do_sensor_map_output):
     sensors = signal_face["sensors"]
     for sensor_name in sensors:
       sensor = sensors[sensor_name]
-      sensor_file.write("   \\hline " + signal_face["name"] + " & " +
-                        sensor_name + " &")
-      toggles = sensor["toggles"]
-      first_toggle = True
-      for toggle_name in toggles:
-        if (not first_toggle):
-          sensor_file.write (",")
-        sensor_file.write (" " + toggle_name)
-        first_toggle = False
-      sensor_file.write ("\\\\\n")
+      do_write = True
+      if (only_important):
+        do_write = sensor["important"]
+      if (do_write):
+        toggles = sensor["toggles"]
+        sensor_file.write("   \\hline " + signal_face["name"] + " & " +
+                          sensor_name + " &")
+        if (len(toggles) == 0):
+          sensor_file.write (" not connected ")
+        else:
+          first_toggle = True
+          for toggle_name in toggles:
+            if (not first_toggle):
+              sensor_file.write (",")
+            sensor_file.write (" " + toggle_name)
+            first_toggle = False
+        sensor_file.write ("\\\\\n")
 
   sensor_file.write ("\\hline \\end{longtable}\n")
   sensor_file.close()

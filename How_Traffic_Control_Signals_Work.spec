@@ -1,5 +1,5 @@
 Name:           How_Traffic_Control_Signals_Work
-Version:        0.52
+Version:        0.53
 Release:        1%{?dist}
 Summary:        Explain traffic control signals
 
@@ -62,8 +62,10 @@ make check VERBOSE=1
 %license COPYING
 
 %changelog
+ * Fri Sep 12 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.53-1 fix add more information about the complex intersection
  * Thu Sep 11 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
- - 0.52-1 fix the spec file
+ - 0.52-1 fix the spec file to make building in copr work
  * Wed Sep 10 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.51-1 start work on animations in the documentation
  * Tue Sep 09 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>

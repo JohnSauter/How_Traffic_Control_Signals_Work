@@ -1,4 +1,4 @@
-# File: Makefile.am, author: John Sauter, date: September 11, 2025.
+# File: Makefile.am, author: John Sauter, date: September 15, 2025.
 #
 # Build traffic_control_signals.pdf and animations.
 
@@ -93,6 +93,7 @@ define_one_way_bridge.py \
 bridge_one_car_script.txt \
 bridge_two_cars_script.txt \
 four_corners_many_script.txt \
+flood_script.txt \
 define_four_corners.py \
 display_intersection.py \
 simulate_traffic.py \
@@ -190,7 +191,8 @@ MUTCD_Ped_Signal_-_Walk.pdf signal_ccc.pdf signal_ccu.pdf signal_rrr.pdf \
 signal_cccl.pdf signal_llll.pdf background_01.png background_02.png \
 background_03.png \
 bridge_one_car_animation_01.mkv bridge_two_cars_animation_01.mkv \
-four_corners_many_animation_02.mkv
+four_corners_many_animation_02.mkv pedestrian_and_left_turn_animation_03.mkv \
+multiple_animation_03.mkv flood_animation_03.mkv
 	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex \
 --draftmode -draftmode -shell-escape ${srcdir}/traffic_control_signals.tex
 	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex \
@@ -242,7 +244,8 @@ MUTCD_Ped_Signal_-_Walk.pdf signal_ccc.pdf signal_ccu.pdf signal_rrr.pdf \
 signal_cccl.pdf signal_llll.pdf background_01.png background_02.png \
 background_03.png \
 bridge_one_car_animation_01.mkv bridge_two_cars_animation_01.mkv \
-four_corners_many_animation_02.mkv 
+four_corners_many_animation_02.mkv pedestrian_and_left_turn_animation_03.mkv \
+multiple_animation_03.mkv flood_animation_03.mkv
 	echo " " >"${builddir}/traffic_control_signals.bbl"
 	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex \
 --draftmode -draftmode -shell-escape "${srcdir}/traffic_control_signals.tex"
@@ -320,13 +323,13 @@ ${builddir}/complex_intersection.json \
 sensor_map_01.tex : display_intersection.py one_way_bridge.json
 	python3 ${srcdir}/display_intersection.py \
 ${builddir}/one_way_bridge.json  \
---table-label "sensor_map_01" \
+--table-label "sensor_map_01" --only-important \
 --sensor-map=${builddir}/sensor_map_01.tex 
 
 sensor_map_02.tex : display_intersection.py four_corners.json
 	python3 ${srcdir}/display_intersection.py \
 ${builddir}/four_corners.json  \
---table-label "sensor_map_02" \
+--table-label "sensor_map_02" --only-important \
 --sensor-map=${builddir}/sensor_map_02.tex 
 
 sensor_map_03.tex : display_intersection.py complex_intersection.json
@@ -358,7 +361,7 @@ ${builddir}/complex_intersection.json  \
 idle_01_table.tex : simulate_traffic.py one_way_bridge.json
 	python3 ${srcdir}/simulate_traffic.py \
 --intersection ${builddir}/one_way_bridge.json \
---table-level 4 --table-file ${builddir}/idle_01_table.tex --duration 200  \
+--table-level 5 --table-file ${builddir}/idle_01_table.tex --duration 200  \
 --table-caption "Power On to Idle State, example 01"
 
 idle_03_table.tex : simulate_traffic.py complex_intersection.json
@@ -643,7 +646,7 @@ MUTCD_Ped_Signal_-_Steady_hand.png MUTCD_Ped_Signal_-_Walk.png \
 car-38800411-right.png \
 car-38800411-up.png truck-51893967-up.png truck-51893967-right.png \
 man_walking_right.png
-	bash "${srcdir}/build_animation.sh" "${srcdir}/render_animation" \
+	bash "${srcdir}/build_animation.sh" "${srcdir}/render_animation.sh" \
 "${srcdir}/process_events.py" \
 "$<" "${builddir}/last_event_time_$(*F)_animation.txt" \
 "${builddir}/animation_$(*F)_temp" \

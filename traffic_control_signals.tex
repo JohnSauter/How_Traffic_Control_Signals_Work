@@ -1,5 +1,5 @@
 % File: traffic_control_signals.tex, author: John Sauter,
-% date: September 11, 2025.
+% date: September 14, 2025.
 
 % Copyright © 2025 by John Sauter.
 % Licensed under the Creative Commons Attribution-ShareAlike 4.0 International
@@ -196,13 +196,13 @@
   pdfcontactregion={New Hampshire},
   pdfcontacturl={https://www.systemeyescomputerstore.com},
   pdfcopyright={Copyright {\copyright} 2025 by John Sauter},
-  pdfurl={https://www.systemeyescomputerstore.com/traffic\%5Fsignals/traffic\%5Fsignals.pdf},
-  pdfdate={2025-09-11},
+  pdfurl={https://www.systemeyescomputerstore.com/How\%5FTraffic\%5FControl\%5FSignals\%5fWork/traffic\%5Fcontrol\%5Fsignals.pdf},
+  pdfdate={2025-09-15},
   pdflicenseurl={https://creativecommons.org/licenses/by-sa/4.0},
   pdfmetalang={en-US}
 }
 
-\date{2025-09-11}
+\date{2025-09-15}
 \maketitle
 \begin{abstract}
   Traffic control signals allow vehicles and pedestrians to move through
@@ -210,20 +210,21 @@
 \end{abstract}
 \begin{description}
 \item[Keywords:]traffic control signals; traffic intersections; traffic.
-\item[URL:]\href{https://www.systemeyescomputerstore.com/traffic\_signals/traffic\_signalst.pdf}{https://www.systemeyescomputerstore.com/traffic\_signals/traffic\_signals.pdf}
+\item[URL:]\href{https://www.systemeyescomputerstore.com/How\_Traffic\_Control\_Signals\_Work/traffic\_control\_signals.pdf}{https://www.systemeyescomputerstore.com/How\_Traffic\_Control\_Signals\_Work/traffic\_control\_signals.pdf}
 \end{description}
 %\tableofcontents
 \newpage
 
 \section{Introduction}
-At a traffic intersection, vehicles and pedestrians must cross each other's
+At a traffic intersection vehicles and pedestrians must cross each other's
 path.  To allow this to happen safely, a traffic control signal is used to
 delay traffic in one direction while it proceeds in another.  To maximize
-efficiency, the traffic signal allows multiple traffic flows provided they
-do not intersect.  However, too long a delay compromises safety, since a
-vehicle operator will consider a long delay as an indication that the
-traffic control signal is not working, and proceed into the intersection
-in spite of it.
+efficiency, the traffic control signal lets traffic flow when there is a
+long line of vehicles and allows multiple traffic flows provided they
+do not intersect.  However, making a vehicle wait too long compromises safety,
+since a vehicle operator will consider an excessive  delay as an indication
+that the traffic control signal is not working, and proceed into the
+intersection in spite of it.
 
 In the United States, the standard for traffic control devices is the
 Manual on Uniform Traffic Control Devices, known as MUTCD\citep{MUTCD11}.
@@ -243,8 +244,8 @@ example: a single-lane bridge:
 In figure \ref{fig:single-lane_bridge} vehicles approach from the west
 on lane A.  From there they can cross the bridge and exit on lane 1,
 or make a U-turn and exit on lane 2.  Similarly, vehicles approach
-from the east on lane B and either cross the bridge, exiting on lane 2
-or making a U-turn and exit on lane 1.
+from the east on lane B and either cross the bridge, exiting on lane 2,
+or make a U-turn and exit on lane 1.
 
 \subsection{Conflicts}
 
@@ -259,7 +260,8 @@ same time.
 When a vehicle reaches the bridge on lane A or B we do not
 know which lane it intends to exit on, so we must block all travel paths
 which conflict with any travel path starting at that lane.  Thus,
-signal face A must be red when signal face B is green, and vice-versa.
+lane A must be blocked when a vehicle has entered the bridge from lane B,
+and vice-versa.
 
 This analysis is simple for the one-lane bridge but it is more complex
 for complex intersections.
@@ -294,7 +296,8 @@ green.
 \subsection{Sensors}
 
 In order to know when we need to stop traffic from entering the bridge
-we have sensors in the lanes to detect vehicles.
+we have sensors in the lanes to detect vehicles.  When a vehicle is
+detected by a sensor we describe the sensor as being triggered.
 
 \subsubsection{Traffic Present}
 
@@ -321,32 +324,34 @@ time to stop safely.  We call this the Traffic Approaching sensor.
 
 In addition to signal faces and their associated sensors, the
 traffic control signal needs a sense of time.  Here are the most
-important timers:
+important timers associated with each signal face:
 
 \subsubsection{Red Clearance Time}
 The Red Clearance time is the time between when a signal face turns red
 and the last vehicle to enter the bridge from that lane has left the
-bridge, so that the other lane can be given a green light.
+bridge, so that we can give the other lane a green light.
 
 \subsubsection{Yellow Change Time}
-To give traffic warning that we are soon turning red, we first turn our light
+To give traffic warning that we are soon turning red, we first turn the light
 yellow for Yellow Change time.
 
 \subsubsection{Minimum Green Time}
-When a signal face turns green we want to give the traffic some time
+When a signal face turns green we give the traffic this much time
 to get moving before we consider turning red.
 
 \subsubsection{Passage Time}
-After the minimum green time has elapsed, if there is traffic waiting for
-us to turn red so it can cross the bridge in the other direction
-we would like to wait for a gap in our traffic before turning red.
-The Passage time is the length of a gap in our traffic that will permit us
-to turn red.
+When a vehicle operator sees a signal face turn yellow, he must stop
+before entering the intersection if he can do so safely, or proceed
+through the intersection if he cannot.  This decision is easy to make
+if the vehicle is close to the intersection or far from it, but it hard
+to make in an intermediate situation.  To avoid this, we try to turn
+yellow only when there are no vehicles in this intermediate situation.
 
-We use the Traffic Approaching sensor to measure the gap between vehicles.
-This has a safety benefit because, if we are able to turn yellow during
-a gap there will not be a vehicle who is uncertain about whether he can
-stop safely before the signal face turns red.
+We do this by monitoring the Traffic Approaching sensor.  If no vehicle
+has activated this sensor for Passage Time seconds, we can be sure
+that any vehicles are either so close to the intersection that they
+can safely make it through before the signal face turns red, or far
+enough away that they clearly cannot.
 
 \subsubsection{Maximum Green time}
 If we have reached maximum green time and there has been no conflicting
@@ -358,16 +363,22 @@ traffic, but conflicting traffic arrives later, wait maximum green extra time
 for a gap.  If there isn't one, turn red anyway.
 
 \subsubsection{Traffic Gone Time}
-If we are green and there is no cross traffic, but we have seen no traffic
-for Traffic Gone seconds, turn red.
+If we are green and there is no conflicting traffic,
+but we have seen no traffic for Traffic Gone seconds, turn red.
+This is needed to keep both signal faces
+red when there is no traffic, which is the normal case.  Only if the other
+signal face has been red for Red Clearance seconds can we give
+an instant green when traffic approaches.
 
 \subsubsection{Green Limit Time}
 
-If we have been green for green limit seconds, turn red even if there
-is no conflicting traffic.  This is needed to keep all the signal faces
-red when there is no traffic, which is the normal case.  Only if all
-signal faces have been red for red clearance seconds can we give
-an instant green when traffic approaches.
+If we have been green for Green Limit seconds, turn red even if there
+is no conflicting traffic and there is traffic through this signal
+face's lane.
+
+\subsubsection{Red Limit Time}
+If the signal face has been red for this many seconds, turn it green
+even if there is no traffic.
 
 \subsection{Timer Durations}
 
@@ -385,60 +396,68 @@ When a signal face detects a vehicle approaching it must not turn green
 if there is a vehicle already on the bridge coming the other way.
 This means that the signal faces must communicate with each other.
 They do this with toggles.  Toggles are also used to communicate
-from sensors to their signal faces.  Here are the most important toggles:
+from sensors to their signal faces.
+
+A toggle may be either set (true) or clear (false).
+Here are the most important toggles:
 
 \subsubsection{Traffic Approaching}
 
-The Traffic Approaching sensor has detected a vehicle.
+When the Traffic Approaching sensor has detected a vehicle
+it sets this toggle.  The toggle remains set until it is cleared
+by the finite state machine, even after the sensor is no longer
+detecting a vehicle.
 
 \subsubsection{Traffic Present}
 
-The Traffic Present sensor has detected a vehicle.
+When the Traffic Present sensor has detected a vehicle
+it sets this toggle.  The toggle remains set until it is cleared
+by the finite state machine, even after the sensor is no longer
+detecting a vehicle.
 
 \subsubsection{Request Green}
 
-When a signal face is red but wants to turn green it sets this toggle.
+When we are red but want to turn green we set this toggle.
 
 \subsubsection{Green Request Granted}
 
-When a signal face sees this toggle set it can ask the other signal
+When we see this toggle set we can ask the other signal
 face to turn red.
 
 \subsubsection{Request Partial Clearance}
 
-When a signal face has been granted its request to turn green it sets
+When we have been granted our request to turn green we set
 the Request Partial Clearance toggle.  This causes the Clearance Requested
 toggle to be set in the other signal face.
 
 \subsubsection{Clearance Requested}
 
-When a signal face sees that its Clearance Requested toggle has been
+When the other signal face sees that its Clearance Requested toggle has been
 set, it turns red.
 
 \subsubsection{Cleared}
 
-When a signal face has been red long enough for all of its traffic
-to have cleared the intersection it sets the Cleared toggle.
+When the other signal face has been red long enough for all of its traffic
+to have cleared the intersection it sets its Cleared toggle.
 This causes the Partial Conflicting Paths are Clear toggle to be set
-in the other signal face.
+in our signal face.
 
 \subsubsection{Partial Conflicting Paths are Clear}
 
-When a signal face sees this toggle set it can change from red
-to green.
+When we see this toggle set we can change from red to green.
 
 \subsubsection{Traffic Flowing}
 
-When a signal face has turned green it sets this toggle to indicate
-that it no longer needs to turn green.  Doing this gives permission
+When we have turned green we set this toggle to indicate
+that we no longer need to turn green.  Doing this gives permission
 to the other signal face to begin the process of turning green,
-if it needs to.
+when and if it needs to.
 
 \subsection{Wiring the Finite State Machines to the Lamps}
 
-Each signal face finite state machine is wired to the lamps that
+Each signal face finite state machine is wired to the signal face lamps that
 it controls.  Table \ref{lamp_map_01} shows wiring between the signal
-face finite state machines and the lamps in the signal faces.
+face finite state machines and the lamps in their signal faces.
 
 \input {lamp_map_names_01.tex}
 
@@ -480,10 +499,25 @@ passes without a gap.
 The green request granted system program looks for the Green Request
 toggle in either signal face, and sets the Green Request Granted
 toggle.  Other system programs mediate the other stages of moving
-information between the signal faces.  These system programs become
-more complex when the intersection is more complex.
+information between the signal faces.  These system programs act
+in a more complex way when the intersection is more complex.
 
 \subsection{Illustrations}
+
+\subsubsection{Idle}
+
+When the intersection starts up all toggles are set to false,
+all timers are set to stopped, and each signal face finite state machine
+is set to state Red substate Waiting for Clearance.
+
+Each signal face will proceed
+from state Red substate Waiting for Clearance to substate Travel Path is Clear.
+Because the Red Limit timers have infinite duration both signal faces
+will remain red until some traffic appears.
+
+Here is the detailed log:
+
+\input{idle_01_table.tex}
 
 \subsubsection{Single Car}
 
@@ -491,8 +525,7 @@ Consider a single car approaching the bridge from the west.
 
 \noindent\includemedia[width=\textwidth,
   addresource=bridge_one_car_animation_01.mkv,
-  activate=pageopen,
-  passcontext,
+  activate=onclick, attachfiles,
   flashvars={source=bridge_one_car_animation_01.mkv &loop=false}
 ]{{\includegraphics[width=\textwidth]{background_01}}}{VPlayer.swf}
 
@@ -501,19 +534,26 @@ Approaching sensor for lane A.  The signal face for lane B has been red
 for some time, so signal face A immediately turns green.  The car passes
 across the bridge without stopping after which signal face A turns red.
 
+If your PDF viewer will not play the animation you can see it on Youtube
+at this URL: 
+\href{https://youtu.be/YgWkwT\_6EcE}{https://youtu.be/YgWkwT\_6EcE}.
+
 \subsubsection{Two Cars}
 
 If two cars approach the bridge at the same time one of them must stop.
 
 \noindent\includemedia[width=\textwidth,
   addresource=bridge_two_cars_animation_01.mkv,
-  activate=pageopen,
-  passcontext,
+  activate=onclick, attachfiles,
   flashvars={source=bridge_two_cars_animation_01.mkv &loop=false}
 ]{{\includegraphics[width=\textwidth]{background_01}}}{VPlayer.swf}
 
 One car is allowed to cross the bridge immediately, and when it is
 clear of the bridge the other car is allowed to cross.
+
+If your PDF viewer will not play the animation you can see it on Youtube
+at this URL:
+\href{https://youtu.be/nRE2B95XoHo}{https://youtu.be/nRE2B95XoHo}.
 
 \section{Example 02: four-way intersection}
 
@@ -528,13 +568,16 @@ Consider now a rural intersection of two two-lane roads.
 In figure \ref{fig:four-way_intersection} vehicles approach from the
 north, south, east and west.  Vehicles from the south enter the intersection
 on lane A and can exit on lanes 1 (U-turn), 2 (right turn), 3 (atraight
-through) or 4 (left turn).  The same is true for lanes B, C, and D.
+through) or 4 (left turn).  Lanes B, C, and D likewise have four exit
+lanes, for a total of \num{16} travel paths.
 
 \subsection{Conflicts}
 
 A strict analysis of travel path conflicts shows that every entry lane
-has a travel path which conflicts with every other entry lane.  This means
-that only one signal face can be green at a time.
+has a travel path which conflicts with at least one travel path of
+every other entry lane.  This means that only one signal face can be
+green at a time.
+
 However, it is customary for a rural stoplight with little traffic to allow
 traffic to flow either north and south or east and west.  
 Thus we will overlook the conflict between A4 and C2, for example, so
@@ -551,7 +594,7 @@ bridge, but now we need four of them: A, B, C, and D.
 
 \subsection{Sensors}
 
-Each entry lane has two sensors: Traffic Present just before the intersection,
+Each entry lane has two sensors: Traffic Present just before the intersection
 and Traffic Approaching set some distance back.  In addition there is an
 emergency vehicle sensor which can sometimes tell which direction
 the emergency vehicle is coming from.
@@ -621,9 +664,9 @@ toggles.
 \subsubsection{States}
 
 The states are the same as for the single-lane bridge,
-except the two preempt toggles will move the signal face
+except the Preempt Red and Preempt Green toggles will move the signal face
 to the correct state as quickly as possible consistent with
-safety, and keep it there until the signal stops.
+safety, and keep it there until the sensor ceases to be triggered.
 
 \subsubsection{System Programs}
 
@@ -633,8 +676,10 @@ signal faces B and D.
 
 If there were four independent signal faces the green request granted
 system program would have to  be careful not to let two signal faces
-exchange green between them, freezing out a third since an excessive
-wait for a green will cause a vehicle operator to ignore the signal face.
+exchange green between them, freezing out a third, since an excessive
+wait for a green will cause a vehicle operator to ignore the signal face
+and proceed into an intersection which may be occupied by another vehicle.
+
 However, because we have tied the traffic sensors of signal faces A and C
 together, and the same for B and D, they will actually operate
 as though they were a single signal face, except in the presence
@@ -649,13 +694,16 @@ line from each direction.
 
 \noindent\includemedia[width=\textwidth,
   addresource=four_corners_many_animation_02.mkv,
-  activate=pageopen,
-  passcontext,
+  activate=onclick, attachfiles,
   flashvars={source=four_corners_many_animation_02.mkv &loop=false}
 ]{{\includegraphics[width=\textwidth]{background_02}}}{VPlayer.swf}
 
 The traffic control signal allows traffic to pass in one direction
 only when it is stopped in the perpendicular direction.
+
+If your PDF viewer will not play the animation you can see it on Youtube
+at this URL:
+\href{https://youtu.be/CDJMpd8RGm4}{https://youtu.be/CDJMpd8RGm4}.
 
 \section{Example 03: Complex Suburban Intersection}
 
@@ -683,10 +731,10 @@ and another on the south.
 Analysis of conflicts is more complex for this example, so we
 will be more formal.  Each lane has a set of travel paths.
 For example, lane A is a dedicated left turn lane; a vehicle approaching on
-lane A must exit the intersection on lane 1 (U-turn), 2 (U-turn)
+lane A must exit the intersection on lane 1 (wide U-turn), 2 (U-turn)
 or 6 (left turn).  Whenever two travel paths from different entry lanes
-occupy the same space in the intersection, the entry lanes
-conflict, so only one of them can be green at a time.
+occupy the same space in the intersection they conflict,
+as shown in the following table.
 
 \begin{longtable}{l | l | p{8cm}}
   \caption{Travel Path Conflicts} \\
@@ -713,8 +761,12 @@ conflict, so only one of them can be green at a time.
 \end{longtable}
 
 Since the traffic control signal only controls entry to the
-intersection, we can simplify the travel path conflict table into a signal face
-conflict table:
+intersection, not which travel path will be taken,
+we can simplify the travel path conflict table into a signal face
+conflict table.  If any travel path from a first lane conflicts with
+any travel path from a second lane, we say the two lanes conflict.
+This means that only one of the two corresponding signal faces
+can be green at a time.
 
 \begin{longtable}{c | l}
   \caption{Signal Face Conflict Table} \\
@@ -735,14 +787,16 @@ conflict table:
 
 We also need a table named Partial Signal Face Conflicts.  It is the same
 as Signal Face Conflicts except for signal face A which omits F and G,
-and signal face E which omits B and C.  This is used for permissive
+and signal face E which omits B and C.  This table is used for permissive
 left turns.
 
 \subsection{Signal Faces}
 
 We need some additional signal faces for this intersection.  In addition
 to the signal face used for the one-way bridge and the four-corners
-intersection, we have:
+intersection, we have the following:
+
+\subsubsection{Right Turn Signal Face}
 
 Lane H permits only right turns, so we use a signal face in which all of
 the circular lamps have been replaced by right arrow lamps.
@@ -754,6 +808,8 @@ the circular lamps have been replaced by right arrow lamps.
                green}\label{fig:signal_rrr}}
 \end{figure}
 
+\subsubsection{Left Turn and Straight Through Signal Face}
+
 Lane G permits going straight through to lane 3 or a left turn onto lanes
 4 or 5.  To indicate this we use a signal face with an additionl green
 arrow lamp:
@@ -764,6 +820,8 @@ arrow lamp:
            {\caption{steady circular red, circular yellow, circular green,
                left arrow green}\label{fig:signal_cccl}}
 \end{figure}
+
+\subsubsection{Permissive Left Turn Signal Face}
 
 Lanes A and E allow both permissive and protected left turns but not
 straight through.  We use a signal face with all left arrows and an
@@ -780,6 +838,8 @@ is stopped) if the green arrow is lit.
              \label{signal_llll}}
 \end{figure}
 
+\subsubsection{Pedestrian Signal Face}
+
 For pedestrians, the signal face shows a picture which changes to indicate
 whether it is safe to walk, not safe to walk, or the walk time is about to end.
 
@@ -794,7 +854,7 @@ whether it is safe to walk, not safe to walk, or the walk time is about to end.
            {\includegraphics{MUTCD_Ped_Signal_-_Hand_with_timer}}
            {\caption{The walk condition will end in the indicated
                number of seconds.  Do not enter the intersection
-               unless you can cross before the condition ends.}}
+               unless you can cross before the walk condition ends.}}
 \end{figure}
 
 \begin{figure}[H]
@@ -808,7 +868,7 @@ pedestrians with poor sight.
 
 \subsection{Sensors}
 
-Lanes D, G and H do not have Traffic Approaching sensors, so their
+Lanes D, G, and H do not have Traffic Approaching sensors, so their
 Traffic Present sensors also set their Traffic Approaching toggles.
 
 Each pedestrian crossing is equipped with a button so the pedestrian can
@@ -835,10 +895,6 @@ called a permissive left turn. Once we have turned on the left flashing
 yellow light, we keep it on at least Minimum Left Flashing Yellow time
 to make sure the left turning traffic is able to start up.
 
-\subsubsection{Red Limit Time}
-If the signal face has been red for this many seconds, turn it green
-even if there is no traffic.
-
 \subsection{Timer Durations}
 
 Here are the lengths of times that the timers run for.  Unlimited means
@@ -852,7 +908,7 @@ how long signal face A can remain red.
 This intersection has provision for manual override by a traffic control
 officer.  The officer has a control panel by which he can indicate which
 direction of traffic should be allowed.  Alternatively, he can set all
-of the signal faces to flashing and control traffic using hand gestures.
+of the signal faces to flashing and control the traffic using hand gestures.
 
 In addition, we need toggles to handle permissive versus protected
 left turns.
@@ -903,7 +959,7 @@ machines and the lamps in the signal faces.
 Each signal face finite state machine is wired to the sensors
 for its lane.
 
-In this example lanes A and E have their distant sensor where
+Lanes A and E have their distant sensor where
 the left turn lane begins; lanes B, C, E, and F have their
 distant sensors far enough from the intersection that a vehicle
 moving at the speed limit which sees the lamp turn yellow
@@ -929,6 +985,7 @@ for lanes pnw and pne to both signal faces pnw and pne.
 \input {sensor_map_03.tex}
 
 \subsection{Process}
+
 We have nine signal faces, each with one or two sensors, plus an emergency
 vehicle sensor and manual override controls.
 
@@ -949,7 +1006,7 @@ lane must stop.  When the traffic light has been red for Red Clearance Time,
 the finite state machine sets its Cleared toggle, which is tested by other
 signal faces to see if they can turn green.  If a vehicle or
 pedestrian arrives at this signal face it starts the process
-of turning green.
+of itself tturning green.
 
 Here are the details of the Red state:
       
@@ -957,7 +1014,8 @@ Here are the details of the Red state:
 
 \item[Green]
 The Green major state shows a green light, which means traffic in this lane
-may proceed through the intersection.  We keep the light green long enough
+may proceed through the intersection.  When the light turns green
+we keep the light green long enough
 for the traffic to get moving.  Afterwards if another signal face wants us
 to turn red we wait for a break in the traffic.  If there is no break in the
 traffic for a while we turn red anyway.  If an emergency vehicle is present
@@ -998,8 +1056,8 @@ To prevent two signal faces from bouncing green time between each other,
 locking out a third signal face, this system program makes sure that
 traffic never has to wait too long for a green light.
 
-This system program maintains a persistent list of signal faces that are
-requesting green,
+The Green Request Granted system program maintains a persistent list of
+signal faces that are requesting green,
 a list of signal faces that are allowed to turn green and a list of signal
 faces that have turned green since the currently waiting signal face
 has had its chance.
@@ -1008,7 +1066,7 @@ All of these lists start empty.
 Go through all of the signal faces looking for those with toggle Request
 Green true.  Add each such signal face to the list of
 signal faces that are requesting green, unless the signal face is already on
-the list or in the set of signal faces allowed to turn green.
+the list or is in the list of signal faces allowed to turn green.
 
 If the list of signal faces allowed to turn green is empty, move the
 oldest signal face on the list of signal faces that are requesting
@@ -1034,11 +1092,11 @@ Keep doing the above until the list is empty or the oldest signal
 face on the list cannot move because of a conflict.
 
 Now we try to let some signal faces turn green out of order, being
-careful not to allow a signal face to be starved out of any
+careful not to allow any other signal face to be starved out of any
 opportunity to turn green.
 
 Provided the oldest signal face on the list of signal faces
-waiting to requesting to turn green has not been waiting too long,
+requesting to turn green has not been waiting too long,
 go through the list of signal faces that are requesting to turn green
 starting with the oldest.  For each such signal face that does not
 conflict with any of the signal faces already in the set of signal
@@ -1104,6 +1162,10 @@ signal face.
 
 \item[Safety Check]
 
+Safety Check is a different kind of system program.  It does not
+monitor toggles from the various signal faces but instead checks
+for unsafe conditions.  
+  
 An error in the description of the finite state machine, or an error
 in the implementation of the finite state machine driver or the
 system programs may cause the signal faces to get into unintended
@@ -1113,28 +1175,11 @@ states and, if such a state is found, set the intersection to flashing.
 
 \end{description}
 
-\section{Scenarios}
+\subsection{Illustrations}
 
-To illustrate how the above logic causes the signal faces to react
-appropriately, I will describe several scenarios using our example
-intersections.
+\subsubsection{Idle}
 
-\subsection{Idle}
-
-When the intersection starts up all toggles are set to false,
-all timers are set to stopped, and each signal face finite state machine
-is set to state Red substate Waiting for Clearance.
-
-Each signal face will proceed
-from state Red substate Waiting for Clearance to substate Travel Path is Clear.
-Because the Red Limit timers have infinite duration both signal faces
-will remain red until some traffic appears.
-
-Here is the detailed log for example 01:
-
-\input{idle_01_table.tex}
-
-For example 03, if there is no traffic, signals faces A, D, E, H, J and the
+If there is no traffic, signals faces A, D, E, H, J, and the
 pedestrian signal faces will remain red
 since their Red Limit timers have an infinite duration; however,
 signal faces B, C, F, and G will proceed to substate Going Green 1 when
@@ -1182,9 +1227,9 @@ This will cause the list to be empty.
 
 The net effect is that after 60 seconds signal faces
 B, C, F, and G turn green.  Because the Green Limit timer duration for signal
-faces B, C, F, and G are infinity they will remain green unless
+faces B, C, F, and G is unlimited they will remain green unless
 a conflicting signal face needs to turn green.  Because the Red Limit
-timer duration for the other signal faces is infinite they will stay red
+timer duration for the other signal faces is unlimited they will stay red
 unless some traffic appears on their lanes.
 
 We will call this situation, with signal faces B, C, F, and G green
@@ -1196,12 +1241,11 @@ condition.
 
 \input{idle_03_table.tex}
 
-\subsection{Pedestrian Crossing on South Side of Intersection}
+\subsubsection{Pedestrian Crossing on South Side of Intersection}
 A pedestrian who wishes to cross the boulevard on the south side
 presses his button.  Assuming we are in the idle condition
-with signal faces
-B, C, F and G green and A, D, E, H, J, and the pedestrian signal faces
-red and clear.
+with signal faces B, C, F, and G green and with A, D, E, H, J,
+and the pedestrian signal faces red and clear.
 
 Signal faces psw and pse will proceed to substate Going Green 1 where
 they will set
@@ -1246,13 +1290,13 @@ they will
 transition to substate Travel Path is Clear and set the Cleared toggle.
 
 Signal faces B, C, F, and G will then proceed as described above
-in the Idle scenario to turn green.
+in the Idle illustration to turn green.
 
 The following describes the events in detail.
 
 \input{pedestrian_table.tex}
 
-\subsection{Left Turn}
+\subsubsection{Left Turn}
 
 A vehicle arrives at Signal Face A.  Assume we are in the idle condition
 with signal faces B, C, F, and G green and the others red and clear.
@@ -1286,10 +1330,10 @@ When signal faces F and G become clear system program Conflicting Paths
 are Clear will set the Conflicting Paths are Clear toggle in signal face
 A which will cause signal face A to turn green.
 
-When the Green Limit timer in signal face A completes, signal face
-A will turn red and eventually become clear, which will allow
-signal faces F and G to turn green when their Red Limit timers complete,
-as described above.
+When the Vehicle Gone timer in signal face A
+completes, signal face A will turn red and eventually become clear,
+which will allow signal faces F and G to turn green when their Red Limit
+timers complete, as described above.
 
 The following events take place assuming that the driver of the
 car turning left is not willing to make the permissive turn,
@@ -1303,13 +1347,13 @@ as illustrated in the following events.
 
 \input{left_turn_table.tex}
 
-\subsection{Pedestrian and Near Left Turner}
+\subsubsection{Pedestrian and Near Left Turner}
 
-Building upon the previous two scenarios, suppose after the pedestrian
+Building upon the previous two illustrations, suppose after the pedestrian
 has pushed his button and begun to cross, a vehicle arrives at lane A.
 Signal face A will be be given permission to turn green right away, since no
 other signal faces are waiting to turn green.  It will then request
-that signal faces psw, pse, D, H and J turn red.  Signal faces D and J
+that signal faces psw, pse, D, H, and J turn red.  Signal faces D and J
 will already be clear because signal faces pse and psw is green,
 and signal face H has never been green, so signal face A is waiting
 only for signal faces psw and pse.
@@ -1324,12 +1368,24 @@ will turn green without waiting for signal face A to clear, since
 they do not conflict.  When signal face A is clear signal faces
 F and G will turn green, getting us back to the idle state.
 
-Here are the events of this scenario, with less detail than
+Here are the events of this illustration, with less detail than
 previously.
 
 \input{pedestrian_and_left_turn_table.tex}
 
-\subsection{Multiple Arrivals}
+Here is an animation, which provides the same illustration in graphic form.
+
+\noindent\includemedia[width=\textwidth,
+  addresource=pedestrian_and_left_turn_animation_03.mkv,
+  activate=onclick, attachfiles,
+  flashvars={source=pedestrian_and_left_turn_animation_03.mkv &loop=false}
+]{{\includegraphics[width=\textwidth]{background_03}}}{VPlayer.swf}
+
+If your PDF viewer will not play the animation you can see it on Youtube
+at this URL:
+\href{https://youtu.be/RBuMvScOgxk}{https://youtu.be/RBuMvScOgxk}.
+
+\subsubsection{Multiple Arrivals}
 
 Suppose we are in the Idle condition when traffic arrives in quick succession
 at signal faces A, psw, D, E, pne, H, and J in that order.
@@ -1362,6 +1418,35 @@ The following table shows the most significant events in this scenario.
 
 \input{multiple_table.tex}
 
+Here is an animation of the multiple arrivals scenario:
+
+\noindent\includemedia[width=\textwidth,
+  addresource=multiple_animation_03.mkv,
+  activate=onclick, attachfiles,
+  flashvars={source=multiple_animation_03.mkv &loop=false}
+]{{\includegraphics[width=\textwidth]{background_03}}}{VPlayer.swf}
+
+If your PDF viewer will not play the animation you can see it on Youtube
+at this URL:
+\href{https://youtu.be/DCo7ZpW0FQg}{https://youtu.be/DCo7ZpW0FQg}.
+
+\subsubsection{Heavy Traffic}
+
+To illustrate how the traffic control signal handles heavy traffic,
+here is an animation showing traffic arriving from all directions,
+and the intersection flashing for a few seconds due to a nearby
+emergency vehicle.
+
+\noindent\includemedia[width=\textwidth,
+  addresource=flood_animation_03.mkv,
+  activate=onclick, attachfiles,
+  flashvars={source=flood_animation_03.mkv &loop=false}
+]{{\includegraphics[width=\textwidth]{background_03}}}{VPlayer.swf}
+
+If your PDF viewer will not play the animation you can see it on Youtube
+at this URL:
+\href{https://youtu.be/6oFNbIGWkH4}{https://youtu.be/6oFNbIGWkH4}.
+
 \section{Manual Control}
 
 An operator may take manual control of the traffic control signal.
@@ -1379,7 +1464,7 @@ There is a multi-position mode switch:
 \subsubsection{Automatic}
 
 With the mode switch set to Automatic the traffic control signal
-receives signals from the sensors and acts appropriately, as described
+processes signals from the sensors and acts appropriately, as described
 above.  The operator is an observer who can see the color of each
 signal face, the state of the toggle corresponding to each vehicle detector,
 and the names of the signal faces in each persistent list maintained by
@@ -1392,7 +1477,7 @@ running timer, and the state of each toggle and sensor.
 \subsubsection{Manual}
 
 With the mode switch set to Manual, the traffic control signal is
-disconnected from the sensors.  The operator has
+not responsive to the sensors.  The operator has
 a 3-position switch on the display of each lane to cause that lane to turn red
 or green.  The Red position sets the Manual
 Red toggle and the green position sets the Manual Green toggle.
@@ -1408,22 +1493,26 @@ In this mode the operator must specify when each signal face turns
 red and green.  Notice that all of the safety interlocks still
 are in effect: setting a signal face to green while a conflicting
 signal face is already set to green will have no effect until the
-conflicting signal faces are set to red or neutral.
+conflicting signal faces are set to red or neutral.  There is an
+option in the manual control panel to automatically set all
+conflicting signal faces to red when a signal face is manually set to green.
 
-A manual control console can be either local or remote.  If it is remote
+A manual control panel can be either local or remote.  If it is remote
 there should be cameras giving a complete picture of the intersection
 to the remote operator.
 
 \subsubsection{Flashing}
 
-With the mode switch set to Flashing, signal faces with Red Limit
-timers having finite duration have their Flash Yellow toggles set
-and all other signal faces have their Flash Red toggles set.
+With the mode switch set to Flashing, each signal face will
+turn red as quickly as possible consistent with safety, and then
+flash either red or yellow.
 
 If the traffic signal controller detects a malfunction it switches
 to Flashing mode itself.  In addition, if the computer in the traffic
 signal controller fails there is hardware in the traffic signal
-controller to flash the lights independent of the computer.
+controller to flash the lights independent of the computer,
+though in this case it will not be possible to first turn the
+signal face red safely.
 
 \subsubsection{Programming}
 
@@ -1453,6 +1542,17 @@ chosen directions.
 The central controller will be able to see all of the sensors of all
 of the intersections it controls.
 
+\section{More Details}
+
+If you would like more details about how a traffic control signal works,
+you can examine the software used to prepare the tables and animations
+for this paper.  The software is on github at this URL:
+
+\href{https://github.com/JohnSauter/How\_Traffic\_Control\_Signals\_Work}{https://github.com/JohnSauter/How\_Traffic\_Control\_Signals\_Work}
+
+That github repository includes a spec file to facilitate building
+this paper using COPR.  That spec file is also included in the tarball.
+
 \section{Licensing}
 \label{section:Licensing}
 As noted on the first page, this paper is licensed under a Creative
@@ -1460,7 +1560,7 @@ Commons Attribution-ShareAlike 4.0 International License.
 
 The full text of the Creative Commons Attribution-ShareAlike 4.0
 International license is at this web site:
-\href{https://creativecommons.org/licenses/by-sa/4.0/legalcode}{https://creativecommons.org/licenses/by-sa/4.0/legalcode}%
+\href{https://creativecommons.org/licenses/by-sa/4.0/legalcode}{https://creativecommons.org/licenses/by-sa/4.0/legalcode}
 What follows is a human-readable summary of it.
 
 \subsection{You are free to:}

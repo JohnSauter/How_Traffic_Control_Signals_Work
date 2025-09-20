@@ -47,7 +47,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_complex_intersection 0.50 2025-09-09',
+                     version='define_complex_intersection 0.53 2025-09-14',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -1224,6 +1224,8 @@ for signal_face in signal_faces_list:
       sensor["shape"] = sensor_shape
     
     sensor["value"] = False
+    sensor["important"] = True
+    
     sensors [sensor_name] = sensor
     
   signal_face ["sensors"] = sensors

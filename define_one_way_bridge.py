@@ -46,7 +46,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_one_way_bridge 0.50 2025-09-09',
+                     version='define_one_way_bridge 0.53 2025-09-15',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -184,7 +184,7 @@ for signal_face_name in signal_face_names:
     match timer_name:
       case "Red Clearance" | "Yellow Change" | "Minimum Green" | \
            "Passage" | "Maximum Green" | "Maximum Green Extra" | \
-           "Traffic Gone" | "Green Limit":
+           "Traffic Gone" | "Green Limit" | "Red Limit":
         important = True
         
       case _:
@@ -559,6 +559,16 @@ for signal_face in signal_faces_list:
       sensor["shape"] = sensor_shape
     
     sensor["value"] = False
+
+    match sensor_name:
+      case "Traffic Present" | "Traffic Approaching":
+        important = True
+        
+      case _:
+        important = False
+
+    sensor["important"] = important
+
     sensors [sensor_name] = sensor
     
   signal_face ["sensors"] = sensors
