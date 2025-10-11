@@ -1,5 +1,5 @@
 % File: traffic_control_signals.tex, author: John Sauter,
-% date: September 14, 2025.
+% date: October 4, 2025.
 
 % Copyright © 2025 by John Sauter.
 % Licensed under the Creative Commons Attribution-ShareAlike 4.0 International
@@ -197,12 +197,12 @@
   pdfcontacturl={https://www.systemeyescomputerstore.com},
   pdfcopyright={Copyright {\copyright} 2025 by John Sauter},
   pdfurl={https://www.systemeyescomputerstore.com/How\%5FTraffic\%5FControl\%5FSignals\%5fWork/traffic\%5Fcontrol\%5Fsignals.pdf},
-  pdfdate={2025-09-15},
+  pdfdate={2025-10-04},
   pdflicenseurl={https://creativecommons.org/licenses/by-sa/4.0},
   pdfmetalang={en-US}
 }
 
-\date{2025-09-15}
+\date{2025-10-04}
 \maketitle
 \begin{abstract}
   Traffic control signals allow vehicles and pedestrians to move through
@@ -798,7 +798,7 @@ intersection, we have the following:
 
 \subsubsection{Right Turn Signal Face}
 
-Lane H permits only right turns, so we use a signal face in which all of
+Lane J permits only right turns, so we use a signal face in which all of
 the circular lamps have been replaced by right arrow lamps.
 
 \begin{figure}[H]
@@ -810,7 +810,7 @@ the circular lamps have been replaced by right arrow lamps.
 
 \subsubsection{Left Turn and Straight Through Signal Face}
 
-Lane G permits going straight through to lane 3 or a left turn onto lanes
+Lane H permits going straight through to lane 3 or a left turn onto lanes
 4 or 5.  To indicate this we use a signal face with an additionl green
 arrow lamp:
 
@@ -868,7 +868,7 @@ pedestrians with poor sight.
 
 \subsection{Sensors}
 
-Lanes D, G, and H do not have Traffic Approaching sensors, so their
+Lanes D, H, and J do not have Traffic Approaching sensors, so their
 Traffic Present sensors also set their Traffic Approaching toggles.
 
 Each pedestrian crossing is equipped with a button so the pedestrian can
@@ -877,8 +877,7 @@ Traffic Present sensor for vehicles.
 
 \subsection{Timers}
 
-We need additional timers to handle permissive left turns and to
-keep the boulevard green when there is no traffic.
+We need additional timers to handle permissive left turns.
 
 \subsubsection{Left Flashing Yellow Waiting Time}
 
@@ -960,7 +959,7 @@ Each signal face finite state machine is wired to the sensors
 for its lane.
 
 Lanes A and E have their distant sensor where
-the left turn lane begins; lanes B, C, E, and F have their
+the left turn lane begins; lanes B, C, F, and G have their
 distant sensors far enough from the intersection that a vehicle
 moving at the speed limit which sees the lamp turn yellow
 just as he trips the sensor has time to stop safely.

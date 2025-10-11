@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='simulate_traffic 0.53 2025-09-14',
+                     version='simulate_traffic 0.55 2025-10-04',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -76,10 +76,13 @@ parser.add_argument ('--last-event-time', metavar='last_event_time',
                      help='time of last event written to this file'),
 parser.add_argument ('--script-input', metavar='script_input',
                      help='actions for the simulator to execute')
-parser.add_argument ('--print-statistics', type=bool,
-                     metavar='print_statistics',
-                     help='print statistics about the simulation ' +
-                     'default is False.')
+parser.add_argument ('--clock-step', metavar='clock_step',
+                     help="set the size of the simulation's clock step; " +
+                     'default is 0.01 seconds.')
+parser.add_argument ('--print-statistics', action='store_true',
+                     help='print statistics about the simulation')
+parser.add_argument ('--explain-state-transitions', action='store_true',
+                     help='give reasons for state transitions')
 parser.add_argument ('--verbose', type=int, metavar='verbosity_level',
                      help='control the amount of output from the program: ' +
                      '1 is normal, 0 suppresses summary messages')
@@ -99,7 +102,9 @@ table_caption = "no caption"
 do_script_input = False
 script_input_file = ""
 do_last_event_time_output = False
+clock_step = fractions.Fraction ("0.01")
 print_statistics = False
+explain_state_transitions = False
 verbosity_level = 1
 error_counter = 0
 
@@ -159,8 +164,16 @@ if (arguments ['last_event_time'] != None):
   last_event_time_file_name = arguments ['last_event_time']
   last_event_time_file_name = pathlib.Path(last_event_time_file_name)
 
+if (arguments ['clock_step'] != None):
+  clock_step = arguments ['clock_step']
+  clock_step = decimal.Decimal (clock_step)
+  clock_step = fractions.Fraction (clock_step)
+
 if (arguments ['print_statistics'] != None):
   print_statistics = arguments ['print_statistics']
+
+if (arguments ['explain_state_transitions'] != None):
+  explain_state_transitions = arguments ['explain_state_transitions']
 
 if (arguments ['verbose'] != None):
   verbosity_level = int(arguments ['verbose'])
@@ -863,8 +876,42 @@ def perform_actions (signal_face, substate):
           
   return    
 
-# Enter the signal face into the named state and substate.
-def enter_state (signal_face, state_name, substate_name):
+# Subroutine to describe a state transition
+def describe_transition (old_state_name, old_substate_name, state_name,
+                         substate_name, the_exit):
+  description = "enters state " + state_name + " substate " + substate_name
+  if ((not explain_state_transitions) or (the_exit == None)):
+    return (description)
+  description = description + " because"
+  conditionals = the_exit [0]
+  first_condition = True
+  for conditional in conditionals:
+    if (first_condition):
+      first_condition = False
+    else:
+      description = description + " and"
+      
+    match conditional[0]:    
+      case "toggle is true":
+        toggle_name = conditional[1]
+        description = (description + " toggle " + toggle_name + " is true")
+
+      case "toggle is false":
+        toggle_name = conditional[1]
+        description = (description + " toggle " + toggle_name + " is false")
+                
+      case "timer is completed":
+        timer_name = conditional[1]
+        description = (description + " timer " + timer_name + " has completed")
+                
+      case "timer not complete":
+        timer_name = conditional[1]
+        description = (description + "  timer " + timer_name +
+                       " has not completed")
+  return (description)
+
+# Subroutine to enter the signal face into the named state and substate.
+def enter_state (signal_face, state_name, substate_name, the_exit):
   global no_activity
 
   if ("state" in signal_face):
@@ -890,17 +937,24 @@ def enter_state (signal_face, state_name, substate_name):
   signal_face["state"] = state_name
   signal_face["substate"] = substate_name
 
+  transition_reason = None
+  
   if (((verbosity_level >= 3) and significant_event) or
       (verbosity_level >= 5)):
+    transition_reason = describe_transition (old_state_name, old_substate_name,
+                                             state_name, substate_name,
+                                             the_exit)
     print (format_time(current_time) + " signal face " + signal_face["name"] +
-           " enters state " + state_name +
-           " substate " + substate_name + ".")
+           " " + transition_reason + ".")
   if ((table_level >= 3) and (current_time > table_start_time) and
       significant_event):
+    if (transition_reason == None):
+      transition_reason = describe_transition (old_state_name,
+                                               old_substate_name, state_name,
+                                               substate_name, the_exit)
     table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                       signal_face["name"] + " & " +
-                      "Enter state " + state_name + " substate " +
-                      substate_name + ". \\\\\n")
+                      cap_first_letter (transition_reason) + ". \\\\\n")
   states = finite_state_machine["states"]
   state = states[state_name]
   for substate in state:
@@ -1911,13 +1965,14 @@ def find_next_script_action_time():
   return (next_script_action_time)
 
 # Find the next traffic element time.
-# TODO
+# Someday compute the time until the next reaching of a milestone or
+# another traffic element.  Don't forget permissive turns.
 def find_next_traffic_element_time():
   min_time = end_time
   for traffic_element_name in traffic_elements:
     traffic_element = traffic_elements[traffic_element_name]
     if (traffic_element["present"]):
-      return (current_time + fractions.Fraction(1, 1000))
+      return (current_time + clock_step)
   return (None)
 
 # Main loop
@@ -1930,7 +1985,7 @@ while ((current_time < end_time) and (error_counter == 0)):
   for signal_face in signal_faces_list:
     # If we are starting up enter state Red substate Walting for Clearance.
     if ("state" not in signal_face):
-      enter_state (signal_face, "Red", "Waiting for Clearance")
+      enter_state (signal_face, "Red", "Waiting for Clearance", None)
     state_name = signal_face["state"]
     substate_name = signal_face["substate"]
 
@@ -2027,7 +2082,7 @@ while ((current_time < end_time) and (error_counter == 0)):
     if (found_exit != None):
       new_state_name = found_exit[1]
       new_substate_name = found_exit[2]
-      enter_state (signal_face, new_state_name, new_substate_name)
+      enter_state (signal_face, new_state_name, new_substate_name, found_exit)
       
   
   # Run the system programs.

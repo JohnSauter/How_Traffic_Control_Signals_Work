@@ -53,7 +53,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='draw_background 0.42 2025-08-02',
+                     version='draw_background 0.55 2025-10-04',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -300,7 +300,7 @@ for lane_name in lanes_info:
 # Place names on the lanes.
 font_face = cv2.FONT_HERSHEY_SIMPLEX
 font_scale = 2
-font_color = color_green
+font_color = color_white
 font_thickness = 3
 
 for lane_name in lanes_info:

@@ -45,7 +45,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='display_intersection 0.53 2025-09-15',
+                     version='display_intersection 0.55 2025-10-04',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
