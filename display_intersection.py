@@ -45,7 +45,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='display_intersection 0.55 2025-10-04',
+                     version='display_intersection 0.56 2025-10-19',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -143,10 +143,10 @@ if (do_lamp_map_output):
   if (have_table_label):
     lamp_map_file.write ("\\label{" + table_label + "}")
   lamp_map_file.write ("\\\\\n")
-  lamp_map_file.write ("  Signal Face & Signal Face Output Name & " +
+  lamp_map_file.write ("  Lane & Finite State Machine Output Name & " +
                        "Actual Lamp Name \\endfirsthead\n")
   lamp_map_file.write ("  \\caption{Lamp Wiring continued} \\\\\n")
-  lamp_map_file.write ("  Signal Face & Signal Face Output Name & " +
+  lamp_map_file.write ("  Lane & Finite State Machine Output Name & " +
                        "Actual Lamp Name \\endhead\n")
   
   for signal_face in signal_faces_list:
@@ -167,7 +167,7 @@ if (do_sensor_map_output):
   if (have_table_label):
     sensor_file.write ("\\label{" + table_label + "}")
   sensor_file.write ("\\\\\n")
-  sensor_file.write ("  Signal Face & Sensor & " +
+  sensor_file.write ("  Lane & Sensor & " +
                        "Toggles \\endfirsthead\n")
   sensor_file.write ("  \\caption{Sensor Wiring continued} \\\\\n")
   sensor_file.write ("  Signal Face & Sensor & " +
@@ -206,10 +206,11 @@ if (do_timer_durations_output):
   if (have_table_label):
     timer_durations_file.write ("\\label{" + table_label + "}")
   timer_durations_file.write ("\\\\\n")
-  timer_durations_file.write ("  Signal Face & Timer & Duration " +
+  timer_durations_file.write ("  Finite State Machine & Timer & Duration " +
                               "\\endfirsthead\n")
   timer_durations_file.write ("  \\caption{Timer Durations continued} \\\\\n")
-  timer_durations_file.write ("  Signal Face & Timer & Duration \\endhead\n")
+  timer_durations_file.write ("  Finite State Machine & Timer & Duration " +
+                              "\\endhead\n")
   
   for signal_face in signal_faces_list:
     timers_list = signal_face["timers"]

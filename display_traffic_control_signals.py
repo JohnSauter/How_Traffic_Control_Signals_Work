@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='traffic_control_signals 0.39 2025-07-06',
+                     version='traffic_control_signals 0.56 2025-10-12',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -140,8 +140,13 @@ def write_out_state (the_state, output_file_name):
       trace_file.write ("Writing out substate " + substate ["name"] + ".\n")
     substate_name = substate["name"]
     output_file.write ("\\item [Substate] " + substate_name + "\n")
+
+    if ("note" in substate):
+      the_note = substate["note"]
+      output_file.write ("\n  " + the_note + "\n")
+      
     output_file.write ("  \\begin{description}\n")
-    
+
     actions = substate["actions"]
     output_file.write ("  \\item [Entry Actions]\n")
     output_file.write ("    \\begin{itemize}\n")

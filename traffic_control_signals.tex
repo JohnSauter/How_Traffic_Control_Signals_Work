@@ -1,5 +1,5 @@
 % File: traffic_control_signals.tex, author: John Sauter,
-% date: October 4, 2025.
+% date: October 19, 2025.
 
 % Copyright © 2025 by John Sauter.
 % Licensed under the Creative Commons Attribution-ShareAlike 4.0 International
@@ -197,12 +197,12 @@
   pdfcontacturl={https://www.systemeyescomputerstore.com},
   pdfcopyright={Copyright {\copyright} 2025 by John Sauter},
   pdfurl={https://www.systemeyescomputerstore.com/How\%5FTraffic\%5FControl\%5FSignals\%5fWork/traffic\%5Fcontrol\%5Fsignals.pdf},
-  pdfdate={2025-10-04},
+  pdfdate={2025-10-19},
   pdflicenseurl={https://creativecommons.org/licenses/by-sa/4.0},
   pdfmetalang={en-US}
 }
 
-\date{2025-10-04}
+\date{2025-10-19}
 \maketitle
 \begin{abstract}
   Traffic control signals allow vehicles and pedestrians to move through
@@ -228,8 +228,19 @@ intersection in spite of it.
 
 In the United States, the standard for traffic control devices is the
 Manual on Uniform Traffic Control Devices, known as MUTCD\citep{MUTCD11}.
-Much of the terminology and some of the illustrations
+Much of the terminology and some of the pictures
 in this paper were taken from that document.
+
+We describe a traffic control signal as a set of finite state machines,
+one for each lane that provides entry to the intersection.
+A finite state machine is a process within a computer which has
+a limited number of states that it can be in, and for each state
+there are rules for making a transition to another state.
+Each finite state machine is associated with an entry lane
+and controls the signal face which is displayed to traffic
+entering the intersection through that lane.  A lane's finite
+state machine has timers and toggles so it can communicate
+with the environment, as described below.
 
 \section{Example 01: Single-lane Bridge}
 
@@ -254,8 +265,8 @@ in one way, it must not be permitted to move in another way.  We call each
 way that vehicles can move a travel path, and each travel path is named
 for the entering and exiting lane.  Here we have travel paths A1, A2, B1,
 and B2.  The two U-turns, A2 and B1, do not interfere with each other, but
-all the others do since they place two vehicles in the same place at the
-same time.
+A1 conflicts with B2 and B2 conflicts with A1 since they place two vehicles
+on the one-lane bridge going in opposite directions.
 
 When a vehicle reaches the bridge on lane A or B we do not
 know which lane it intends to exit on, so we must block all travel paths
@@ -263,8 +274,8 @@ which conflict with any travel path starting at that lane.  Thus,
 lane A must be blocked when a vehicle has entered the bridge from lane B,
 and vice-versa.
 
-This analysis is simple for the one-lane bridge but it is more complex
-for complex intersections.
+This conflict analysis is simple for the one-lane bridge but as we will see
+later it is more complex for complex intersections.
 
 \subsection{Signal Faces}
 
@@ -295,17 +306,19 @@ green.
 
 \subsection{Sensors}
 
-In order to know when we need to stop traffic from entering the bridge
-we have sensors in the lanes to detect vehicles.  When a vehicle is
-detected by a sensor we describe the sensor as being triggered.
+The finite state machine associated with a lane needs to know
+what traffic is flowing through that lane so it can set its
+signal face appropriately.  This information is provided
+by vehicle sensors buried under the roadway.
+When a vehicle passes over a sensor we say that the sensor
+has been triggered.
 
 \subsubsection{Traffic Present}
 
-Lanes A and B each
-have a vehicle sensor at the stop line where the lane meets the
-intersection.  This sensor tells us that a vehicle is entering
-the intersection or is waiting to enter.  We call this the Traffic
-Present sensor.
+Lanes A and B each have a vehicle sensor at the stop line where the lane
+meets the intersection.  This sensor tells the finite state machine
+that a vehicle is entering the intersection or is waiting to enter.
+We call this the Traffic Present sensor.
 
 \subsubsection{Traffic Approaching}
 
@@ -315,16 +328,17 @@ used to seeing the signal face turn green when they reach
 the intersection, and when it doesn't they will be unable to stop
 before entering the bridge.  To solve this problem we need a
 second vehicle sensor set back from the Traffic Present sensor.
-This lets us turn the signal face green before the vehicle is
+This lets the finite state machine turn the signal face green
+before the vehicle is
 close to the intersection.  If the vehicle operator does not
 see the green light when he is used to seeing it he will have
 time to stop safely.  We call this the Traffic Approaching sensor.
 
 \subsection{Timers}
 
-In addition to signal faces and their associated sensors, the
-traffic control signal needs a sense of time.  Here are the most
-important timers associated with each signal face:
+In addition to the lane's signal faces and sensors, the
+finite state machine needs a sense of time.  Here are the most
+important timers:
 
 \subsubsection{Red Clearance Time}
 The Red Clearance time is the time between when a signal face turns red
@@ -332,53 +346,60 @@ and the last vehicle to enter the bridge from that lane has left the
 bridge, so that we can give the other lane a green light.
 
 \subsubsection{Yellow Change Time}
-To give traffic warning that we are soon turning red, we first turn the light
-yellow for Yellow Change time.
+To give traffic warning that the finite state machine will soon
+set the signal face to red it first turns the signal face yellow
+for Yellow Change time.
 
 \subsubsection{Minimum Green Time}
-When a signal face turns green we give the traffic this much time
-to get moving before we consider turning red.
+After turning a signal face green the finite state machine
+gives the traffic this much time to get moving before it considers
+turning the signal face red.
 
 \subsubsection{Passage Time}
 When a vehicle operator sees a signal face turn yellow, he must stop
 before entering the intersection if he can do so safely, or proceed
 through the intersection if he cannot.  This decision is easy to make
-if the vehicle is close to the intersection or far from it, but it hard
-to make in an intermediate situation.  To avoid this, we try to turn
-yellow only when there are no vehicles in this intermediate situation.
+if the vehicle is close to the intersection or far from it, but is hard
+to make in an intermediate situation.  To avoid this, the finite state
+machine tries to turn the signal face yellow only when there are no
+vehicles in this intermediate situation.
 
-We do this by monitoring the Traffic Approaching sensor.  If no vehicle
-has activated this sensor for Passage Time seconds, we can be sure
-that any vehicles are either so close to the intersection that they
-can safely make it through before the signal face turns red, or far
-enough away that they clearly cannot.
+The finite state machine does this by monitoring the Traffic Approaching
+sensor.  If no vehicle has activated this sensor for Passage Time seconds,
+the finite state machine can be sure that any vehicles are either so close
+to the intersection that they can safely make it through before the signal
+face turns red, or far enough away that they clearly cannot.
+We call this a gap in the traffic.
 
 \subsubsection{Maximum Green time}
-If we have reached maximum green time and there has been no conflicting
-traffic, wait for some conflicting traffic, then look again for a gap.
+If the finite state machine has reached maximum green time and there has
+been no conflicting traffic, it will wait for some conflicting traffic,
+then look again for a gap in the traffic.
 
 \subsubsection{Maximum Green Extra time}
-If we have reached maximum green time and there has been no conflicting
-traffic, but conflicting traffic arrives later, wait maximum green extra time
-for a gap.  If there isn't one, turn red anyway.
+If the finite state machine has reached maximum green time and there has
+been no conflicting traffic, but conflicting traffic arrives later,
+it will wait maximum green extra time for a gap in the traffic.
+If there isn't one, it will turn the signal face red anyway.
 
 \subsubsection{Traffic Gone Time}
-If we are green and there is no conflicting traffic,
-but we have seen no traffic for Traffic Gone seconds, turn red.
+If the signal face is green and there is no conflicting traffic,
+but the finite state machine has seen no traffic for Traffic Gone seconds,
+it will set the signal face red.
 This is needed to keep both signal faces
 red when there is no traffic, which is the normal case.  Only if the other
-signal face has been red for Red Clearance seconds can we give
-an instant green when traffic approaches.
+signal face has been red for Red Clearance seconds can this finite state
+machine instantly set its signal face to green when traffic approaches.
 
 \subsubsection{Green Limit Time}
 
-If we have been green for Green Limit seconds, turn red even if there
-is no conflicting traffic and there is traffic through this signal
-face's lane.
+If the signal face has been green for Green Limit seconds, the finite state
+machine will set the signal face to red even if there is no conflicting
+traffic and there is traffic passing through this finite state machine's lane.
 
 \subsubsection{Red Limit Time}
-If the signal face has been red for this many seconds, turn it green
-even if there is no traffic.
+If the signal face has been red for this many seconds, the finite state
+machine will set the signal face to green even if there is no traffic.
 
 \subsection{Timer Durations}
 
@@ -392,79 +413,94 @@ Here are the lengths of time that each timer runs:
 
 \subsection{Toggles}
 
-When a signal face detects a vehicle approaching it must not turn green
-if there is a vehicle already on the bridge coming the other way.
-This means that the signal faces must communicate with each other.
-They do this with toggles.  Toggles are also used to communicate
-from sensors to their signal faces.
+When a finite state machine detects a vehicle approaching it must not turn
+its signal face green if there is a vehicle already on the bridge coming
+the other way.
+This means that the finite state machines must communicate with each other.
+They do this with toggles.  Toggles are also used to tell the finite
+state machines that their sensors have been triggered.
 
 A toggle may be either set (true) or clear (false).
 Here are the most important toggles:
 
 \subsubsection{Traffic Approaching}
 
-When the Traffic Approaching sensor has detected a vehicle
-it sets this toggle.  The toggle remains set until it is cleared
-by the finite state machine, even after the sensor is no longer
-detecting a vehicle.
+When a lane's Traffic Approaching sensor has detected a vehicle
+it sets this toggle in the lane's finite state machine.
+The toggle remains set after the sensor is no longer
+detecting a vehicle until it is cleared by the finite state machine.
 
 \subsubsection{Traffic Present}
 
-When the Traffic Present sensor has detected a vehicle
-it sets this toggle.  The toggle remains set until it is cleared
-by the finite state machine, even after the sensor is no longer
-detecting a vehicle.
+When a lane's Traffic Present sensor has detected a vehicle
+it sets this toggle in the lane's finite state machine.
+The toggle remains set after the sensor is no longer
+detecting a vehicle until it is cleared by the finite state machine.
 
 \subsubsection{Request Green}
 
-When we are red but want to turn green we set this toggle.
+When a finite state machine's signal face is red but
+the finite state machine wants to turn it green it set this toggle.
 
 \subsubsection{Green Request Granted}
 
-When we see this toggle set we can ask the other signal
-face to turn red.
+When a finite state machine sees this toggle set it can ask the conflicting
+finite state machines to block their lane's traffic.
 
 \subsubsection{Request Partial Clearance}
 
-When we have been granted our request to turn green we set
+When a finite state machine has been granted its request to turn
+its signal face green it sets
 the Request Partial Clearance toggle.  This causes the Clearance Requested
-toggle to be set in the other signal face.
+toggle to be set in the other finite state machines which control lanes
+that conflict with this one.  In this example, if finite state machine
+A sets its Request Partial Clearance toggle, that will cause the
+Clearance Requested toggle to be set in finite machine B, and vice versa.
 
 \subsubsection{Clearance Requested}
 
-When the other signal face sees that its Clearance Requested toggle has been
-set, it turns red.
+When the other finite state machines see that their Clearance Requested
+toggles have been set, they start the process which will lead to
+them turning their signal faces red.
 
 \subsubsection{Cleared}
 
-When the other signal face has been red long enough for all of its traffic
-to have cleared the intersection it sets its Cleared toggle.
+When a finite state machine's signal face has been red long enough for all
+of the traffic which entered the intersection through this finite state
+machine's lane to have cleared the intersection the finite state machine
+sets its Cleared toggle.
 This causes the Partial Conflicting Paths are Clear toggle to be set
-in our signal face.
+in finite state machines which are waiting for it.
 
 \subsubsection{Partial Conflicting Paths are Clear}
 
-When we see this toggle set we can change from red to green.
+When a finite state machine see this toggle set it can change its signal
+face from from red to green.
 
 \subsubsection{Traffic Flowing}
 
-When we have turned green we set this toggle to indicate
-that we no longer need to turn green.  Doing this gives permission
-to the other signal face to begin the process of turning green,
-when and if it needs to.
+When a finite state machine has turned its signal face green it sets the
+Traffic Flowing toggle to indicate that it no longer needs to turn
+its signal face green.
+Doing this gives permission to the other finite state machine to begin the
+process of turning its signal face green, when and if it needs to.
 
 \subsection{Wiring the Finite State Machines to the Lamps}
 
-Each signal face finite state machine is wired to the signal face lamps that
-it controls.  Table \ref{lamp_map_01} shows wiring between the signal
+Each finite state machine is wired to the signal face lamps in the
+signal face that it controls.
+Table \ref{lamp_map_01} shows wiring between the signal
 face finite state machines and the lamps in their signal faces.
+The mapping is simple for this example but is more complex
+for the examples we will discuss later.
 
 \input {lamp_map_names_01.tex}
 
 \subsection{Wiring the Finite State Machines to the Sensors}
 
-Each signal face finite state machine is wired to the sensors
-for its lane.
+Each finite state machine is wired to the sensors
+for its lane.  Again, the mapping is simple for this example
+but will be more complex later.
 
 \input {sensor_map_01.tex}
 
@@ -473,23 +509,27 @@ for its lane.
 With these resources we can construct a process which uses them
 to move traffic safely and efficiently across the bridge.
 We have two finite state machines, one for each signal face,
-and some system programs to let them communicate.
+and some system programs to let them communicate using toggles.
+
+Here are the states for each finite state machine.  Each state
+has substates which we will ignore for now.
 
 \subsubsection{Red State}
-When a signal face is in the red state its light is red.  If it has
-been red for Red Clearance Time seconds it sets the Cleared toggle.
+When a finite state machine is in the red state its signal face is red.
+If it has been in the red state for Red Clearance Time seconds
+it sets the Cleared toggle.
 
 If it sees that the Traffic Approaching toggle is set it sets
 the Request Green toggle, which will eventually lead to it moving
 to the green state.
 
 \subsubsection{Yellow State}
-When a signal face is in the yellow state its light is yellow.
-If it has been yellow for Yellow Change Time seconds it moves
+When a finite state machine is in the yellow state its signal face is yellow.
+If it has been in the yellow state for Yellow Change Time seconds it moves
 to the red state.
 
 \subsubsection{Green State}
-When a signal face is in the green state its light is green.
+When a finite state machine is in the green state its signal face is green.
 If it sees that the Clearance Requested toggle is set it moves to the
 yellow state when there is a gap in the traffic, or if too much time
 passes without a gap.
@@ -497,9 +537,10 @@ passes without a gap.
 \subsubsection{System Programs}
 
 The green request granted system program looks for the Green Request
-toggle in either signal face, and sets the Green Request Granted
-toggle.  Other system programs mediate the other stages of moving
-information between the signal faces.  These system programs act
+toggle in either finite state machine and sets that finite state machine's
+Green Request Granted toggle.
+Other system programs mediate the other stages of moving the
+finite state machines between states.  These system programs act
 in a more complex way when the intersection is more complex.
 
 \subsection{Illustrations}
@@ -507,12 +548,9 @@ in a more complex way when the intersection is more complex.
 \subsubsection{Idle}
 
 When the intersection starts up all toggles are set to false,
-all timers are set to stopped, and each signal face finite state machine
-is set to state Red substate Waiting for Clearance.
-
-Each signal face will proceed
-from state Red substate Waiting for Clearance to substate Travel Path is Clear.
-Because the Red Limit timers have infinite duration both signal faces
+all timers are set to stopped, and each finite state machine
+is set to state Red.
+Because the Red Limit timers have infinite duration both finite state machines
 will remain red until some traffic appears.
 
 Here is the detailed log:
@@ -538,6 +576,10 @@ If your PDF viewer will not play the animation you can see it on Youtube
 at this URL: 
 \href{https://youtu.be/YgWkwT\_6EcE}{https://youtu.be/YgWkwT\_6EcE}.
 
+Here are the events shown in the above animation:
+
+\input{bridge_one_car_table.tex}
+
 \subsubsection{Two Cars}
 
 If two cars approach the bridge at the same time one of them must stop.
@@ -555,6 +597,10 @@ If your PDF viewer will not play the animation you can see it on Youtube
 at this URL:
 \href{https://youtu.be/nRE2B95XoHo}{https://youtu.be/nRE2B95XoHo}.
 
+Here are the events shown in the above animation:
+
+\input{bridge_two_cars_table.tex}
+
 \section{Example 02: four-way intersection}
 
 Consider now a rural intersection of two two-lane roads.
@@ -565,7 +611,7 @@ Consider now a rural intersection of two two-lane roads.
     \label{fig:four-way_intersection}}
 \end{figure}
 
-In figure \ref{fig:four-way_intersection} vehicles approach from the
+In figure \ref{fig:four-way_intersection} vehicles may approach from the
 north, south, east and west.  Vehicles from the south enter the intersection
 on lane A and can exit on lanes 1 (U-turn), 2 (right turn), 3 (atraight
 through) or 4 (left turn).  Lanes B, C, and D likewise have four exit
@@ -585,7 +631,8 @@ that the signal face on lane C can be green at the same time as the
 signal face on lane A.  We expect that, in the rare case where a southbound
 vehicle wants to turn left at the same time as a northbound vehicle,
 the vehicle operators will signal to each other so that they do not
-enter the intersection at the same time.
+enter the intersection at the same time, just as they would if the
+intersection had no traffic control signal.
 
 \subsection{Signal Faces}
 
@@ -601,9 +648,9 @@ the emergency vehicle is coming from.
 
 It is customary for signal faces A and C to operate together,
 and similarly for signal faces B and D.  To accomplish this, the sensors for
-signal face A set both the corresponding toggles for signal face A
-and for signal face C, and vice-versa.  The same is true for the sensors
-for signal faces B and D.
+lane A set both the corresponding toggles for finite state machine
+A and for finite state machine C, and vice-versa.
+The same is true for the sensors for lanes B and D.
 
 \subsection{Timers}
 
@@ -611,9 +658,10 @@ In addition to the timers we described for the single-lane bridge,
 we need the following:
 
 \subsubsection{Traffic Still Present Time}
-If we are trying to turn green due to a vehicle being present or approaching
-the intersection, but after this much time the vehicle is not present, then
-we stop trying to turn green.  The vehicle has likely made a permissive right
+If a finite state machine is trying to turn its signal face green due to
+a vehicle being present or approaching the intersection, but after this
+much time the vehicle is not present, then the finite state machine stops
+trying to turn green.  The vehicle has likely made a permissive right
 turn so there is no longer a need to stop the cross traffic.
 
 \subsection{Toggles}
@@ -624,13 +672,13 @@ we need toggles to handle the emergency vehicle sensor.
 \subsubsection{Preempt Green}
 
 This toggle is set by the emergency vehicle detector if the emergency
-vehicle is coming from the direction controlled by this signal face.
+vehicle is coming from the lane controlled by this signal face.
 
 \subsubsection{Preempt Red}
 
 This toggle is set by the emergency vehicle detector if the emergency
-vehicle is coming from another direction, or if it cannot detect
-which direction the emergency vehicle is coming from.
+vehicle is coming from another lane, or if it cannot detect
+which lane the emergency vehicle is coming from.
 
 \subsection{Timer Durations}
 
@@ -640,18 +688,18 @@ Here are the lengths of time that each timer runs:
 
 \subsection{Wiring the Finite State Machines to the Lamps}
 
-Each signal face finite state machine is wired to the lamps that
-it controls.  Table \ref{lamp_map_02} shows wiring between the signal
-face finite state machines and the lamps in the signal faces.
+Each finite state machine is wired to the lamps that
+it controls.  Table \ref{lamp_map_02} shows wiring between the
+finite state machines and the lamps in their signal faces.
 
 \input {lamp_map_names_02.tex}
 
 \subsection{Wiring the Finite State Machines to the Sensors}
 
-Each signal face finite state machine is wired to the sensors
-for its lane.  The traffic sensors for signal faces A and C
-are also wired to signal faces C and A, respectively, and
-the same for signal faces B and D.
+Each finite state machine is wired to the sensors
+for its lane.  The traffic sensors for lanes A and C
+are also wired to finite state machines C and A, respectively, and
+the same for lanes B and D.
 
 \input {sensor_map_02.tex}
 
@@ -664,26 +712,29 @@ toggles.
 \subsubsection{States}
 
 The states are the same as for the single-lane bridge,
-except the Preempt Red and Preempt Green toggles will move the signal face
+except the Preempt Red and Preempt Green toggles will move the
+finite state machine
 to the correct state as quickly as possible consistent with
 safety, and keep it there until the sensor ceases to be triggered.
 
 \subsubsection{System Programs}
 
-Because we have decided that signal faces A and C do not conflict,
-we can let them both be green at the same time, and likewise for
-signal faces B and D.
+Because we have decided that entry lanes A and C do not conflict,
+we can let their signal faces both be green at the same time, and likewise for
+entry lanes B and D.
 
-If there were four independent signal faces the green request granted
-system program would have to  be careful not to let two signal faces
+If there were four independent finite state machines the green request granted
+system program would have to  be careful not to let two finite state machines
 exchange green between them, freezing out a third, since an excessive
-wait for a green will cause a vehicle operator to ignore the signal face
-and proceed into an intersection which may be occupied by another vehicle.
+wait for a green signal face will cause a vehicle operator to ignore the
+signal face and proceed into an intersection which may be occupied by
+another vehicle.
 
-However, because we have tied the traffic sensors of signal faces A and C
-together, and the same for B and D, they will actually operate
-as though they were a single signal face, except in the presence
-of an emergency vehicle.
+However, because the timer values for all finite state machines are the same
+and we have tied the traffic sensors of lanes A and C
+together, and the same for B and D, the corresponding finite state machines
+will actually operate as though they were a single finite state machine,
+except in the presence of an emergency vehicle.
 
 \subsection{Illustrations}
 
@@ -705,9 +756,14 @@ If your PDF viewer will not play the animation you can see it on Youtube
 at this URL:
 \href{https://youtu.be/CDJMpd8RGm4}{https://youtu.be/CDJMpd8RGm4}.
 
+Here are the events shown in the above animation:
+
+\input{four_corners_many_table.tex}
+
 \section{Example 03: Complex Suburban Intersection}
 
 The final example is of a complex suburban intersection.
+
 \begin{figure}[htb]
   {\includegraphics[width=\textwidth]{background_03}}
   {\caption{Example 03: Complex Suburban Intersection}
@@ -719,12 +775,15 @@ northorthbound, B and C, plus a dedicated left turn lane, A.
 For southbound traffic there are likewise two through lanes,
 F and G, plus a dedicated left turn lane, E.
 Vehicles coming from the west on lane H who wish to turn right
-must use the dedicated right turn lane, J.
+must use the dedicated right turn lane, J.  Vehicles coming
+from the east enter the intersection on lane D and may leave
+on any of the exit lanes.
+
 There is heavy traffic moving north and south,
 light traffic moving east and west.
 
 There is a pedestrian crosswalk on the north side of the intersection
-and another on the south.
+and another on the south side.
 
 \subsection{Conflicts}
 
@@ -738,10 +797,9 @@ as shown in the following table.
 
 \begin{longtable}{l | l | p{8cm}}
   \caption{Travel Path Conflicts} \\
-  in & out & conflicts with \endfirsthead
+  in & out & conflicts with \\ \hline \endfirsthead
   \caption{Travel Path Conflicts continued} \\
-  in & out & conflicts with \endhead
-  \hline
+  in & out & conflicts with \\ \hline \endhead
   A & 6, 2, 1 & D6, D1, D2, F2, G1, G6, H5, H4, H3, J1, pswpse, psepsw \\
   B & 5 & D2, D1, D6, E5, E3, H5, H4, H3, pswpse, psepsw, pnwpne, pnepnw \\
   C & 3, 4 & D1, D2, D3, D4, D6, E4, H4, H3, pswpse, psepsw, pnwpne, pnepnw \\
@@ -769,11 +827,12 @@ This means that only one of the two corresponding signal faces
 can be green at a time.
 
 \begin{longtable}{c | l}
-  \caption{Signal Face Conflict Table} \\
-  signal face & conflicts with signal faces \endfirsthead
-  \caption{Signal Face Conflict Table continued} \\
-  signal face & conflicts with signal faces \endhead
-  \hline
+  \caption{Conflict Table} \\
+  lane & conflicts with lane \\
+  \hline \endfirsthead
+  \caption{Conflict Table continued} \\
+  lane & conflicts with lane \\
+  \hline \endhead
   A & pse, psw, D, F, G, H, J \\
   pse and psw & A, B, C, D, F, G, J \\
   B and C & pse, psw, D, E, pne, pnw, H \\
@@ -869,7 +928,8 @@ pedestrians with poor sight.
 \subsection{Sensors}
 
 Lanes D, H, and J do not have Traffic Approaching sensors, so their
-Traffic Present sensors also set their Traffic Approaching toggles.
+Traffic Present sensors also set the Traffic Approaching toggles
+in their respective finite state machines.
 
 Each pedestrian crossing is equipped with a button so the pedestrian can
 signal his desire to cross the street.  This is equivalent to the
@@ -881,7 +941,7 @@ We need additional timers to handle permissive left turns.
 
 \subsubsection{Left Flashing Yellow Waiting Time}
 
-Lanes A and E will allow a left turn in the presence of oncoming traffic,
+Lanes A and E can allow a left turn in the presence of oncoming traffic,
 called a permissive left turn. However, if oncoming traffic is heavy enough
 that a waiting vehicle cannot make its turn for Left Flashing Yellow Waiting
 seconds, the oncoming traffic will be stopped, thus allowing a protected left
@@ -889,10 +949,11 @@ turn.
 
 \subsubsection{Minimum Left Flashing Yellow Time}
 
-Lanes A and E will allow a left turn in the presence of oncoming traffic,
-called a permissive left turn. Once we have turned on the left flashing
-yellow light, we keep it on at least Minimum Left Flashing Yellow time
-to make sure the left turning traffic is able to start up.
+Lanes A and E can allow a left turn in the presence of oncoming traffic,
+called a permissive left turn. Once the finite state machine has turned on
+the left flashing yellow light in the signal face, it keeps that light on
+for at least Minimum Left Flashing Yellow time to make sure the left turning
+traffic is able to start up.
 
 \subsection{Timer Durations}
 
@@ -914,78 +975,83 @@ left turns.
 
 \subsubsection{Flash Red}
 When a malfunction or a traffic control officer sets this toggle
-the signal face will set its light to flashing red.
+the finite state machine will set its signal face to flashing red.
 
 \subsubsection{Flash Yellow}
 When a malfunction or a traffic control officer sets this toggle
-the signal face will set its light to flashing yellow.
+the finite state machine will set its signal face to flashing yellow.
 Lanes A and E, which have two yellow lamps, will flash the upper lamp,
 since flashing the lower lamp means that left turn is permitted.
 
 \subsubsection{Manual Red}
-When a traffic control operator sets this toggle the signal face will
-turn red as quickly as possible consistent with safety and remain
-red until this toggle is cleared.
+When a traffic control operator sets this toggle the finite state machine
+will set its signal face to red as quickly as possible consistent with
+safety and keep it red until this toggle is cleared.
 
 \subsubsection{Manual Green}
-when a traffic control operator sets this toggle the signal face will
-turn green as quickly as possible consistent with safety and remain
-green until this toggle is cleared.
+when a traffic control operator sets this toggle the finite state machine
+will set its signal face to green as quickly as possible consistent with
+safety and keep it green until this toggle is cleared.
 
 \subsubsection{Request Clearance}
-If a lane remains occupied after signaling that a permissive left
-turn is allowed, the signal face asks that oncoming traffic also
-be stopped by setting toggle Request Clearance.
+If a lane remains occupied after its finite state machine has signaled
+that a permissive left turn is allowed, the finite state machine
+asks that oncoming traffic also be stopped by setting toggle Request Clearance.
 
 \subsubsection{Conflicting Paths are Clear}
-When a signal face sees that this toggle is set it can turn green.
+When a finite state machine  sees that this toggle is set it can
+set its signal face to green.
 If this is a left turn signal the oncoming traffic has been stopped.
 
 \subsection{Wiring the Finite State Machines to the Lamps}
 
-Each signal face finite state machine is wired to the lamps that
-it controls.  This lets us use arrow lamps instead of circular lamps
+Each finite state machine is wired to the lamps in its signal face.
+This lets the signal face  use arrow lamps instead of circular lamps
 to indicate to the motorist which travel paths are available to him.
-In our example, signal face A has its Steady Circular Red output
-connected to a lamp which shows a Steady Left Arrow Red.
-Table \ref{lamp_map_03} shows wiring between the signal face finite state
+Signal face A, for example, has its Steady Circular Red output
+connected to a lamp in the signal face which shows a Steady Left Arrow Red.
+Table \ref{lamp_map_03} shows wiring between the finite state
 machines and the lamps in the signal faces.
 
 \input {lamp_map_names_03.tex}
 
 \subsection{Wiring the Finite State Machines to the Sensors}
 
-Each signal face finite state machine is wired to the sensors
+Each finite state machine is wired to the sensors
 for its lane.
 
-Lanes A and E have their distant sensor where
+Lanes A and E have their Traffic Approaching sensor where
 the left turn lane begins; lanes B, C, F, and G have their
-distant sensors far enough from the intersection that a vehicle
-moving at the speed limit which sees the lamp turn yellow
-just as he trips the sensor has time to stop safely.
+Traffic Approaching sensors far enough from the intersection that a vehicle
+moving at the speed limit which sees the signal face turn yellow
+just as he triggers the sensor has time to stop safely.
 
-Lanes D, H, and J do not have distant sensors, so the output
-of the near sensor is used for both functions.  The sensors
-for the pedestrian signal faces are the button that the pedestrian presses
-to cross.
+Lanes D, H, and J do not have Traffic Approaching sensors, so the output
+of the Traffic Present sensor is used for both functions.
+
+The sensors for the pedestrian crosswalks are the buttons that
+the pedestrians pres to cross.
 
 The driving public is accustomed to signal faces which control
 adjacent through lanes operating together: they would think it strange
 if signal face B turned red while C remained green.  We accomodate this
-by connecting the sensors for lanes B and C to both signal face B
-and C, and likewise for F and G.
+by connecting the sensors for lanes B and C to both finite state machines
+B and C, and likewise for F and G.  We also make the timer durations
+match so the pairs of finite state machines will operate in lockstep.
 
 Similarly, if pedestrians can cross the crosswalk in one direction,
 it is customary to also allow crossing in the opposite direction,
 even if the sensor has not been triggered.  Thus we connect the sensors
-for lanes psw and pse to both signal faces psw and pse, and the sensors
-for lanes pnw and pne to both signal faces pnw and pne.
+for lanes psw and pse to both finite state machines faces psw and pse,
+and the sensors for lanes pnw and pne to both finite state machines
+pnw and pne.  We also make the timer durations match in finite state
+machines psw and pse and also pnw and pne.
 
 \input {sensor_map_03.tex}
 
 \subsection{Process}
 
-We have nine signal faces, each with one or two sensors, plus an emergency
+We have nine entry lanes, each with one or two sensors, plus an emergency
 vehicle sensor and manual override controls.
 
 \subsubsection{States}
@@ -999,37 +1065,42 @@ that will cause it to exit the substate and enter another.
 
 \begin{description}
 
-\item[Red]  
-The Red major state shows a red light, which means traffic in this
-lane must stop.  When the traffic light has been red for Red Clearance Time,
-the finite state machine sets its Cleared toggle, which is tested by other
-signal faces to see if they can turn green.  If a vehicle or
-pedestrian arrives at this signal face it starts the process
-of itself tturning green.
+\item[Red]
+  The Red major state has its signal face set to red,
+  which means traffic in this
+  lane must stop.  When the signal face has been red for Red Clearance Time,
+  the finite state machine sets its Cleared toggle, which is tested by other
+  signal faces to see if they can turn green.  If a vehicle or
+  pedestrian arrives at this lane it starts the process
+  of itself turning its signal face green.
 
-Here are the details of the Red state:
+  Here are the details of the Red state:
       
-\input{red_state_table.tex}
-
+  \input{red_state_table.tex}
+  
 \item[Green]
-The Green major state shows a green light, which means traffic in this lane
-may proceed through the intersection.  When the light turns green
-we keep the light green long enough
-for the traffic to get moving.  Afterwards if another signal face wants us
-to turn red we wait for a break in the traffic.  If there is no break in the
-traffic for a while we turn red anyway.  If an emergency vehicle is present
-we turn red as quickly as we safely can.
+  The Green major state has its signal face set to green,
+  which means traffic in this lane
+  may proceed through the intersection.
+  When the signal face light turns green
+  we keep it green long enough
+  for the traffic to get moving.  Afterwards if another finite state machine
+  wants this one to turn red we wait for a break in the traffic.
+  If there is no break in the
+  traffic for a while we turn red anyway.
+  If an emergency vehicle is present and not in this lane
+  we turn red as quickly as we safely can.
 
-\input{green_state_table.tex}
+  \input{green_state_table.tex}
 
 \item[Yellow]
-The Yellow state is an intermediate state between green and red, and when
-flashing means that there may be conflicting traffic.  On left turn signal
-faces with a fourth light that shows a flashing yellow left arrow, that
-light is included in the Yellow state.
+  The Yellow state is an intermediate state between green and red, and when
+  flashing means that there may be conflicting traffic.  On left turn signal
+  faces with a fourth light that shows a flashing yellow left arrow, that
+  light is included in the Yellow state.
 
-\input{yellow_state_table.tex}
-
+  \input{yellow_state_table.tex}
+  
 \end{description}
 
 The State Diagram Summary in figure \ref{fig:State_Diagram_Summary}
@@ -1043,134 +1114,151 @@ transitions of the finite state machines:
 
 \subsubsection{System Programs}
 
-Communication between traffic signal face finite state machiness is handled by
+Communication between finite state machiness is handled by
 system programs.
 These system programs run constantly, reacting to toggles in the
-signal faces by setting toggles in other signal faces.
+finite state machines  by setting toggles in other finite state machines.
 
 \begin{description}
 \item [Green Request Granted]
 
-To prevent two signal faces from bouncing green time between each other,
-locking out a third signal face, this system program makes sure that
-traffic never has to wait too long for a green light.
+  To prevent two finite state machines from bouncing green time between
+  themselves, locking out a third finite state machine,
+  this system program makes sure that
+  traffic never has to wait too long for a green light.
 
-The Green Request Granted system program maintains a persistent list of
-signal faces that are requesting green,
-a list of signal faces that are allowed to turn green and a list of signal
-faces that have turned green since the currently waiting signal face
-has had its chance.
-All of these lists start empty.
+  The Green Request Granted system program maintains a persistent list of
+  finite state machines that are requesting green,
+  a list of finite state machines that are allowed to turn green
+  and a list of finite state machines that have turned green since the
+  currently waiting signal face has had its chance.
+  All of these lists start empty.
 
-Go through all of the signal faces looking for those with toggle Request
-Green true.  Add each such signal face to the list of
-signal faces that are requesting green, unless the signal face is already on
-the list or is in the list of signal faces allowed to turn green.
+  Go through all of the finite state machines
+  looking for those with toggle Request
+  Green true.  Add each such finite state machines to the list of
+  finite state machines that are requesting green,
+  unless the finite state machine is already on
+  the list or is in the list of finite state machines allowed to turn green.
 
-If the list of signal faces allowed to turn green is empty, move the
-oldest signal face on the list of signal faces that are requesting
-green to the list of signal faces allowed to turn green and empty the list
-of signal faces that have turned green since the currently waiting
-signal face has had its chance.
+  If the list of finite state machines allowed to turn green is empty, move the
+  oldest finite state machine on the list of finite state machines
+  that are requesting green to the list of finite state machines allowed to
+  turn green and empty the list
+  of finite state machines that have turned green since the currently waiting
+  finite state machine has had its chance.
 
-Although we wish to allow the signal face that has been on the
-signal faces requesting to turn green list the longest to turn green
-as soon as possible, we can let other signal faces turn green
-at the same time or sooner if they will not delay this signal face
-from turning green.
+  Although we wish to allow the finite state machine that has been on the
+  finite state machines requesting to turn green list the longest to turn green
+  as soon as possible, we can let other finite state machines turn green
+  at the same time or sooner if they will not delay this finite state machine
+  from turning green.
 
-If the oldest signal face on the list of signal faces that are
-requesting to turn green does not conflict with any of the signal
-faces that are already allowed to turn green, move it from the
-list of signal faces that are requesting to turn green to the list
-of signal faces that are allowed to turn green and empty the list
-of signal faces that have turned green since the currently waiting
-signal face has had its chance.
+  If the oldest finite state machine on the list of finite state machines
+  that are requesting to turn green does not conflict with any of the
+  finite state machines that are already allowed to turn green,
+  move it from the list of finite state machines that are requesting
+  to turn green to the list of finite state machines that are allowed
+  to turn green and empty the list of finite state machines that have
+  turned green since the currently waiting finite state machine has had
+  its chance.
 
-Keep doing the above until the list is empty or the oldest signal
-face on the list cannot move because of a conflict.
+  Keep doing the above until the list is empty or the oldest finite
+  state machine on the list cannot move because of a conflict.
 
-Now we try to let some signal faces turn green out of order, being
-careful not to allow any other signal face to be starved out of any
-opportunity to turn green.
+  Now we try to let some finite state machines turn green out of order, being
+  careful not to allow any other finite state machine to be starved out of any
+  opportunity to turn green.
 
-Provided the oldest signal face on the list of signal faces
-requesting to turn green has not been waiting too long,
-go through the list of signal faces that are requesting to turn green
-starting with the oldest.  For each such signal face that does not
-conflict with any of the signal faces already in the set of signal
-faces allowed to turn green, and is not in the list of signal faces
-that have turned green since the currently waiting signal face has
-had its chance, move that signal face to the list of signal faces
-allowed to turn green and add it to the list of signal faces that have
-turned green since the currently waiting signal face has had its
-chance.
+  Provided the oldest finite state machine on the list of finite state
+  machines requesting to turn green has not been waiting too long,
+  go through the list of finite state machines that are requesting
+  to turn green starting with the oldest.
+  For each such finite state machine that does not
+  conflict with any of the finite state machines already in the set of
+  finite state machines allowed to turn green, and is not in the list of
+  finite state machines that have turned green since the currently waiting
+  finite state machine has had its chance, move that finite state machine
+  to the list of finite state machines allowed to turn green and add it to
+  the list of finite state machines that have
+  turned green since the currently waiting finite state machine has had its
+  chance.
 
-Go through the list of signal faces allowed to turn green.  For any
-for which toggle Traffic Flowing is true, remove them from the set
-since they have now turned green.
+  Go through the list of finite state machines allowed to turn green.  For any
+  for which toggle Traffic Flowing is true, remove them from the list
+  since they have now turned green.
 
-Go through the list of signal faces allowed to turn green.  For each
-such signal face, set its Green Request Granted toggle, telling it
-that it can now turn green.
+  Go through the list of finite state machines allowed to turn green.  For each
+  such finite state machine, set its Green Request Granted toggle, telling it
+  that it can now turn green.
 
 \item[Clearance Requested]
 
-When a signal face wants to turn green, it must wait for all conflicting
-signal faces to become clear.  This system program conveys the request
-for clearance to the necessary signal faces.
+  When a finite state machine wants to turn green,
+  it must wait for all conflicting
+  travel paths to become clear.  This system program conveys the request
+  for clearance to the finite state machines which control entry lanes
+  that conflict with this one.
 
-Go through all of the signal faces looking for those with toggle
-Request Clearance true.  For each such signal face, consult the traffic
-signal conflict table to see which signal faces conflict with this one.
-For each such signal face, set its Clearance Requested toggle.
+  Go through all of the finite state machines looking for those with toggle
+  Request Clearance true.  For each such finite state machine,
+  consult the conflict table to see which lanes conflict with this one.
+  For each such lane, set the Clearance Requested toggle in its finite
+  state machine.
 
 \item[Partial Clearance Requested]
 
-Go through all of the signal faces looking for those with toggle
-Request Partial Clearance true.  For each such signal face, consult the
-partial signal face conflict table to see which signal faces conflict
-with this one.
-For each such signal face, set its Clearance Requested toggle.
+  Go through all of the finite state machines looking for those with toggle
+  Request Partial Clearance true.  For each such finite state machine,
+  consult the partial signal face conflict table to see which lanes conflict
+  with this one.  For each such lane, set the Clearance Requested toggle
+  in its finite state machine.
 
-This is the same as Clearance Requested, but we use the partial signal face
-conflict table, which matches the signal face conflict table except
-for the left turn lanes, where their conflict with oncoming traffic is
-omitted.
-This lets left turners try to make a
-permissive left turn, but if they cannot the oncoming traffic will also
-be stopped.
+  This is the same as Clearance Requested, but we use the partial signal face
+  conflict table, which matches the conflict table except
+  for the left turn lanes, where their conflict with oncoming traffic is
+  omitted.
+  This lets left turners try to make a permissive left turn.
+  If they cannot the finite state machine will use the Clearance Requested
+  toggle to cause the oncoming traffic to stop.
 
 \item[Conflicting Paths are Clear]
 
-Go through the signal faces looking for those with toggle Request Clearance
-or toggle Request Partial Clearance
-true.  For each such signal face, consult the signal face conflict table
-to determine which signal faces conflict with this one.  If all of those
-signal faces have their Cleared toggles true, set the Conflicting Paths
-are Clear toggle in this signal face.
+  Go through the finite state machines looking for those with toggle
+  Request Clearance
+  or toggle Request Partial Clearance
+  true.  For each such finite state machine, consult the conflict table
+  to determine which entry lanes contain a travel path that conflicts
+  with any of the travel paths controlled by this finite state machine's
+  entry lane.  If all of the
+  corresponding finite state machines have their Cleared toggles true,
+  set the Conflicting Paths
+  are Clear toggle in this finite state machine.
 
 \item[Partial Conflicting Paths are Clear]
 
-Go through the signal faces looking for those with toggle Request Partial
-Clearance true.  For each such signal face, consult the partial
-signal face conflict table to determine which signal faces conflict
-with this one.  If all of those signal faces have their Clear toggles
-true, set the Partial Conflicting Paths are Clear toggle in this
-signal face.
+  Go through the finite state machines looking for those with toggle
+  Request Partial
+  Clearance true.  For each such finite state machine, consult the partial
+  conflict table to determine which entry lanes contain a travel path
+  that conflicts any of the travel paths controlled by this finite state
+  machine's entry lane.  If all of the corresponding finite state machines
+  have their Clear toggles
+  true, set the Partial Conflicting Paths are Clear toggle in this
+  finite state machine.
 
 \item[Safety Check]
 
-Safety Check is a different kind of system program.  It does not
-monitor toggles from the various signal faces but instead checks
-for unsafe conditions.  
+  Safety Check is a different kind of system program.  It does not
+  monitor toggles from the various finite state machines but instead checks
+  for unsafe conditions.  
   
-An error in the description of the finite state machine, or an error
-in the implementation of the finite state machine driver or the
-system programs may cause the signal faces to get into unintended
-states, such that intersecting traffic flows are permitted in the
-intersection.  Sucn a condition is unsafe.  Check for incompatible
-states and, if such a state is found, set the intersection to flashing.
+  An error in the description of the finite state machine, or an error
+  in the implementation of the finite state machine driver or the
+  system programs may cause the finite state machines to get into unintended
+  states, such that conflicting traffic flows are permitted in the
+  intersection.  Sucn a condition is unsafe.  Check for incompatible
+  states and, if such a state is found, set the intersection to flashing.
 
 \end{description}
 
@@ -1178,62 +1266,66 @@ states and, if such a state is found, set the intersection to flashing.
 
 \subsubsection{Idle}
 
-If there is no traffic, signals faces A, D, E, H, J, and the
-pedestrian signal faces will remain red
+If there is no traffic, finite state machines A, D, E, H, J, and the
+pedestrian finite state machines will remain red
 since their Red Limit timers have an infinite duration; however,
-signal faces B, C, F, and G will proceed to substate Going Green 1 when
-their Red Limit timers complete after 60 seconds.
+finite state machines B, C, F, and G will proceed to substate
+Going Green 4 when their Red Limit timers complete after 60 seconds.
 
-In substate Going Green 1, system program Green Request Granted will notice
-that signal faces B, C, F, and G have their Request Green toggles true.
-The system program will place all four signal faces on its list of traffic
-signals requesting to turn green.  It will move one of them to the list
-of signal faces allowed to turn green.  Assume it is signal face B.
-It will then go through the three
-remaining signal faces and discover that signal face C does not have
-a conflict with B and so move it to the set of signal faces allowed
-to turn green.  Similarly, signal face F has no conflict with B or C,
-and G has no conflict with B, C, or F, so we end up with B, C, F and G
-on the list of signal faces allowed to turn green.
+In substate Going Green 4, system program Green Request Granted will notice
+that finite state machines B, C, F, and G have their Request Green toggles
+set.
+The system program will place all four finite state machines on its list of
+finite state machines requesting to turn green.
+It will move one of them to the list of finite state machines allowed to
+turn green.  Assume it is finite state machine B.
+It will then go through finite state machines C, F, and G
+and discover that finite state machine C does not have
+a conflict with B and so move it to the list of finite state machines
+allowed to turn green.  Similarly, finite state machine F has no conflict
+with B or C, and G has no conflict with B, C, or F, so we end up with
+B, C, F, and G on the list of finite state machines allowed to turn green.
 
-Signal faces B, C, F, and G will proceed to state Red
-substate Going Green 2 where they will set toggle Request Partial Clearance.
+Finite state machines B, C, F, and G will proceed to state Red
+substate Going Green 5 where they will set toggle Request Partial Clearance.
 
-System Program Partial Clearance Requested will notice that signal faces
-B, C, F, and G have Request Partial Clearance true,
-and will consider setting toggle Clearance
-Requested in signal faces D, E, H, J, and the pedestrian signal faces.
-However, those signal faces
+System Program Partial Clearance Requested will notice that finite state
+machines B, C, F, and G have Request Partial Clearance true,
+and will consider setting toggle Clearance Requested in finite state machines
+D, E, H, J, and in the pedestrian finite state machines.
+However, those finite state machines
 are in state Red substate Travel Path is Clear so they all have their
 Cleared toggles set.
 
 The Partial Conflicting Paths are Clear system program will notice that the
-signal faces that partially conflict with B, C, F, and G are clear,
-so will set the
-Partial Conflicting Paths are Clear toggle in signal faces B, F, F, and G.
+finite state machines corresponding to lanes that partially conflict with
+lanes B, C, F, and G are clear, so will set the
+Partial Conflicting Paths are Clear toggle in finite state machines
+B, C, F, and G.
 Similarly, the Conflicting Paths are Clear system program will set
-the Conflicting Paths are Clear toggle in those same signal faces.
+the Conflicting Paths are Clear toggle in those same finite state machines.
 
-Signal faces B, C, F, and G will proceed from state Red substate
-Going Green 2 to state Green substate Minimum Green.
-This will cause those signal faces to turn green and set toggle
+Finite state machines B, C, F, and G will proceed from state Red substate
+Going Green 5 to state Green substate Minimum Green.
+This will cause their signal faces to turn green and set toggle
 Traffic Flowing.
 
-System program Green Request Granted will notice that signal faces
+System program Green Request Granted will notice that finite state machines
 B, C, F, and G have their Traffic Flowing toggle true,
 and so will remove them from the list of signal faces allowed to turn green.
 This will cause the list to be empty.
 
-The net effect is that after 60 seconds signal faces
-B, C, F, and G turn green.  Because the Green Limit timer duration for signal
-faces B, C, F, and G is unlimited they will remain green unless
-a conflicting signal face needs to turn green.  Because the Red Limit
-timer duration for the other signal faces is unlimited they will stay red
-unless some traffic appears on their lanes.
+The net effect is that after 60 seconds finite state machines
+B, C, F, and G turn their signal faces green.
+Because the Green Limit timer duration for these finite state machines
+is unlimited the signal faces  will remain green unless
+a conflicting finite state machine needs to turn green.  Because the Red Limit
+timer duration for the other finite state machines is unlimited
+their signal faces will stay red unless some traffic appears on their lanes.
 
-We will call this situation, with signal faces B, C, F, and G green
-and the others red and clear the idle condition for example 03,
-since it will persist in the absence of traffic.
+We will call this situation, with finite state machines B, C, F, and G
+in a green state and the others in a red state and clear the idle condition
+for example 03, since it will persist in the absence of traffic.
 
 This table of events details the progression from power on to the idle
 condition.
@@ -1241,98 +1333,110 @@ condition.
 \input{idle_03_table.tex}
 
 \subsubsection{Pedestrian Crossing on South Side of Intersection}
-A pedestrian who wishes to cross the boulevard on the south side
+A pedestrian at the southwest corner who wishes to cross the boulevard
 presses his button.  Assuming we are in the idle condition
-with signal faces B, C, F, and G green and with A, D, E, H, J,
-and the pedestrian signal faces red and clear.
+with finite state machines B, C, F, and G green and with A, D, E, H, J,
+and the pedestrian finite state machines red and clear.
 
-Signal faces psw and pse will proceed to substate Going Green 1 where
-they will set
-toggle Request Green.  The Green Request Granted system program will act
+Finite state machines psw and pse will proceed to substate
+Going Green 1 where they will set toggle Request Green and
+advance to substate Going Green 2.
+The Green Request Granted system program will act
 as described above to set the Green Request Granted toggle since no other
-signal faces are waiting to turn green.  Signal faces psw and pse will then
-proceed to substate Going Green 2 where they will set toggle Request Partial
+finite state machines are waiting to turn green.
+Finite state machines psw and pse will then
+proceed to substate Going Green 3 where they will set toggle Request Partial
 Clearance.  System program Partial Conflicting Paths are Clear will set
-the Clearance Requested toggles in signal faces B, C, F, and G,
-but not in signal faces A, D and J because they are aleady clear.
-Signal faces B, C, F, and G are in state Green substate Waiting for Clearance
-Request because their Green Limit timer has a duration of infinity and
-they have seen no recent traffic.
+the Clearance Requested toggles in finite state machines B, C, F, and G,
+but not in finite state machines A, D, and J because they are aleady clear.
+Finite state machines B, C, F, and G are in state Green substate
+Looking for Gap 2 because their Green Limit timers have a
+duration of infinity and they have seen no recent traffic.
 
-Signal faces B, C, F and G will enter state Yellow substate Going Red.
+Finite state machines B, C, F and G enter state Yellow substate Going Red.
 When their Yellow Change timers complete they will proceed to state Red
 substate Waiting for Clearance.
 When their Red Clearance timers complete they will go
 to substate Travel Path is Clear and set toggle Cleared.
 
 The Conflicting Paths are Clear system program will notice that
-signal faces A, B, C, D, F, G, and J are all clear and set the
-Conflicting Paths are Clear toggle in signal faces psw amd pse.  Similarly,
-the Partial Conflicting Paths are Clear system program will set the
+finite state machines A, B, C, D, F, G, and J are all clear and set the
+Conflicting Paths are Clear toggle in finite state machines psw amd pse.
+Similarly, the Partial Conflicting Paths are Clear system program will set the
 Partial Conflicting Paths are Clear toggle.
 
-Signal faces psw and pse will transition to state Green substate Minimum Green.
-This will cause the pedestrian signs to display a walking man, the equivalent
-of green.  Assuming there is no other traffic, signal faces pse and psw
-will remain green
-until the Red Limit timers complete on signal faces B, C, F, and G.
-This will cause signal faces pse and psw to follow the progression described
-above
-for signal paths B, C, F, and G.  Signal faces pse and psw will transition
-to state Yellow
-substate Going Red, where they will display the hand with a countdown timer
-showing how many seconds are left in the Yellow Change timer.  When the Yellow
-Change timer is complete signal faces psw and pse will transition to the
-Red state,
-substate Waiting for Clearance.  When their Red Clearance timers completes
-they will
-transition to substate Travel Path is Clear and set the Cleared toggle.
+Finite state machines  psw and pse will transition to state Green substate
+Minimum Green.
+This will cause the pedestrian signal faces to display a walking man,
+the equivalent of green.
+Assuming there is no other traffic, finite state machines
+pse and psw will remain green until the Red Limit timers complete on
+finite state machines B, C, F, and G.
+This will cause finite state machines pse and psw to follow the progression
+described above for finite state machines B, C, F, and G.
+Finite State Machines pse and psw will transition to state Yellow
+substate Going Red, where they will display on their signal faces
+the hand with a countdown timer showing how many seconds are left
+in the Yellow Change timer.  When the Yellow Change timer is complete
+finite state machines psw and pse will transition to the
+Red state, substate Waiting for Clearance.  When their Red Clearance timers
+completes they will transition to substate Travel Path is Clear
+and set the Cleared toggle.
 
 Signal faces B, C, F, and G will then proceed as described above
-in the Idle illustration to turn green.
+in the Idle illustration to turn their signal faces green.
 
-The following describes the events in detail.
+The following describes these events in detail.
 
 \input{pedestrian_table.tex}
 
 \subsubsection{Left Turn}
 
-A vehicle arrives at Signal Face A.  Assume we are in the idle condition
-with signal faces B, C, F, and G green and the others red and clear.
+A vehicle arrives at lane A.  Assume we are in the idle condition
+with finite state machines B, C, F, and G green and the others red and clear.
 
-Signal face A requests permission to turn green, which it receives right
-away because no other signal face is requesting permisison to turn green.
+Finite state machine A requests permission to turn green,
+which it receives right away because no other finite state machine
+is requesting permisison to turn green.
 
-Signal face A then causes the Partial Clearance Requested system program
-to set the Clearance Requested toggle in signal faces psw, pse, D, H, and J.
+Finite state machine A then causes the Partial Clearance Requested system
+program to set the Clearance Requested toggle in finite state machines
+psw, pse, D, H, and J.
 
-Signal faces psw, pse, D, H, and J are already clear, so system program Partial
-Conflicting Paths are Clear sets toggle Partial Conflicting Paths are Clear
-in signal face A.
-Notice that signal faces F and G are not clear, so toggle Conflicting Paths
-are Clear does not get set in signal face A.
+Finite state machines psw, pse, D, H, and J are already clear,
+so system program Partial Conflicting Paths are Clear sets toggle
+Partial Conflicting Paths are Clear in finite state machine A.
+Notice that finite state machines F and G are not clear,
+so toggle Conflicting Paths are Clear does not get set in
+finite state machine A.
 
-Signal face A proceeds to state Yellow substate Flashing 1.  The red light
-at lane A turns to a yellow flashing light, telling the vehicle operator
-that he may turn left but must watch for oncoming traffic.
+Finite state machine A proceeds to state Yellow substate Left Flashing 1.
+The red light at signal face A turns to a yellow flashing light,
+telling the vehicle operator that he may turn left but must watch for
+oncoming traffic.
 
-When the Left Flashing Yellow Waiting timer completes, if there is still
-traffic for
-signal face A it proceeds to substate Going Green where it sets the
-toggle Request Clearance, causing system program Clearance Requested to
-set the Clearance Requested toggle in signal faces psw, pse, D, F, G, H, and J.
+When the Minimum Left Flashing Yellow timer is completed the finite
+state machine transitions to substate Left Flashing 2.
 
-Signal faces psw, pse, D, H and J are already clear.  Signal faces F and G turn
-yellow, then red, then become clear.
+If a vehicle is still in lane A when the Left Flashing Yellow Waiting
+timer completes, the finite state machine proceeds to substate
+Going Green where it sets the Request Clearance toggle,
+causing system program Clearance Requested to set the Clearance Requested
+toggle in finite state machines psw, pse, D, F, G, H, and J.
 
-When signal faces F and G become clear system program Conflicting Paths
-are Clear will set the Conflicting Paths are Clear toggle in signal face
-A which will cause signal face A to turn green.
+Finite state machines psw, pse, D, H and J are already clear.
+Finite state machines F and G proceed to the yellow state
+and then the red state and become clear.
 
-When the Vehicle Gone timer in signal face A
-completes, signal face A will turn red and eventually become clear,
-which will allow signal faces F and G to turn green when their Red Limit
-timers complete, as described above.
+When finite state machines F and G become clear system program
+Conflicting Paths are Clear will set the Conflicting Paths are Clear
+toggle in finite state machine A which will cause signal face A to turn green.
+
+When the Vehicle Gone timer in finite state machine A
+completes, finite state machine A will proceed to state red and eventually
+become clear, which will allow finite state machines F and G to turn
+their signal faces green when their Red Limit timers complete,
+as described above.
 
 The following events take place assuming that the driver of the
 car turning left is not willing to make the permissive turn,
@@ -1340,8 +1444,9 @@ and so waits for the green arrow.
 
 \input{left_turn_delayed_table.tex}
 
-However, if the vehicle makes the permissive left turn, signal face A
-returns to red, never causing signal faces F and G to turn red,
+However, if the vehicle makes the permissive left turn and there is
+no further traffic, finite state machine A
+returns to state red, never causing finite state machines F and G to turn red,
 as illustrated in the following events.
 
 \input{left_turn_table.tex}
@@ -1350,22 +1455,28 @@ as illustrated in the following events.
 
 Building upon the previous two illustrations, suppose after the pedestrian
 has pushed his button and begun to cross, a vehicle arrives at lane A.
-Signal face A will be be given permission to turn green right away, since no
-other signal faces are waiting to turn green.  It will then request
-that signal faces psw, pse, D, H, and J turn red.  Signal faces D and J
-will already be clear because signal faces pse and psw is green,
-and signal face H has never been green, so signal face A is waiting
-only for signal faces psw and pse.
+Finite state machine A will be be given permission to turn green right away,
+since no other finite state machines are waiting to turn green.
+It will then request that finite state machines psw, pse, D, H, and J
+turn red.  Finite state machines D and J
+will already be clear because of the previous request by finite state
+machines pse and psw.
+Finite state machine H has never been green so finite state machine A
+is waiting only for finite state machines psw and pse.
 
-When signal faces psw and pse are clear signal face A will turn green because
-signal faces F and G are clear due to signal faces psw and pse,
+When the pedestrian finishes crossing and finite state machines
+psw and pse are clear finite state machine A will turn its signal face
+left arrow green rather than flashing left arrow yellow because
+finite state machines F and G are clear due to the previous request
+by finite state machines psw and pse,
 so the left turn is protected rather than permissive.
 
-Signal faces B, C, F, and G will want to turn green and so signal faces
-F and G will ask signal face A to turn red.  Signal faces B and C
-will turn green without waiting for signal face A to clear, since
-they do not conflict.  When signal face A is clear signal faces
-F and G will turn green, getting us back to the idle state.
+Finite state machines B, C, F, and G will eventually want to turn green
+and so finite state machines F and G will ask finite state machine
+A to turn red.  Finite state machines B and C
+will turn green without waiting for finite state machine A to clear, since
+they do not conflict.  When finite state machine A is clear finite state
+machines F and G will turn green, getting us back to the idle state.
 
 Here are the events of this illustration, with less detail than
 previously.
@@ -1386,26 +1497,31 @@ at this URL:
 
 \subsubsection{Multiple Arrivals}
 
-Suppose we are in the Idle condition when traffic arrives in quick succession
-at signal faces A, psw, D, E, pne, H, and J in that order.
+Suppose we are in the idle condition when traffic arrives in quick succession
+on lanes A, psw, D, E, pne, H, and J in that order.
 
-Signal face A turns left flashing yellow immediately since lanes
+Finite state machine A turns left flashing yellow immediately since lanes
 F and G are allowing traffic to flow.
 
-Signal face psw asks signal faces A, B, C, F, and G to turn red.
-Signal face A is currently left flashing yellow but signal faces
-B, C, F, and G turn yellow and then red.
+Finite state machine psw asks finite state machines A, B, C, F, and G to
+turn red.
+Finite state machine A is currently left flashing yellow but finite state
+machines B, C, F, and G turn yellow and then red.
 
-With the through lanes all stopped signal face A turns
-green, then yellow, then red, permitting the pedestrians in the south
-crosswalk to cross.  Signal face E does the same, permitting the
-pedestrians in the north crosswalk to cross.
+With the through lanes all stopped finite state machine face A turns
+green, then yellow, then red, permitting the pedestrian in the south
+crosswalk to cross.  Signal face E does the same, permitting first its
+own vehicle and then the
+pedestrian in the north crosswalk to cross.  The lane E vehicle and
+the pedestrian on the north crosswalk are allowed
+to enter the intersection out of turn because they can enter the
+intersection at the same time as the pedestrian crossing the south crosswalk.
 
-When the pedestrians in the south crosswalk have crossed, signal
-face J turns green.  Similarly, when the pedestrians in the
-north crosswalk have crossed, signal face H turns green.
+When the pedestrian in the south crosswalkhas crossed, finite state machine
+J turns green.  Similarly, when the pedestrian in the
+north crosswalk have crossed, finite state machine H turns green.
 
-When signal faces H and J have turned red, signal face D
+When finite state machines H and J have turned red, signal face D
 can finally turn green.  When it turns red signal faces
 B, C, F, and G turn green, getting us back to the idle state.
 
@@ -1433,8 +1549,8 @@ at this URL:
 
 To illustrate how the traffic control signal handles heavy traffic,
 here is an animation showing traffic arriving from all directions,
-and the intersection flashing for a few seconds due to a nearby
-emergency vehicle.
+and in the middle of the flood of traffic the intersection flashing
+for a few seconds due to a nearby emergency vehicle.
 
 \noindent\includemedia[width=\textwidth,
   addresource=flood_animation_03.mkv,
@@ -1445,6 +1561,10 @@ emergency vehicle.
 If your PDF viewer will not play the animation you can see it on Youtube
 at this URL:
 \href{https://youtu.be/6oFNbIGWkH4}{https://youtu.be/6oFNbIGWkH4}.
+
+Here are the events shown in the above animation:
+
+\input{flood_table.tex}
 
 \section{Manual Control}
 
@@ -1465,13 +1585,13 @@ There is a multi-position mode switch:
 With the mode switch set to Automatic the traffic control signal
 processes signals from the sensors and acts appropriately, as described
 above.  The operator is an observer who can see the color of each
-signal face, the state of the toggle corresponding to each vehicle detector,
-and the names of the signal faces in each persistent list maintained by
-the Green Request Granted system program.
+signal face, the state of each vehicle detector,
+and the names of the finite state machines in each persistent list
+maintained by the Green Request Granted system program.
 
-The operator can choose to also see the state and substate of each signal
-face, the state of each timer, the time until completion of each
-running timer, and the state of each toggle and sensor.
+The operator can choose to also see the state and substate of each
+finite state machine, the state of each timer, the time until completion
+of each running timer, and the state of each toggle.
 
 \subsubsection{Manual}
 
@@ -1482,19 +1602,23 @@ or green.  The Red position sets the Manual
 Red toggle and the green position sets the Manual Green toggle.
 The third position is neutral, which sets neither toggle.
 
-In this mode, as in Automatic mode, the operator sees the state of
-each signal face and each vehicle detector.  Also as in Automatic mode,
-the operator can choose to also see the substate of each signal face,
-the state of each timer, the time until completion of each running
-timer, and the state of each toggle.
+In this mode, as in Automatic mode, the operator sees the color of
+each signal face and the state each vehicle detector.
+Also as in Automatic mode,
+the operator can choose to also see the state and substate of each
+finite state machine, the state of each timer, the time until completion
+of each running timer, and the state of each toggle.
 
-In this mode the operator must specify when each signal face turns
+In this mode the operator must specify when each finite state machine turns
 red and green.  Notice that all of the safety interlocks still
-are in effect: setting a signal face to green while a conflicting
-signal face is already set to green will have no effect until the
-conflicting signal faces are set to red or neutral.  There is an
-option in the manual control panel to automatically set all
-conflicting signal faces to red when a signal face is manually set to green.
+are in effect: setting a finite state machine to green while a conflicting
+finite state machine is already set to green will have no effect until the
+conflicting finite state machines are set to red or neutral.  There are
+options in the manual control panel to automatically set all
+conflicting signal faces to red or to neutral when a signal face
+is manually set to green.  There are also options to group finite state
+machines together, so that moving one switch changes toggles in
+more than one finite state machine.
 
 A manual control panel can be either local or remote.  If it is remote
 there should be cameras giving a complete picture of the intersection
@@ -1502,23 +1626,24 @@ to the remote operator.
 
 \subsubsection{Flashing}
 
-With the mode switch set to Flashing, each signal face will
-turn red as quickly as possible consistent with safety, and then
-flash either red or yellow.
+With the mode switch set to Flashing, each finite state machine will
+turn red or yellow as quickly as possible consistent with safety, and then
+flash its signal face either red or yellow.
 
-If the traffic signal controller detects a malfunction it switches
-to Flashing mode itself.  In addition, if the computer in the traffic
+If the traffic signal controller detects an internal malfunction it switches
+all of the finite state machines to Flashing mode.
+In addition, if the computer in the traffic
 signal controller fails there is hardware in the traffic signal
 controller to flash the lights independent of the computer,
 though in this case it will not be possible to first turn the
-signal face red safely.
+signal face red or yellow safely.
 
 \subsubsection{Programming}
 
 This mode is protected so only authorized persons can access it.
 It works the same as Automatic mode except the operator is also allowed to
-adjust the duration of the timers in each signal face, and update the
-Signal Conflict Table and the Partial Signal Conflict Table.
+adjust the duration of the timers in each finite state machine, and update the
+Conflict Table and the Partial Conflict Table.
 
 These adjustments can cause unsafe conditions and so should be limited
 to highly trusted personnel.
@@ -1539,7 +1664,12 @@ through several intersections so that traffic can flow freely in the
 chosen directions.
 
 The central controller will be able to see all of the sensors of all
-of the intersections it controls.
+of the intersections it controls and will be able to watch all of
+the traffic through cameras.
+
+As an alternative to a central controller some coordination between
+intersections can be achieved by connecting the sensors of one intersection
+to the Traffic Approaching toggles of downstream intersections.
 
 \section{More Details}
 

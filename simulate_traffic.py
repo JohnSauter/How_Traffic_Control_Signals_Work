@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='simulate_traffic 0.55 2025-10-04',
+                     version='simulate_traffic 0.56 2025-10-18',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -867,7 +867,10 @@ def perform_actions (signal_face, substate):
               if ((table_level >= 5) and (current_time > table_start_time)):
                 table_file.write ("\\hline " + format_time_N(current_time) +
                                   " & " + signal_face ["name"] +
-                                  " & Start timer " + timer_name + ". \\\\\n")
+                                  " & Start timer " + timer_name +
+                                  " duration " +
+                                  format_time(the_timer["remaining time"]) +
+                                  ". \\\\\n")
       case _:
         if (verbosity_level >= 1):
           print (format_time(current_time) + " signal face " +

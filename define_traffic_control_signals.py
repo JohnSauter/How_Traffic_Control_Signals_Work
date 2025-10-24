@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_traffic_control_signals 0.50 2025-09-09',
+                     version='define_traffic_control_signals 0.56 2025-10-13',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -96,6 +96,8 @@ red_state = list()
 
 substate = dict()
 substate["name"] = "Waiting for Clearance"
+substate["note"] = ("Come here when the traffic control signal starts " +
+                    "and when we have finished flashing.")
 substate["actions" ] = list()
 actions_list = substate["actions"]
 action = ("set lamp", "Steady Circular Red")
@@ -118,6 +120,10 @@ red_state.append(substate)
 
 substate = dict()
 substate["name"] = "Travel Path is Clear"
+substate["note"] = ("We have waited long enough for all vehicles which " +
+                     "passed through this signal face when it was green " +
+                     "to have cleared the intersection.  Conflicting signal " +
+                     "faces may now turn green.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 action=("set toggle", "Cleared")
@@ -208,6 +214,8 @@ red_state.append(substate)
 
 substate = dict()
 substate["name"] = "Going Green 1"
+substate["note"] = ("There is traffic approaching or present; we would like " +
+                    "to turn green.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 
@@ -232,6 +240,8 @@ red_state.append(substate)
 
 substate = dict()
 substate["name"] = "Going Green 2"
+substate["note"] = ("Come here to wait for permission to turn green " +
+                    " and make sure we still have traffic.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 
@@ -291,6 +301,9 @@ red_state.append(substate)
 
 substate=dict()
 substate["name"] = "Going Green 3"
+substate["note"] = ("We have permission to turn green and there is still " +
+                    "traffic present.  Ask conflicting signal faces " +
+                    "to turn green.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 
@@ -362,6 +375,8 @@ red_state.append(substate)
 
 substate = dict()
 substate["name"] = "Going Green 4"
+substate["note"] = ("Come here to turn green even though there is no " +
+                    "traffic at this signal face.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 action=("set toggle", "Request Green")
@@ -404,6 +419,8 @@ red_state.append(substate)
 
 substate=dict()
 substate["name"] = "Going Green 5"
+substate["note"] = ("Come here when we have permission tu turn green " +
+                    "but no traffic.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 action=("clear toggle", "Request Green")
@@ -455,6 +472,7 @@ red_state.append(substate)
 
 substate = dict()
 substate["name"] = "Flashing"
+substate["note"] = ("Come here to flash the signal face red.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 action=("set lamp", "Flashing Circular Red")
@@ -493,6 +511,8 @@ states["Red"] = red_state
 green_state = list()
 substate = dict()
 substate["name"] = "Minimum Green"
+substate["note"] = ("We are now able to turn green.  Keep the signal face " +
+                    "green long enough to get the traffic moving.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 action=("set lamp", "Steady Circular Green")
@@ -526,6 +546,9 @@ green_state.append(substate)
 
 substate = dict()
 substate["name"] = "Looking for Gap 1"
+substate["note"] = ("We have been green long enough to get the traffic " +
+                    "moving.  Track any gaps in the traffic in case we " +
+                    "need to turn red.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 action = ("start timer", "Passage")
@@ -610,6 +633,8 @@ green_state.append(substate)
 
 substate = dict()
 substate["name"] = "Looking for Gap 2"
+substate["note"] = ("We have reached maximum green but there is still." +
+                    "traffic moving through this signal face.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 action = ("clear toggle", "Preempt Green")

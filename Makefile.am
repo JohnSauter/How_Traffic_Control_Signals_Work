@@ -1,4 +1,4 @@
-# File: Makefile.am, author: John Sauter, date: October 4, 2025.
+# File: Makefile.am, author: John Sauter, date: October 19, 2025.
 #
 # Build traffic_control_signals.pdf and animations.
 
@@ -101,7 +101,7 @@ draw_background.py \
 traffic_control_signals.tex \
 state_diagram.txt 
 
-# These files are used to build the renderer.
+# These files are used by the renderer.
 EXTRA_DIST += \
 signal_ccc_Green.svg \
 signal_ccc_Red.svg \
@@ -138,7 +138,7 @@ RPMs:
 	bash build_RPMs.sh
 
 # The spec file is ueed to build RPMs for RPM-based distributions
-# of GNU/Linux, including RHEL, CENTOS and Fedora.
+# of GNU/Linux.
 EXTRA_DIST += How_Traffic_Control_Signals_Work.spec
 
 # Building the PDF depends on the bbl file, which is built below.
@@ -190,9 +190,12 @@ MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf signal_ccc.pdf signal_ccu.pdf signal_rrr.pdf \
 signal_cccl.pdf signal_llll.pdf background_01.png background_02.png \
 background_03.png \
-bridge_one_car_animation_01.mkv bridge_two_cars_animation_01.mkv \
-four_corners_many_animation_02.mkv pedestrian_and_left_turn_animation_03.mkv \
-multiple_animation_03.mkv flood_animation_03.mkv
+bridge_one_car_animation_01.mkv bridge_one_car_table.tex \
+bridge_two_cars_animation_01.mkv bridge_two_cars_table.tex \
+four_corners_many_animation_02.mkv four_corners_many_table.tex \
+pedestrian_and_left_turn_animation_03.mkv pedestrian_and_left_turn_table.tex \
+multiple_animation_03.mkv multiple_table.tex \
+flood_table.tex flood_animation_03.mkv 
 	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex \
 --draftmode -draftmode -shell-escape ${srcdir}/traffic_control_signals.tex
 	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex \
@@ -243,9 +246,12 @@ MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf signal_ccc.pdf signal_ccu.pdf signal_rrr.pdf \
 signal_cccl.pdf signal_llll.pdf background_01.png background_02.png \
 background_03.png \
-bridge_one_car_animation_01.mkv bridge_two_cars_animation_01.mkv \
-four_corners_many_animation_02.mkv pedestrian_and_left_turn_animation_03.mkv \
-multiple_animation_03.mkv flood_animation_03.mkv
+bridge_one_car_animation_01.mkv bridge_one_car_table.tex \
+bridge_two_cars_animation_01.mkv bridge_two_cars_table.tex \
+four_corners_many_animation_02.mkv four_corners_many_table.tex \
+pedestrian_and_left_turn_animation_03.mkv pedestrian_and_left_turn_table.tex \
+multiple_animation_03.mkv multiple_table.tex \
+flood_animation_03.mkv flood_table.tex
 	echo " " >"${builddir}/traffic_control_signals.bbl"
 	TEXINPUTS=${TEXINPUTS}:${builddir}:${srcdir} lualatex \
 --draftmode -draftmode -shell-escape "${srcdir}/traffic_control_signals.tex"
@@ -281,7 +287,7 @@ finite_state_machine.json
 --input=${builddir}/finite_state_machine.json \
 --green=${builddir}/green_state_table.tex
 
-# Create a JSON file which describes the one-way bridge.
+# Create a JSON file which describes the one-way bridge example.
 one_way_bridge.json : define_one_way_bridge.py \
 finite_state_machine.json
 	python3 ${srcdir}/define_one_way_bridge.py \
@@ -295,7 +301,7 @@ finite_state_machine.json
 --input=${builddir}/finite_state_machine.json \
 --output=${builddir}/four_corners.json
 
-# Create a JSON file which describes the complex intersection.
+# Create a JSON file which describes the complex intersection example.
 complex_intersection.json : define_complex_intersection.py \
 finite_state_machine.json
 	python3 ${srcdir}/define_complex_intersection.py \
@@ -357,7 +363,9 @@ ${builddir}/complex_intersection.json  \
 --timer-durations=${builddir}/timer_durations_03.tex 
 
 # Generate the table files which detail the operation of the
-# finite state machines.
+# finite state machines for the various scenarios.  In case
+# we wish to show an animation also create the events csv file
+# and the last events time files that the animation renderer needs.
 idle_01_table.tex : simulate_traffic.py one_way_bridge.json
 	python3 ${srcdir}/simulate_traffic.py \
 --intersection ${builddir}/one_way_bridge.json --clock-step 0.001 \
@@ -372,49 +380,111 @@ idle_03_table.tex : simulate_traffic.py complex_intersection.json
 --table-level 4 --table-file ${builddir}/idle_03_table.tex --duration 200  \
 --table-caption "Power On to Idle State, example 03"
 
-left_turn_table.tex : simulate_traffic.py complex_intersection.json \
-left_turn_script.txt
+bridge_one_car_table.tex bridge_one_car_animation_01.csv &: \
+simulate_traffic.py one_way_bridge.json bridge_one_car_script.txt
 	python3 ${srcdir}/simulate_traffic.py \
---intersection ${builddir}/complex_intersection.json --clock-step 0.001 \
---table-level 4 --table-file ${builddir}/left_turn_table.tex --duration 400 \
+--intersection ${builddir}/one_way_bridge.json --clock-step 0.001 \
+--table-level 4 --table-file ${builddir}/bridge_one_car_table.tex \
+--duration 400 \
 --explain-state-transitions \
---table-start 199 --script ${srcdir}/left_turn_script.txt \
---table-caption "Left Turn"
+--table-start 199 --script ${srcdir}/bridge_one_car_script.txt \
+--events-file $(builddir)/bridge_one_car_animation_01.csv \
+--last-event-time "${builddir}/last_event_time_bridge_one_car_animation.txt" \
+--table-caption "One Car Passes Over the Single-lane Bridge"
 
-left_turn_delayed_table.tex : simulate_traffic.py complex_intersection.json  \
+bridge_two_cars_table.tex bridge_two_cars_animation_01.csv &: \
+simulate_traffic.py one_way_bridge.json bridge_two_cars_script.txt
+	python3 ${srcdir}/simulate_traffic.py \
+--intersection ${builddir}/one_way_bridge.json --clock-step 0.001 \
+--table-level 4 --table-file ${builddir}/bridge_two_cars_table.tex \
+--duration 400 \
+--explain-state-transitions \
+--table-start 199 --script ${srcdir}/bridge_two_cars_script.txt \
+--events-file $(builddir)/bridge_two_cars_animation_01.csv \
+--last-event-time "${builddir}/last_event_time_bridge_two_cars_animation.txt" \
+--table-caption "Two Cars Pass Over the Single-lane Bridge"
+
+four_corners_many_table.tex four_corners_many_animation_02.csv &: \
+simulate_traffic.py four_corners.json four_corners_many_script.txt
+	python3 "${srcdir}/simulate_traffic.py" \
+--intersection "${builddir}/four_corners.json" --clock-step 0.001 \
+--table-level 4 --table-file "${builddir}/four_corners_many_table.tex" \
+--duration 400 --explain-state-transitions \
+--table-start 199 --script "${srcdir}/four_corners_many_script.txt" \
+--events-file "$(builddir)/four_corners_many_animation_02.csv" \
+--last-event-time \
+"${builddir}/last_event_time_four_corners_many_animation.txt" \
+--table-caption "Traffic from All Directions"
+
+left_turn_delayed_table.tex left_turn_delayed_animation_03.csv &: \
+simulate_traffic.py complex_intersection.json  \
 left_turn_delayed_script.txt
 	python3 ${srcdir}/simulate_traffic.py \
 --intersection ${builddir}/complex_intersection.json --clock-step 0.001 \
 --table-level 4 --table-file ${builddir}/left_turn_delayed_table.tex \
+--events-file $(builddir)/left_turn_delayed_animation_03.csv \
+--last-event-time \
+"${builddir}/last_event_time_left_turn_delayed_animation.txt" \
 --duration 400 --table-start 199 --explain-state-transitions \
 --script ${srcdir}/left_turn_delayed_script.txt \
 --table-caption "Left Turn Delayed"
 
-pedestrian_table.tex : simulate_traffic.py complex_intersection.json \
-pedestrian_script.txt
+left_turn_table.tex left_turn_animation_03.csv &: \
+simulate_traffic.py complex_intersection.json  \
+left_turn_script.txt
+	python3 "${srcdir}/simulate_traffic.py" \
+--intersection "${builddir}/complex_intersection.json" --clock-step 0.001 \
+--table-level 4 --table-file "${builddir}/left_turn_table.tex" \
+--events-file "$(builddir)/left_turn_animation_03.csv" \
+--last-event-time \
+"${builddir}/last_event_time_left_turn_animation.txt" \
+--duration 400 --table-start 199 --explain-state-transitions \
+--script "${srcdir}/left_turn_script.txt" \
+--table-caption "Left Turn"
+
+pedestrian_table.tex pedestrian_animation.csv &: simulate_traffic.py \
+complex_intersection.json pedestrian_script.txt
 	python3 ${srcdir}/simulate_traffic.py \
 --intersection ${builddir}/complex_intersection.json --table-level 3 \
 --table-file ${builddir}/pedestrian_table.tex --duration 400 \
+--events-file $(builddir)/pedestrian_animation_03.csv \
+--last-event-time "${builddir}/last_event_time_pedestrian_animation.txt" \
 --clock-step 0.001 --explain-state-transitions \
 --table-start 199 --script ${srcdir}/pedestrian_script.txt \
 --table-caption "Pedestrian Crosses"
 
-pedestrian_and_left_turn_table.tex : simulate_traffic.py \
+pedestrian_and_left_turn_table.tex \
+pedestrian_and_left_turn_animation_03.csv &: simulate_traffic.py \
 complex_intersection.json pedestrian_and_left_turn_script.txt
 	python3 ${srcdir}/simulate_traffic.py \
 --intersection ${builddir}/complex_intersection.json --table-level 3 \
 --table-file ${builddir}/pedestrian_and_left_turn_table.tex --duration 400 \
+--events-file $(builddir)/pedestrian_and_left_turn_animation_03.csv \
+--last-event-time \
+"${builddir}/last_event_time_pedestrian_and_left_turn_animation.txt" \
 --clock-step 0.001 --explain-state-transitions \
 --table-start 199 --script ${srcdir}/pedestrian_and_left_turn_script.txt \
 --table-caption "Pedestrian then Left Turn"
 
-multiple_table.tex : simulate_traffic.py complex_intersection.json \
-multiple_script.txt
+multiple_table.tex multiple_animation_03.csv &: simulate_traffic.py \
+complex_intersection.json multiple_script.txt
 	python3 ${srcdir}/simulate_traffic.py \
 --intersection ${builddir}/complex_intersection.json \
 --table-level 2 --clock-step 0.001 \
+--events-file "$(builddir)/multiple_animation_03.csv" \
+--last-event-time "${builddir}/last_event_time_multiple_animation.txt" \
 --table-file ${builddir}/multiple_table.tex --duration 400 --table-start 199 \
---script ${srcdir}/multiple_script.txt --table-caption "Many Events"
+--script ${srcdir}/multiple_script.txt --table-caption "Multiple Arrivals"
+
+flood_table.tex flood_animation_03.csv &: simulate_traffic.py \
+complex_intersection.json flood_script.txt
+	python3 "${srcdir}/simulate_traffic.py" \
+--intersection "${builddir}/complex_intersection.json" \
+--table-level 2 --clock-step 0.01 \
+--events-file "$(builddir)/flood_animation_03.csv" \
+--last-event-time "${builddir}/last_event_time_flood_animation.txt" \
+--table-file "${builddir}/flood_table.tex" --duration 1200 --table-start 199 \
+--script "${srcdir}/flood_script.txt" --table-caption "Heavy Traffic"
 
 # Some of the diagrams have been created in inkscape.  Convert them
 # to PDF files for the document or to png files for the renderer.
@@ -462,6 +532,9 @@ left_turn_script.txt
 # script applies to by following the name of the script with "animation_01"
 # for the one-way bridge example, "animation_02" for the four corners example,
 # and "animation_03" for the complex intersection example.
+#
+# Some of the animation CSV files are produced as a byproduct of creating
+# the events table.  The following CSV rules is for those that aren't.
 %_animation_01.csv : %_script.txt simulate_traffic.py one_way_bridge.json
 	python3 ${srcdir}/simulate_traffic.py \
 --intersection ${builddir}/one_way_bridge.json --clock-step 0.001 \
