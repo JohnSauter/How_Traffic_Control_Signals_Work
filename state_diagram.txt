@@ -1,4 +1,4 @@
-# File: state_diagram.txt, author: John Sauter, date: August 16, 2025.
+# File: state_diagram.txt, author: John Sauter, date: November 2, 2025.
 
 strict digraph Traffic_Control_Signals {
 fontname="Helvetica,Arial,sans-serif"
@@ -33,12 +33,12 @@ node [label="Going Green 5"] "Red\nGoing Green 5";
 subgraph Cluster_Green {
 style=filled; fillcolor=lightgreen;
 label="Green State";
-node [color=green, label="Minimum Green"] "Green\nMinimum Green";
+node [color=green, label="No Traffic"] "Green\nNo Traffic";
+node [label="Clearance Requested"] "Green\nClearance Requested";
+node [label="Waiting for Gap 1"] "Green\nWaiting for Gap 1";
+node [label="Waiting for Gap 2"] "Green\nWaiting for Gap 2";
 node [label="Looking for Gap 1"] "Green\nLooking for Gap 1";
 node [label="Looking for Gap 2"] "Green\nLooking for Gap 2";
-node [label="Looking for Gap 3"] "Green\nLooking for Gap 3";
-node [label="Looking for Gap 4"] "Green\nLooking for Gap 4";
-node [label="Looking for Gap 5"] "Green\nLooking for Gap 5";
 }
 
 subgraph Cluster_Yellow {
@@ -62,7 +62,7 @@ edge [label=""]"Red\nGoing Green 2"->"Red\nGoing Green 3";
 edge [label="permissive\nleft turn"]
      "Red\nGoing Green 3"->"Yellow\nLeft Flashing 1";
 edge [label="conflicting\npaths clear"]
-     	"Red\nGoing Green 3"->"Green\nMinimum Green";
+     	"Red\nGoing Green 3"->"Green\nNo Traffic";
 edge [label="traffic\ngone"]
      	"Red\nGoing Green 3"->"Red\nTravel Path\nis Clear";
 #edge [label="stop\nflashing"] "Red\nFlashing"->"Red\nWaiting for\nClearance";
@@ -71,41 +71,38 @@ edge [label="long\nenough"]
      "Red\nTravel Path\nis Clear"->"Red\nGoing Green 4";
 edge [label="permission\ngranted"] "Red\nGoing Green 4"->"Red\nGoing Green 5";
 edge [label="conflicting\npaths clear"]
-     	"Red\nGoing Green 5"->"Green\nMinimum Green";
+     	"Red\nGoing Green 5"->"Green\nNo Traffic";
 edge [label="traffic\ngone"]
      	"Red\nGoing Green 5"->"Red\nTravel Path\nis Clear";
 
-#edge [label="quick\nred"] "Green\nMinimum Green"->"Yellow\nGoing Red";
-edge [label="waited\nlong enough"]
-     "Green\nMinimum Green"->"Green\nLooking for Gap 1";
+edge [label="conflicting traffic"]
+     "Green\nNo Traffic"->"Green\nClearance Requested";
+edge [label="conflicting traffic"]
+     "Green\nNo Traffic"->"Yellow\nGoing Red";
+edge [label="traffic approaching"]
+     "Green\nNo Traffic"->"Green\nWaiting for Gap 1";
+edge [label="gap in traffic"]
+     "Green\nClearance Requested"-> "Yellow\nGoing Red"
+edge [label="traffic approaching"]
+     "Green\nClearance Requested"-> "Green\nWaiting for Gap 1"
+edge [label="traffic off sensor"]
+     "Green\nWaiting for Gap 1"-> "Green\nWaiting for Gap 2"
 edge [label="found gap"]
+     "Green\nWaiting for Gap 2"->"Yellow\nGoing Red";
+edge [label="traffic approaching"]
+     "Green\nWaiting for Gap 2"->"Green\nWaiting for Gap 1";
+edge [label="conflicting traffic"]
+     "Green\nLooking for Gap 1"->"Green\nClearance Requested";
+edge [label="conflicting traffic"]
      "Green\nLooking for Gap 1"->"Yellow\nGoing Red";
-edge [label="no conflicting\ntraffic"] "Green\nLooking for Gap 1"->
-     "Green\nLooking for Gap 2";
-edge [label="still\nlooking"]
-     "Green\nLooking for Gap 1"->"Green\nLooking for Gap 1";
-edge [label="conflicting\ntraffic\nwaiting"]
-     "Green\nLooking for Gap 2"->"Green\nLooking for Gap 3";
-edge [label="lost gap"]
-     "Green\nLooking for Gap 2"->"Green\nLooking for Gap 4";
-edge [label="lost gap"]
-     "Green\nLooking for Gap 3"->"Green\nLooking for Gap 5";
-edge [label="conflicting traffic gone"]
-     "Green\nLooking for Gap 3"->"Green\nLooking for Gap 2";
-edge [label="found gap"]
-     "Green\nLooking for Gap 4"->"Yellow\nGoing Red";
-edge [label="lost gap"]
-     "Green\nLooking for Gap 4"->"Green\nLooking for Gap 4";
-edge [label="found gap"]
-     "Green\nLooking for Gap 5"->"Yellow\nGoing Red";
-edge [label="no gap"]
-     "Green\nLooking for Gap 5"->"Yellow\nGoing Red";
-edge [label="lost gap"]
-     "Green\nLooking for Gap 5"->"Green\nLooking for Gap 5";
-edge [label="conflicting traffic gone"]
-     "Green\nLooking for Gap 5"->"Green\nLooking for Gap 2";
-#edge [label="flash\nyellow"]
-#     "Green\nWaiting for\nClearance Request"->"Yellow\nFlashing";
+edge [label="traffic off sensor"]
+     "Green\nLooking for Gap 1"-> "Green\nLooking for Gap 2"
+edge [label="conflicting traffic"]
+     "Green\nLooking for Gap 2"->"Yellow\nGoing Red";
+edge [label="conflicting traffic"]
+     "Green\nLooking for Gap 2"->"Green\nClearance Requested";
+edge [label="traffic approaching"]
+     "Green\nLooking for Gap 2"->"Green\nLooking for Gap 1";
 
 edge [label="yellow change time\ncompleted"]
      "Yellow\nGoing Red"->"Red\nWaiting for\nClearance";
@@ -118,7 +115,7 @@ edge [label="traffic\ngone"] "Yellow\nLeft Flashing 2"->"Yellow\nGoing Red";
 edge [label="still\nwaiting"]
      "Yellow\nLeft Flashing 2"->"Yellow\nLeft Flashing 2";
 #edge [label="quick\nred"] "Yellow\nGoing Green"->"Yellow\nGoing Red";
-edge [label="clear"] "Yellow\nGoing Green"->"Green\nMinimum Green";
+edge [label="clear"] "Yellow\nGoing Green"->"Green\nNo Traffic";
 #edge [label="stop\nflashing"]
 #     "Yellow\nFlashing"->"Red\nWaiting for\nClearance";
 #edge [label="flash\nred"] "Yellow\nFlashing"->"Red\nFlashing";

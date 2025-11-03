@@ -47,7 +47,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_complex_intersection 0.53 2025-09-14',
+                     version='define_complex_intersection 0.58 2025-11-02',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -146,8 +146,6 @@ for signal_face_name in ("B", "C", "F", "G"):
   timer_durations[timer_full_name] = float ("60.000")
   timer_full_name = signal_face_name + "/" + "Maximum Green"
   timer_durations[timer_full_name] = float ("60.000")
-  timer_full_name = signal_face_name + "/" + "Maximum Green Extra"
-  timer_durations[timer_full_name] = float ("3.500")
   timer_full_name = signal_face_name + "/" + "Minimum Green"
   timer_durations[timer_full_name] = float ("12.000")
   timer_full_name = signal_face_name + "/" + "Passage"
@@ -155,8 +153,6 @@ for signal_face_name in ("B", "C", "F", "G"):
   timer_full_name = signal_face_name + "/" + "Red Clearance"
   timer_durations[timer_full_name] = float ("1.000")
   timer_full_name = signal_face_name + "/" + "Green Limit"
-  timer_durations[timer_full_name] = float ("inf")
-  timer_full_name = signal_face_name + "/" + "Traffic Gone"
   timer_durations[timer_full_name] = float ("inf")
   timer_full_name = signal_face_name + "/" + "Yellow Change"
   timer_durations[timer_full_name] = float ("5.000")
@@ -170,8 +166,6 @@ for signal_face_name in ("A", "E"):
   timer_durations[timer_full_name] = float ("5.000")
   timer_full_name = signal_face_name + "/" + "Maximum Green"
   timer_durations[timer_full_name] = float ("20.000")
-  timer_full_name = signal_face_name + "/" + "Maximum Green Extra"
-  timer_durations[timer_full_name] = float ("1.900")
   timer_full_name = signal_face_name + "/" + "Minimum Green"
   timer_durations[timer_full_name] = float ("5.000")
   timer_full_name = signal_face_name + "/" + "Passage"
@@ -180,8 +174,6 @@ for signal_face_name in ("A", "E"):
   timer_durations[timer_full_name] = float ("1.000")
   timer_full_name = signal_face_name + "/" + "Green Limit"
   timer_durations[timer_full_name] = float ("60.000")
-  timer_full_name = signal_face_name + "/" + "Traffic Gone"
-  timer_durations[timer_full_name] = float ("10.000")
   timer_full_name = signal_face_name + "/" + "Yellow Change"
   timer_durations[timer_full_name] = float ("3.500")
   timer_full_name = signal_face_name + "/" + "Traffic Still Present"
@@ -194,8 +186,6 @@ for signal_face_name in ("D", "H"):
   timer_durations[timer_full_name] = float ("inf")
   timer_full_name = signal_face_name + "/" + "Maximum Green"
   timer_durations[timer_full_name] = float ("30.000")
-  timer_full_name = signal_face_name + "/" + "Maximum Green Extra"
-  timer_durations[timer_full_name] = float ("1.900")
   timer_full_name = signal_face_name + "/" + "Minimum Green"
   timer_durations[timer_full_name] = float ("7.000")
   timer_full_name = signal_face_name + "/" + "Passage"
@@ -204,8 +194,6 @@ for signal_face_name in ("D", "H"):
   timer_durations[timer_full_name] = float ("1.500")
   timer_full_name = signal_face_name + "/" + "Green Limit"
   timer_durations[timer_full_name] = float ("60.000")
-  timer_full_name = signal_face_name + "/" + "Traffic Gone"
-  timer_durations[timer_full_name] = float ("10.000")
   timer_full_name = signal_face_name + "/" + "Yellow Change"
   timer_durations[timer_full_name] = float ("3.000")
   timer_full_name = signal_face_name + "/" + "Traffic Still Present"
@@ -218,8 +206,6 @@ for signal_face_name in ("J"):
   timer_durations[timer_full_name] = float ("inf")
   timer_full_name = signal_face_name + "/" + "Maximum Green"
   timer_durations[timer_full_name] = float ("30.000")
-  timer_full_name = signal_face_name + "/" + "Maximum Green Extra"
-  timer_durations[timer_full_name] = float ("1.900")
   timer_full_name = signal_face_name + "/" + "Minimum Green"
   timer_durations[timer_full_name] = float ("7.000")
   timer_full_name = signal_face_name + "/" + "Passage"
@@ -228,8 +214,6 @@ for signal_face_name in ("J"):
   timer_durations[timer_full_name] = float ("1.000")
   timer_full_name = signal_face_name + "/" + "Green Limit"
   timer_durations[timer_full_name] = float ("60.000")
-  timer_full_name = signal_face_name + "/" + "Traffic Gone"
-  timer_durations[timer_full_name] = float ("10.000")
   timer_full_name = signal_face_name + "/" + "Yellow Change"
   timer_durations[timer_full_name] = float ("3.000")
   timer_full_name = signal_face_name + "/" + "Traffic Still Present"
@@ -243,8 +227,6 @@ for signal_face_name in ("pse", "psw", "pne", "pnw"):
   timer_durations[timer_full_name] = float ("inf")
   timer_full_name = signal_face_name + "/" + "Maximum Green"
   timer_durations[timer_full_name] = float ("10.000")
-  timer_full_name = signal_face_name + "/" + "Maximum Green Extra"
-  timer_durations[timer_full_name] = float ("1.000")
   timer_full_name = signal_face_name + "/" + "Minimum Green"
   timer_durations[timer_full_name] = float ("6.000")
   timer_full_name = signal_face_name + "/" + "Passage"
@@ -253,8 +235,6 @@ for signal_face_name in ("pse", "psw", "pne", "pnw"):
   timer_durations[timer_full_name] = float ("3.000")
   timer_full_name = signal_face_name + "/" + "Green Limit"
   timer_durations[timer_full_name] = float ("60.000")
-  timer_full_name = signal_face_name + "/" + "Traffic Gone"
-  timer_durations[timer_full_name] = float ("10.000")
   timer_full_name = signal_face_name + "/" + "Yellow Change"
   timer_durations[timer_full_name] = float ("20.000")
   timer_full_name = signal_face_name + "/" + "Traffic Still Present"
@@ -286,11 +266,12 @@ for signal_face_name in signal_face_names:
 
     match timer_name:
       case "Red Clearance" | "Yellow Change" | "Minimum Green" | \
-           "Passage" | "Maximum Green" | "Maximum Green Extra" | \
-           "Traffic Gone" | "Green Limit" | "Traffic Still Present" | \
+           "Passage" | "Maximum Green" | \
+           "Green Limit" | "Traffic Still Present" | \
            "Left Flashing Yellow Waiting" | "Minimum Left Flashing Yellow" | \
            "Red Limit":
         important = True
+        
       case _:
         important = False
 

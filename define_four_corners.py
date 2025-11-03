@@ -47,7 +47,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_four_corners 0.53 2025-09-15',
+                     version='define_four_corners 0.58 2025-11-02',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -137,8 +137,6 @@ for signal_face_name in ("A", "B", "C", "D"):
   timer_durations[timer_full_name] = float ("inf")
   timer_full_name = signal_face_name + "/" + "Maximum Green"
   timer_durations[timer_full_name] = float ("60.000")
-  timer_full_name = signal_face_name + "/" + "Maximum Green Extra"
-  timer_durations[timer_full_name] = float ("3.500")
   timer_full_name = signal_face_name + "/" + "Minimum Green"
   timer_durations[timer_full_name] = float ("12.000")
   timer_full_name = signal_face_name + "/" + "Passage"
@@ -147,8 +145,6 @@ for signal_face_name in ("A", "B", "C", "D"):
   timer_durations[timer_full_name] = float ("1.000")
   timer_full_name = signal_face_name + "/" + "Green Limit"
   timer_durations[timer_full_name] = float ("60.000")
-  timer_full_name = signal_face_name + "/" + "Traffic Gone"
-  timer_durations[timer_full_name] = float ("10.000")
   timer_full_name = signal_face_name + "/" + "Yellow Change"
   timer_durations[timer_full_name] = float ("5.000")
   timer_full_name = signal_face_name + "/" + "Traffic Still Present"
@@ -186,10 +182,11 @@ for signal_face_name in signal_face_names:
     
     match timer_name:
       case "Red Clearance" | "Yellow Change" | "Minimum Green" | \
-           "Passage" | "Maximum Green" | "Maximum Green Extra" | \
-           "Traffic Gone" | "Green Limit" | "Red Limit" | \
+           "Passage" | "Maximum Green" | \
+           "Green Limit" | "Red Limit" | \
            "Traffic Still Present":
         important = True
+        
       case _:
         important = False
 
@@ -863,7 +860,7 @@ for signal_face in signal_faces_list:
             sensor["x max"] = lane_info[0] + (sensor_width / 2.0)
             sensor["y max"] = lane_info[1] - sensor_offset
             
-          case "B":
+          case "D":
             sensor_offset = approach_sensor_long_distance
             sensor["x min"] = lane_info[0] - (sensor_offset + sensor_length)
             sensor["y min"] = lane_info[1] - (sensor_width / 2.0)

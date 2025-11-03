@@ -46,7 +46,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_one_way_bridge 0.53 2025-09-15',
+                     version='define_one_way_bridge 0.58 2025-11-02',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -136,8 +136,6 @@ for signal_face_name in signal_face_names:
   timer_durations[timer_full_name] = float ("inf")
   timer_full_name = signal_face_name + "/" + "Maximum Green"
   timer_durations[timer_full_name] = float ("60.000")
-  timer_full_name = signal_face_name + "/" + "Maximum Green Extra"
-  timer_durations[timer_full_name] = float ("3.500")
   timer_full_name = signal_face_name + "/" + "Minimum Green"
   timer_durations[timer_full_name] = float ("12.000")
   timer_full_name = signal_face_name + "/" + "Passage"
@@ -146,8 +144,6 @@ for signal_face_name in signal_face_names:
   timer_durations[timer_full_name] = float ("10.000")
   timer_full_name = signal_face_name + "/" + "Green Limit"
   timer_durations[timer_full_name] = float ("60.0")
-  timer_full_name = signal_face_name + "/" + "Traffic Gone"
-  timer_durations[timer_full_name] = float ("10.0")
   timer_full_name = signal_face_name + "/" + "Yellow Change"
   timer_durations[timer_full_name] = float ("5.000")
   timer_full_name = signal_face_name + "/" + "Traffic Still Present"
@@ -183,8 +179,8 @@ for signal_face_name in signal_face_names:
 
     match timer_name:
       case "Red Clearance" | "Yellow Change" | "Minimum Green" | \
-           "Passage" | "Maximum Green" | "Maximum Green Extra" | \
-           "Traffic Gone" | "Green Limit" | "Red Limit":
+           "Passage" | "Maximum Green" | \
+           "Green Limit" | "Red Limit":
         important = True
         
       case _:

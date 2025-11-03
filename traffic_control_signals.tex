@@ -1,5 +1,5 @@
 % File: traffic_control_signals.tex, author: John Sauter,
-% date: October 19, 2025.
+% date: November 2, 2025.
 
 % Copyright © 2025 by John Sauter.
 % Licensed under the Creative Commons Attribution-ShareAlike 4.0 International
@@ -197,12 +197,12 @@
   pdfcontacturl={https://www.systemeyescomputerstore.com},
   pdfcopyright={Copyright {\copyright} 2025 by John Sauter},
   pdfurl={https://www.systemeyescomputerstore.com/How\%5FTraffic\%5FControl\%5FSignals\%5fWork/traffic\%5Fcontrol\%5Fsignals.pdf},
-  pdfdate={2025-10-19},
+  pdfdate={2025-11-02},
   pdflicenseurl={https://creativecommons.org/licenses/by-sa/4.0},
   pdfmetalang={en-US}
 }
 
-\date{2025-10-19}
+\date{2025-11-02}
 \maketitle
 \begin{abstract}
   Traffic control signals allow vehicles and pedestrians to move through
@@ -375,21 +375,6 @@ We call this a gap in the traffic.
 If the finite state machine has reached maximum green time and there has
 been no conflicting traffic, it will wait for some conflicting traffic,
 then look again for a gap in the traffic.
-
-\subsubsection{Maximum Green Extra time}
-If the finite state machine has reached maximum green time and there has
-been no conflicting traffic, but conflicting traffic arrives later,
-it will wait maximum green extra time for a gap in the traffic.
-If there isn't one, it will turn the signal face red anyway.
-
-\subsubsection{Traffic Gone Time}
-If the signal face is green and there is no conflicting traffic,
-but the finite state machine has seen no traffic for Traffic Gone seconds,
-it will set the signal face red.
-This is needed to keep both signal faces
-red when there is no traffic, which is the normal case.  Only if the other
-signal face has been red for Red Clearance seconds can this finite state
-machine instantly set its signal face to green when traffic approaches.
 
 \subsubsection{Green Limit Time}
 
@@ -1562,7 +1547,9 @@ If your PDF viewer will not play the animation you can see it on Youtube
 at this URL:
 \href{https://youtu.be/6oFNbIGWkH4}{https://youtu.be/6oFNbIGWkH4}.
 
-Here are the events shown in the above animation:
+A table of all of the events in the above animation would be excessively
+long, so the following table just looks at the events surrounding
+the presence of an emergency vehicle.
 
 \input{flood_table.tex}
 

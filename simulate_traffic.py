@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='simulate_traffic 0.56 2025-10-18',
+                     version='simulate_traffic 0.58 2025-11-02',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -67,6 +67,10 @@ parser.add_argument ('--table-start', type=decimal.Decimal,
                      metavar='table_start',
                      help='do not include information before this time' +
                      ' in the LaTex table, default is -1.000')
+parser.add_argument ('--table-end', type=decimal.Decimal,
+                     metavar='table_end',
+                     help='do not include information after this time' +
+                     ' in the LaTex table, default is unlimited')
 parser.add_argument ('--duration', type=decimal.Decimal, metavar='duration',
                      help='length of time to run the simulator, ' +
                      'default is 0.000')
@@ -83,6 +87,8 @@ parser.add_argument ('--print-statistics', action='store_true',
                      help='print statistics about the simulation')
 parser.add_argument ('--explain-state-transitions', action='store_true',
                      help='give reasons for state transitions')
+parser.add_argument ('--show-substates', action='store_true',
+                     help='show substates in the table')
 parser.add_argument ('--verbose', type=int, metavar='verbosity_level',
                      help='control the amount of output from the program: ' +
                      '1 is normal, 0 suppresses summary messages')
@@ -98,13 +104,15 @@ table_file_name = ""
 table_level = 0
 end_time = decimal.Decimal ('0.000')
 table_start_time  = decimal.Decimal ('-1.000')
+table_end_time = decimal.Decimal ('Infinity')
 table_caption = "no caption"
 do_script_input = False
 script_input_file = ""
 do_last_event_time_output = False
-clock_step = fractions.Fraction ("0.01")
+clock_step = fractions.Fraction ("0.001")
 print_statistics = False
 explain_state_transitions = False
+show_substates = False
 verbosity_level = 1
 error_counter = 0
 
@@ -151,6 +159,9 @@ if (arguments ['duration'] != None):
 if (arguments ['table_start'] != None):
   table_start_time = arguments ['table_start']
 
+if (arguments ['table_end'] != None):
+  table_end_time = arguments ['table_end']
+
 if (arguments ['table_caption'] != None):
   table_caption = arguments ['table_caption']
   
@@ -175,6 +186,9 @@ if (arguments ['print_statistics'] != None):
 if (arguments ['explain_state_transitions'] != None):
   explain_state_transitions = arguments ['explain_state_transitions']
 
+if (arguments ['show_substates'] != None):
+  show_substates = arguments ['show_substates']
+
 if (arguments ['verbose'] != None):
   verbosity_level = int(arguments ['verbose'])
 
@@ -187,6 +201,18 @@ last_event_time = current_time
 #
 def cap_first_letter (the_string):
   return (the_string[0].upper() + the_string[1:])
+
+# Subroutine to determine if it is OK to append a line to the table.
+def table_OK (the_level):
+  if (not do_table_output):
+    return False
+  if (the_level > table_level):
+    return False
+  if (current_time <= table_start_time):
+    return False
+  if (current_time > table_end_time):
+    return False
+  return True
 
 # Write the first lines in the table file.
 
@@ -382,7 +408,7 @@ def set_toggle_value (signal_face, toggle_name, new_value, source):
                  signal_face["name"] + " " + operator + toggle_name + byline +
                  ".")
             
-        if ((table_level >= 4) and (current_time > table_start_time)):
+        if (table_OK (4)):
           table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                             signal_face["name"] + " & " + operator + 
                             toggle_name + byline + ". \\\\\n")
@@ -400,7 +426,7 @@ def set_toggle_value (signal_face, toggle_name, new_value, source):
               print (format_time(current_time) + " signal face " +
                      signal_face["name"] + " finishes waiting: " +
                      format_time(wait_time) + ".")
-            if ((table_level >= 5) and (current_time > table_start_time)):
+            if (table_OK (5)):
               table_file.write ("\\hline " + format_time_N(current_time) +
                                 " & " + signal_face ["name"] +
                                 " & finishes waiting for " +
@@ -517,7 +543,7 @@ def green_request_granted():
         if (verbosity_level >= 5):
           print (format_time(current_time) + " signal face " +
                  signal_face["name"] + " starts waiting.")
-        if ((table_level >= 5) and (current_time > table_start_time)):
+        if (table_OK (5)):
           table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                             signal_face ["name"] + " & starts waiting. \\\\\n")
 
@@ -739,7 +765,7 @@ def safety_check ():
         print (format_time(current_time)  + " sensor " +
                signal_face["name"] + "/" + "Flash" + " set to " +
                    str(sensor["value"]) + " by system program safety check.")
-      if ((table_level >= 2) and (current_time > table_start_time)):
+      if (table_OK (2)):
         table_file.write ("\\hline " + format_time_N(current_time) +
                           " & " + signal_face ["name"] + " & Sensor " +
                           "Flash" + " set to " + str(sensor["value"]) +
@@ -784,7 +810,7 @@ def perform_actions (signal_face, substate):
             print (format_time(current_time) + " signal face " +
                    signal_face["name"] + " lamp set to " + external_lamp_name +
                    ".")
-          if ((table_level >= 2) and (current_time > table_start_time)):
+          if (table_OK (2)):
             table_file.write ("\\hline " + format_time_N(current_time) +
                               " & " + signal_face["name"] +
                               " & Set lamp to " + external_lamp_name +
@@ -834,8 +860,7 @@ def perform_actions (signal_face, substate):
                              " Unable to clear toggle " + toggle_name +
                              " because sensor " + full_test_sensor_name +
                              " is still active.")
-                    if ((table_level >= 5) and
-                        (current_time > table_start_time)):
+                    if (table_OK (5)):
                       table_file.write ("\\hline " +
                                         format_time_N(current_time) +
                                         " & " + signal_face_name +
@@ -864,7 +889,7 @@ def perform_actions (signal_face, substate):
                        signal_face["name"] + " start timer " +
                        timer_name + " duration " +
                        format_time(the_timer["remaining time"]) + ".")
-              if ((table_level >= 5) and (current_time > table_start_time)):
+              if (table_OK (4)):
                 table_file.write ("\\hline " + format_time_N(current_time) +
                                   " & " + signal_face ["name"] +
                                   " & Start timer " + timer_name +
@@ -879,10 +904,31 @@ def perform_actions (signal_face, substate):
           
   return    
 
-# Subroutine to describe a state transition
+# Subroutine to describe a state transition.  If no description is needed
+# return the empty string.
 def describe_transition (old_state_name, old_substate_name, state_name,
                          substate_name, the_exit):
-  description = "enters state " + state_name + " substate " + substate_name
+
+  if (show_substates):
+    if ((old_state_name == state_name) and
+        (old_substate_name == substate_name)):
+      return ("")
+  else:
+    if (old_state_name == state_name):
+      return ("")
+    
+  if (len(old_state_name) == 0):
+    description = "enter state " + state_name
+    if (show_substates):
+      description = description + " substate " + substate_name
+  else:
+    description = "transition from state " + old_state_name
+    if (show_substates):
+      description = description + " substate " + old_substate_name
+    description = description + " to state " + state_name
+    if (show_substates):
+      description = description + " substate " + substate_name
+      
   if ((not explain_state_transitions) or (the_exit == None)):
     return (description)
   description = description + " because"
@@ -909,7 +955,7 @@ def describe_transition (old_state_name, old_substate_name, state_name,
                 
       case "timer not complete":
         timer_name = conditional[1]
-        description = (description + "  timer " + timer_name +
+        description = (description + " timer " + timer_name +
                        " has not completed")
   return (description)
 
@@ -947,17 +993,18 @@ def enter_state (signal_face, state_name, substate_name, the_exit):
     transition_reason = describe_transition (old_state_name, old_substate_name,
                                              state_name, substate_name,
                                              the_exit)
-    print (format_time(current_time) + " signal face " + signal_face["name"] +
-           " " + transition_reason + ".")
-  if ((table_level >= 3) and (current_time > table_start_time) and
-      significant_event):
+    if (len(transition_reason) > 0):
+      print (format_time(current_time) + " signal face " +
+             signal_face["name"] + " " + transition_reason + ".")
+  if ((table_OK (3) and significant_event) or (table_OK (5))):
     if (transition_reason == None):
       transition_reason = describe_transition (old_state_name,
                                                old_substate_name, state_name,
                                                substate_name, the_exit)
-    table_file.write ("\\hline " + format_time_N(current_time) + " & " +
-                      signal_face["name"] + " & " +
-                      cap_first_letter (transition_reason) + ". \\\\\n")
+    if (len(transition_reason) > 0):
+      table_file.write ("\\hline " + format_time_N(current_time) + " & " +
+                        signal_face["name"] + " & " +
+                        cap_first_letter (transition_reason) + ". \\\\\n")
   states = finite_state_machine["states"]
   state = states[state_name]
   for substate in state:
@@ -1122,7 +1169,7 @@ def add_traffic_element (type, travel_path_name, permissive_delay):
     if (verbosity_level >= 2):
       print (format_time(current_time) + " " + this_name +
              " is blocked from spawning by " + blocker_name + ".")
-    if ((table_level >= 2) and (current_time > table_start_time)):
+    if (table_OK (2)):
       table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                         traffic_element["current lane"] + " & " +
                         cap_first_letter(this_name) +
@@ -1147,7 +1194,7 @@ def add_traffic_element (type, travel_path_name, permissive_delay):
              " speed " + format_speed(traffic_element["speed"]) +
              " angle " + str(math.degrees(traffic_element["angle"])) +
              " degrees.")
-    if ((table_level >= 2) and (current_time > table_start_time)):
+    if (table_OK (2)):
       table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                         traffic_element["current lane"] + " & " +
                         cap_first_letter(this_name) +
@@ -1539,7 +1586,7 @@ def move_traffic_element (traffic_element):
       traffic_element["speed"] = old_speed
       traffic_element["blocker name"] = None
 
-      if ((table_level >= 3) and (current_time > table_start_time)):
+      if (table_OK (3)):
         table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                           traffic_element["current lane"] + " & " +
                           cap_first_letter(traffic_element["name"]) +
@@ -1626,7 +1673,7 @@ def move_traffic_element (traffic_element):
                " ) distance to next milestone  " +
                format_distance(traffic_element["distance remaining"]) +
                " is blocked by " + blocking_traffic_element_name + ".")
-      if ((table_level >= 3) and (current_time > table_start_time)):
+      if (table_OK (3)):
         table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                           traffic_element["current lane"] + " & " +
                           cap_first_letter(traffic_element["name"]) +
@@ -1664,7 +1711,7 @@ def move_traffic_element (traffic_element):
                " exits the simulation at position (" +
                format_location(traffic_element["position x"]) + ", " +
                format_location(traffic_element["position y"]) + ").")
-      if ((table_level >= 2) and (current_time > table_start_time)):
+      if (table_OK (2)):
         table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                           traffic_element["current lane"] + " & " +
                           cap_first_letter(traffic_element["name"]) +
@@ -1701,7 +1748,7 @@ def move_traffic_element (traffic_element):
                      format_distance(
                        traffic_element["distance remaining"]) +
                      " stopped.")
-            if ((table_level >= 2) and (current_time > table_start_time)):
+            if (table_OK (2)):
               table_file.write ("\\hline " + format_time_N(current_time) +
                                 " & " + traffic_element["current lane"] +
                                 " & " +
@@ -1724,7 +1771,7 @@ def move_traffic_element (traffic_element):
                        format_location(traffic_element["position x"]) + ", " +
                        format_location(traffic_element["position y"]) + ").")
             
-              if ((table_level >= 2) and (current_time > table_start_time)):
+              if (table_OK (2)):
                 table_file.write ("\\hline " + format_time_N(current_time) +
                                   " & " + traffic_element["current lane"] +
                                   " & " +
@@ -1765,7 +1812,7 @@ def move_traffic_element (traffic_element):
                        format_distance(traffic_element["distance remaining"]) +
                        " speed " + format_speed(traffic_element["speed"]) +
                        tail_text + ".")
-              if ((table_level >= 2) and (current_time > table_start_time)):
+              if (table_OK (2)):
                 table_file.write ("\\hline " + format_time_N(current_time) +
                                   " & " + traffic_element["current lane"] +
                                   " & " +
@@ -1791,7 +1838,7 @@ def move_traffic_element (traffic_element):
                  format_location(traffic_element["position y"]) +
                  ") speed " + format_speed(traffic_element["speed"]) +
                  " at a milestone.")
-        if ((table_level >= 5) and (current_time > table_start_time)):
+        if (table_OK (5)):
           table_file.write ("\\hline " + format_time_N(current_time) +
                             " & " + traffic_element["current lane"] +
                             " & " +
@@ -1834,7 +1881,7 @@ def check_sensors():
                      signal_face["name"] + "/" + sensor_name + " set to " +
                      str(sensor["value"]) + " by " + sensor["triggered by"] +
                      ".")
-            if ((table_level >= 2) and (current_time > table_start_time)):
+            if (table_OK (2)):
               table_file.write ("\\hline " + format_time_N(current_time) +
                                 " & " + signal_face ["name"] + " & Sensor " +
                                 sensor_name + " set to " +
@@ -1874,7 +1921,7 @@ def perform_script_action (the_operator, signal_face_name, the_operand,
             print (format_time(current_time)  + " sensor " +
                    signal_face["name"] + "/" + sensor_name + " set to " +
                    str(sensor["value"]) + " by script.")
-          if ((table_level >= 2) and (current_time > table_start_time)):
+          if (table_OK (2)):
             table_file.write ("\\hline " + format_time_N(current_time) +
                               " & " + signal_face ["name"] + " & Sensor " +
                               sensor_name + " set to " + str(sensor["value"]) +
@@ -1915,7 +1962,7 @@ def update_timers():
         print (format_time(current_time) + " timer " +
                the_timer ["signal face name"] + "/" + the_timer["name"] +
                " completed.")
-      if ((table_level >= 5) and (current_time > table_start_time)):          
+      if (table_OK (4)):
         table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                           the_timer ["signal face name"] + " & Timer " +
                           the_timer ["name"] + " completed. \\\\\n")
@@ -2003,6 +2050,11 @@ while ((current_time < end_time) and (error_counter == 0)):
       if (the_substate["name"] == substate_name):
         substate = the_substate
         break
+    if (substate == None):
+      print ("Invalid substate: " + substate_name + ".")
+      error_counter = error_counter + 1
+      break
+    
     if (verbosity_level >= 5):
       print (format_time(current_time) + " Signal face " +
              signal_face["name"] + " state " + signal_face["state"] +
@@ -2142,7 +2194,7 @@ while ((current_time < end_time) and (error_counter == 0)):
             if (verbosity_level >= 5):
               print (format_time(current_time) + " Sensor " +
                      signal_face ["name"] + "/" + sensor_name + " is True.")
-            if ((table_level >= 5) and (current_time > table_start_time)):
+            if (table_OK (5)):
               table_file.write ("\\hline " + format_time_N(current_time) +
                                 " & " + signal_face["name"] +
                                 " &  Sensor " + sensor_name +
