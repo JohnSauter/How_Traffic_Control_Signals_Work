@@ -1,5 +1,5 @@
 % File: traffic_control_signals.tex, author: John Sauter,
-% date: November 2, 2025.
+% date: November 9, 2025.
 
 % Copyright © 2025 by John Sauter.
 % Licensed under the Creative Commons Attribution-ShareAlike 4.0 International
@@ -197,12 +197,12 @@
   pdfcontacturl={https://www.systemeyescomputerstore.com},
   pdfcopyright={Copyright {\copyright} 2025 by John Sauter},
   pdfurl={https://www.systemeyescomputerstore.com/How\%5FTraffic\%5FControl\%5FSignals\%5fWork/traffic\%5Fcontrol\%5Fsignals.pdf},
-  pdfdate={2025-11-02},
+  pdfdate={2025-11-09},
   pdflicenseurl={https://creativecommons.org/licenses/by-sa/4.0},
   pdfmetalang={en-US}
 }
 
-\date{2025-11-02}
+\date{2025-11-09}
 \maketitle
 \begin{abstract}
   Traffic control signals allow vehicles and pedestrians to move through
@@ -336,7 +336,7 @@ time to stop safely.  We call this the Traffic Approaching sensor.
 
 \subsection{Timers}
 
-In addition to the lane's signal faces and sensors, the
+In addition to the lane's signal face and sensors, the
 finite state machine needs a sense of time.  Here are the most
 important timers:
 
@@ -372,9 +372,10 @@ face turns red, or far enough away that they clearly cannot.
 We call this a gap in the traffic.
 
 \subsubsection{Maximum Green time}
-If the finite state machine has reached maximum green time and there has
-been no conflicting traffic, it will wait for some conflicting traffic,
-then look again for a gap in the traffic.
+If the finite state machine has been looking for a gap in the traffic
+in order to turn red for Maximum Green time seconds, it turns red
+anyway.  This will allow cross traffic to proceed even when it needs
+to stop a line of continuous traffic.
 
 \subsubsection{Green Limit Time}
 
@@ -454,12 +455,12 @@ When a finite state machine's signal face has been red long enough for all
 of the traffic which entered the intersection through this finite state
 machine's lane to have cleared the intersection the finite state machine
 sets its Cleared toggle.
-This causes the Partial Conflicting Paths are Clear toggle to be set
+This causes the Conflicting Paths are Clear toggle to be set
 in finite state machines which are waiting for it.
 
-\subsubsection{Partial Conflicting Paths are Clear}
+\subsubsection{Conflicting Paths are Clear}
 
-When a finite state machine see this toggle set it can change its signal
+When a finite state machine sees this toggle set it can change its signal
 face from from red to green.
 
 \subsubsection{Traffic Flowing}
@@ -598,7 +599,7 @@ Consider now a rural intersection of two two-lane roads.
 
 In figure \ref{fig:four-way_intersection} vehicles may approach from the
 north, south, east and west.  Vehicles from the south enter the intersection
-on lane A and can exit on lanes 1 (U-turn), 2 (right turn), 3 (atraight
+on lane A and can exit on lanes 1 (U-turn), 2 (right turn), 3 (straight
 through) or 4 (left turn).  Lanes B, C, and D likewise have four exit
 lanes, for a total of \num{16} travel paths.
 
@@ -642,12 +643,19 @@ The same is true for the sensors for lanes B and D.
 In addition to the timers we described for the single-lane bridge,
 we need the following:
 
-\subsubsection{Traffic Still Present Time}
-If a finite state machine is trying to turn its signal face green due to
-a vehicle being present or approaching the intersection, but after this
-much time the vehicle is not present, then the finite state machine stops
-trying to turn green.  The vehicle has likely made a permissive right
-turn so there is no longer a need to stop the cross traffic.
+\subsubsection{Green Delay Approaching Time}
+When a vehicle arrives at the Traffic Approaching sensor but the
+signal face is red, the finite state machine waits Green Delay
+Approaching seconds before requesting permission to turn green,
+in case the vehicle makes a permissive right turn so the cross
+traffic does not need to be stopped.
+
+\subsubsection{Green Delay Present Time}
+When a vehicle arrives at the Traffic Present sensor but the
+signal face is red, the finite state machine waits Green Delay
+Approaching seconds before requesting permission to turn green,
+in case the vehicle makes a permissive right turn so the cross
+traffic does not need to be stopped.
 
 \subsection{Toggles}
 
@@ -983,10 +991,13 @@ If a lane remains occupied after its finite state machine has signaled
 that a permissive left turn is allowed, the finite state machine
 asks that oncoming traffic also be stopped by setting toggle Request Clearance.
 
-\subsubsection{Conflicting Paths are Clear}
-When a finite state machine  sees that this toggle is set it can
-set its signal face to green.
-If this is a left turn signal the oncoming traffic has been stopped.
+\subsubsection{Partial Conflicting Paths are Clear}
+When a finite state machine  sees that this toggle is set
+but Conflicting Paths are Clear is not set, it can
+set its signal face to flashing left arrow yellow.
+This can only happen for lanes A and E, since only those
+finite state machines have a partial conflict table
+that is different from their conflict table.
 
 \subsection{Wiring the Finite State Machines to the Lamps}
 

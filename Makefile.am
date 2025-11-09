@@ -1,4 +1,4 @@
-# File: Makefile.am, author: John Sauter, date: October 26, 2025.
+# File: Makefile.am, author: John Sauter, date: November 9, 2025.
 #
 # Build traffic_control_signals.pdf and animations.
 
@@ -369,7 +369,7 @@ ${builddir}/complex_intersection.json  \
 idle_01_table.tex : simulate_traffic.py one_way_bridge.json
 	python3 ${srcdir}/simulate_traffic.py \
 --intersection ${builddir}/one_way_bridge.json --clock-step 0.001 \
---explain-state-transitions \
+--explain-state-transitions --only-important \
 --table-level 4 --table-file ${builddir}/idle_01_table.tex --duration 200  \
 --table-caption "Power On to Idle State, example 01"
 
@@ -386,7 +386,7 @@ simulate_traffic.py one_way_bridge.json bridge_one_car_script.txt
 --intersection ${builddir}/one_way_bridge.json --clock-step 0.001 \
 --table-level 4 --table-file ${builddir}/bridge_one_car_table.tex \
 --duration 400 \
---explain-state-transitions \
+--explain-state-transitions --only-important \
 --table-start 199 --script ${srcdir}/bridge_one_car_script.txt \
 --events-file $(builddir)/bridge_one_car_animation_01.csv \
 --last-event-time "${builddir}/last_event_time_bridge_one_car_animation.txt" \
@@ -398,7 +398,7 @@ simulate_traffic.py one_way_bridge.json bridge_two_cars_script.txt
 --intersection ${builddir}/one_way_bridge.json --clock-step 0.001 \
 --table-level 4 --table-file ${builddir}/bridge_two_cars_table.tex \
 --duration 400 \
---explain-state-transitions \
+--explain-state-transitions --only-important \
 --table-start 199 --script ${srcdir}/bridge_two_cars_script.txt \
 --events-file $(builddir)/bridge_two_cars_animation_01.csv \
 --last-event-time "${builddir}/last_event_time_bridge_two_cars_animation.txt" \
@@ -409,7 +409,7 @@ simulate_traffic.py four_corners.json four_corners_many_script.txt
 	python3 "${srcdir}/simulate_traffic.py" \
 --intersection "${builddir}/four_corners.json" --clock-step 0.001 \
 --table-level 4 --table-file "${builddir}/four_corners_many_table.tex" \
---duration 400 --explain-state-transitions \
+--duration 400 --explain-state-transitions --only-important \
 --table-start 199 --script "${srcdir}/four_corners_many_script.txt" \
 --events-file "$(builddir)/four_corners_many_animation_02.csv" \
 --last-event-time \
@@ -425,7 +425,7 @@ left_turn_delayed_script.txt
 --events-file $(builddir)/left_turn_delayed_animation_03.csv \
 --last-event-time \
 "${builddir}/last_event_time_left_turn_delayed_animation.txt" \
---duration 400 --table-start 199 --explain-state-transitions \
+--duration 400 --table-start 199 --explain-state-transitions --show-substates \
 --script ${srcdir}/left_turn_delayed_script.txt \
 --table-caption "Left Turn Delayed"
 
@@ -483,11 +483,11 @@ flood_table.tex flood_animation_03.csv &: simulate_traffic.py \
 complex_intersection.json flood_script.txt
 	python3 "${srcdir}/simulate_traffic.py" \
 --intersection "${builddir}/complex_intersection.json" \
---table-level 4 --clock-step 0.01 \
+--table-level 4 --clock-step 0.009 \
 --events-file "$(builddir)/flood_animation_03.csv" \
 --last-event-time "${builddir}/last_event_time_flood_animation.txt" \
 --table-file "${builddir}/flood_table.tex" --duration 1200 \
---table-start 258 --table-end 273 \
+--table-start 258 --table-end 275 \
 --explain-state-transitions --show-substates \
 --script "${srcdir}/flood_script.txt" --table-caption "Heavy Traffic"
 

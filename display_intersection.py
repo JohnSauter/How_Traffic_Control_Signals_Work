@@ -45,7 +45,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='display_intersection 0.56 2025-10-19',
+                     version='display_intersection 0.59 2025-11-08',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -61,7 +61,7 @@ parser.add_argument ('--timer-durations-file', metavar='timer_durations_file',
 parser.add_argument ('--table-label', metavar='table_label',
                      help='label the table with this label')
 parser.add_argument ('--only-important', action="store_true",
-                     help='only output important timers')
+                     help='only output important timers and sensors')
 parser.add_argument ('--verbose', type=int, metavar='verbosity_level',
                      help='control the amount of output from the program: ' +
                      '1 is normal, 0 suppresses summary messages')

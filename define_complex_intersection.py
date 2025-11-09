@@ -47,7 +47,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_complex_intersection 0.58 2025-11-02',
+                     version='define_complex_intersection 0.59 2025-11-08',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -156,8 +156,10 @@ for signal_face_name in ("B", "C", "F", "G"):
   timer_durations[timer_full_name] = float ("inf")
   timer_full_name = signal_face_name + "/" + "Yellow Change"
   timer_durations[timer_full_name] = float ("5.000")
-  timer_full_name = signal_face_name + "/" + "Traffic Still Present"
-  timer_durations[timer_full_name] = float ("10.000")
+  timer_full_name = signal_face_name + "/" + "Green Delay Approaching"
+  timer_durations[timer_full_name] = float ("0.000")
+  timer_full_name = signal_face_name + "/" + "Green Delay Present"
+  timer_durations[timer_full_name] = float ("0.000")
 
 for signal_face_name in ("A", "E"):
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Waiting"
@@ -176,10 +178,12 @@ for signal_face_name in ("A", "E"):
   timer_durations[timer_full_name] = float ("60.000")
   timer_full_name = signal_face_name + "/" + "Yellow Change"
   timer_durations[timer_full_name] = float ("3.500")
-  timer_full_name = signal_face_name + "/" + "Traffic Still Present"
-  timer_durations[timer_full_name] = float ("10.000")
+  timer_full_name = signal_face_name + "/" + "Green Delay Approaching"
+  timer_durations[timer_full_name] = float ("0.000")
+  timer_full_name = signal_face_name + "/" + "Green Delay Present"
+  timer_durations[timer_full_name] = float ("0.000")
 
-for signal_face_name in ("D", "H"):
+for signal_face_name in ("D"):
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Waiting"
   timer_durations[timer_full_name] = float ("inf")
   timer_full_name = signal_face_name + "/" + "Minimum Left Flashing Yellow"
@@ -196,8 +200,32 @@ for signal_face_name in ("D", "H"):
   timer_durations[timer_full_name] = float ("60.000")
   timer_full_name = signal_face_name + "/" + "Yellow Change"
   timer_durations[timer_full_name] = float ("3.000")
-  timer_full_name = signal_face_name + "/" + "Traffic Still Present"
+  timer_full_name = signal_face_name + "/" + "Green Delay Approaching"
   timer_durations[timer_full_name] = float ("3.000")
+  timer_full_name = signal_face_name + "/" + "Green Delay Present"
+  timer_durations[timer_full_name] = float ("3.000")
+
+for signal_face_name in ("H"):
+  timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Waiting"
+  timer_durations[timer_full_name] = float ("inf")
+  timer_full_name = signal_face_name + "/" + "Minimum Left Flashing Yellow"
+  timer_durations[timer_full_name] = float ("inf")
+  timer_full_name = signal_face_name + "/" + "Maximum Green"
+  timer_durations[timer_full_name] = float ("30.000")
+  timer_full_name = signal_face_name + "/" + "Minimum Green"
+  timer_durations[timer_full_name] = float ("7.000")
+  timer_full_name = signal_face_name + "/" + "Passage"
+  timer_durations[timer_full_name] = float ("1.900")
+  timer_full_name = signal_face_name + "/" + "Red Clearance"
+  timer_durations[timer_full_name] = float ("1.500")
+  timer_full_name = signal_face_name + "/" + "Green Limit"
+  timer_durations[timer_full_name] = float ("60.000")
+  timer_full_name = signal_face_name + "/" + "Yellow Change"
+  timer_durations[timer_full_name] = float ("3.000")
+  timer_full_name = signal_face_name + "/" + "Green Delay Approaching"
+  timer_durations[timer_full_name] = float ("0.000")
+  timer_full_name = signal_face_name + "/" + "Green Delay Present"
+  timer_durations[timer_full_name] = float ("0.000")
 
 for signal_face_name in ("J"):
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Waiting"
@@ -216,8 +244,10 @@ for signal_face_name in ("J"):
   timer_durations[timer_full_name] = float ("60.000")
   timer_full_name = signal_face_name + "/" + "Yellow Change"
   timer_durations[timer_full_name] = float ("3.000")
-  timer_full_name = signal_face_name + "/" + "Traffic Still Present"
-  timer_durations[timer_full_name] = float ("3.000")
+  timer_full_name = signal_face_name + "/" + "Green Delay Approaching"
+  timer_durations[timer_full_name] = float ("0.000")
+  timer_full_name = signal_face_name + "/" + "Green Delay Present"
+  timer_durations[timer_full_name] = float ("0.000")
 
 
 for signal_face_name in ("pse", "psw", "pne", "pnw"):
@@ -237,8 +267,10 @@ for signal_face_name in ("pse", "psw", "pne", "pnw"):
   timer_durations[timer_full_name] = float ("60.000")
   timer_full_name = signal_face_name + "/" + "Yellow Change"
   timer_durations[timer_full_name] = float ("20.000")
-  timer_full_name = signal_face_name + "/" + "Traffic Still Present"
-  timer_durations[timer_full_name] = float ("inf")
+  timer_full_name = signal_face_name + "/" + "Green Delay Approaching"
+  timer_durations[timer_full_name] = float ("0.000")
+  timer_full_name = signal_face_name + "/" + "Green Delay Present"
+  timer_durations[timer_full_name] = float ("0.000")
 
 signal_faces_list = list()
 signal_faces_dict = dict()
@@ -252,6 +284,7 @@ for signal_face_name in signal_face_names:
     toggle = dict()
     toggle["name"] = toggle_name
     toggle["value"] = False
+    toggle["important"] = True
     toggles_list.append(toggle)
   signal_face["toggles"] = toggles_list
 
@@ -267,7 +300,8 @@ for signal_face_name in signal_face_names:
     match timer_name:
       case "Red Clearance" | "Yellow Change" | "Minimum Green" | \
            "Passage" | "Maximum Green" | \
-           "Green Limit" | "Traffic Still Present" | \
+           "Green Limit" | "Green Delay Approaching" | \
+           "Green Delay Present" \
            "Left Flashing Yellow Waiting" | "Minimum Left Flashing Yellow" | \
            "Red Limit":
         important = True

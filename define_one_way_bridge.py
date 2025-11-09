@@ -46,7 +46,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_one_way_bridge 0.58 2025-11-02',
+                     version='define_one_way_bridge 0.59 2025-11-08',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -146,8 +146,10 @@ for signal_face_name in signal_face_names:
   timer_durations[timer_full_name] = float ("60.0")
   timer_full_name = signal_face_name + "/" + "Yellow Change"
   timer_durations[timer_full_name] = float ("5.000")
-  timer_full_name = signal_face_name + "/" + "Traffic Still Present"
-  timer_durations[timer_full_name] = float ("10.000")
+  timer_full_name = signal_face_name + "/" + "Green Delay Approaching"
+  timer_durations[timer_full_name] = float ("0.000")
+  timer_full_name = signal_face_name + "/" + "Green Delay Present"
+  timer_durations[timer_full_name] = float ("0.000")
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Waiting"
   timer_durations[timer_full_name] = float ("15.000")
   timer_full_name = signal_face_name + "/" + "Minimum Left Flashing Yellow"
@@ -165,7 +167,21 @@ for signal_face_name in signal_face_names:
     toggle = dict()
     toggle["name"] = toggle_name
     toggle["value"] = False
+
+    match toggle_name:
+      case "Traffic Approaching" | "Traffic Present" | "Request Green" | \
+           "Green Request Granted" | "Request Partial Clearance" | \
+           "Clearance Requested" | "Cleared" | \
+           "Conflicting Paths are Clear" | "Traffic Flowing":
+        important = True
+
+      case _:
+        important = False
+
+    toggle["important"] = important
+      
     toggles_list.append(toggle)
+    
   signal_face["toggles"] = toggles_list
 
   timers_list = list()

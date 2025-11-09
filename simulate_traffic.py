@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='simulate_traffic 0.58 2025-11-02',
+                     version='simulate_traffic 0.59 2025-11-08',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -87,6 +87,8 @@ parser.add_argument ('--print-statistics', action='store_true',
                      help='print statistics about the simulation')
 parser.add_argument ('--explain-state-transitions', action='store_true',
                      help='give reasons for state transitions')
+parser.add_argument ('--only-important', action='store_true',
+                     help='Only log important toggles and timers')
 parser.add_argument ('--show-substates', action='store_true',
                      help='show substates in the table')
 parser.add_argument ('--verbose', type=int, metavar='verbosity_level',
@@ -112,6 +114,7 @@ do_last_event_time_output = False
 clock_step = fractions.Fraction ("0.001")
 print_statistics = False
 explain_state_transitions = False
+only_important = False
 show_substates = False
 verbosity_level = 1
 error_counter = 0
@@ -185,6 +188,9 @@ if (arguments ['print_statistics'] != None):
 
 if (arguments ['explain_state_transitions'] != None):
   explain_state_transitions = arguments ['explain_state_transitions']
+
+if (arguments ['only_important'] != None):
+  only_important = arguments ['only_important']
 
 if (arguments ['show_substates'] != None):
   show_substates = arguments ['show_substates']
@@ -325,6 +331,10 @@ def format_time_N(the_time):
   previous_time = the_time
   return (format_time (the_time))
 
+# Format a duration for display.
+def format_duration (the_duration):
+  return ("\\qty{" + str(the_duration) + "}{\\second}")
+
 # The conversion factor from miles per hour to feet per second:
 mph_to_fps = fractions.Fraction(5280, 60*60)
 
@@ -408,7 +418,8 @@ def set_toggle_value (signal_face, toggle_name, new_value, source):
                  signal_face["name"] + " " + operator + toggle_name + byline +
                  ".")
             
-        if (table_OK (4)):
+        if (table_OK (4) and ((not only_important) or
+                              the_toggle["important"])):
           table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                             signal_face["name"] + " & " + operator + 
                             toggle_name + byline + ". \\\\\n")
@@ -888,14 +899,15 @@ def perform_actions (signal_face, substate):
                 print (format_time(current_time) + " signal face " +
                        signal_face["name"] + " start timer " +
                        timer_name + " duration " +
-                       format_time(the_timer["remaining time"]) + ".")
-              if (table_OK (4)):
+                       format_duration(the_timer["remaining time"]) + ".")
+              if (table_OK (4) and ((not only_important) or
+                                    the_timer["important"])):
                 table_file.write ("\\hline " + format_time_N(current_time) +
                                   " & " + signal_face ["name"] +
                                   " & Start timer " + timer_name +
                                   " duration " +
-                                  format_time(the_timer["remaining time"]) +
-                                  ". \\\\\n")
+                                  format_duration(the_timer["remaining time"])
+                                  + ". \\\\\n")
       case _:
         if (verbosity_level >= 1):
           print (format_time(current_time) + " signal face " +
@@ -904,10 +916,43 @@ def perform_actions (signal_face, substate):
           
   return    
 
+# Subroutine to test a conditional to see if we should log it.
+def conditional_is_important (signal_face, the_conditional):
+  global error_counter
+  
+  if (not only_important):
+    return True
+  
+  match the_conditional[0]:    
+    case "toggle is true" | "toggle is false":
+      toggle_name = the_conditional[1]
+      toggles_list = signal_face["toggles"]
+      for the_toggle in toggles_list:
+        if (the_toggle["name"] == toggle_name):
+          return (the_toggle["important"])
+      print ("toggle name invalid: " + toggle_name + ".")
+      error_counter = error_counter + 1
+      
+    case "timer is completed" | "timer not complete":
+      timer_name = the_conditional[1]
+      timers_list = signal_face["timers"]
+      for the_timer in timers_list:
+        if (the_timer["name"] == timer_name):
+          return (the_timer["important"])
+      print ("timer name invalid: " + timer_name + ".")
+      error_counter = error_counter + 1
+
+    case _:
+      print ("condition is invalid: " + the_conditional[0] + ".")
+      error_counter = error_counter + 1
+
+  return False
+
 # Subroutine to describe a state transition.  If no description is needed
 # return the empty string.
-def describe_transition (old_state_name, old_substate_name, state_name,
-                         substate_name, the_exit):
+def describe_transition (signal_face, old_state_name, old_substate_name,
+                         state_name, substate_name, the_exit):
+  global error_counter
 
   if (show_substates):
     if ((old_state_name == state_name) and
@@ -931,32 +976,60 @@ def describe_transition (old_state_name, old_substate_name, state_name,
       
   if ((not explain_state_transitions) or (the_exit == None)):
     return (description)
+  
   description = description + " because"
   conditionals = the_exit [0]
   first_condition = True
-  for conditional in conditionals:
-    if (first_condition):
-      first_condition = False
-    else:
-      description = description + " and"
+  condition_displayed = False
+  
+  for the_conditional in conditionals:
+    if (conditional_is_important (signal_face, the_conditional)):
+    
+      if (first_condition):
+        first_condition = False
+      else:
+        description = description + " and"
       
-    match conditional[0]:    
-      case "toggle is true":
-        toggle_name = conditional[1]
-        description = (description + " toggle " + toggle_name + " is true")
+      match the_conditional[0]:    
+        case "toggle is true":
+          toggle_name = the_conditional[1]
+          description = (description + " toggle " + toggle_name + " is true")
+          condition_displayed = True
 
-      case "toggle is false":
-        toggle_name = conditional[1]
-        description = (description + " toggle " + toggle_name + " is false")
+        case "toggle is false":
+          toggle_name = the_conditional[1]
+          description = (description + " toggle " + toggle_name + " is false")
+          condition_displayed = True
                 
-      case "timer is completed":
-        timer_name = conditional[1]
-        description = (description + " timer " + timer_name + " has completed")
+        case "timer is completed":
+          timer_name = the_conditional[1]
+          description = (description + " timer " + timer_name +
+                         " has completed")
+          condition_displayed = True
                 
-      case "timer not complete":
-        timer_name = conditional[1]
-        description = (description + " timer " + timer_name +
-                       " has not completed")
+        case "timer not complete":
+          timer_name = the_conditional[1]
+          description = (description + " timer " + timer_name +
+                         " has not completed")
+          condition_displayed = True
+
+        case _:
+          print ("Invalid condition.")
+          pprint.pprint ((signal_face, old_state_name, old_substate_name,
+                          the_exit))
+          error_counter = error_counter + 1
+          
+  if (not condition_displayed):
+    print ("No condition displayed.")
+    pprint.pprint ((description, signal_face, old_state_name,
+                    old_substate_name, the_exit))
+    for the_conditional in conditionals:
+      pprint.pprint (the_conditional)
+      importance = conditional_is_important (signal_face, the_conditional)
+      print (the_conditional[0] + ", " + the_conditional[1] + ", " +
+             str(importance) + ".")
+    error_counter = error_counter + 1
+      
   return (description)
 
 # Subroutine to enter the signal face into the named state and substate.
@@ -990,7 +1063,8 @@ def enter_state (signal_face, state_name, substate_name, the_exit):
   
   if (((verbosity_level >= 3) and significant_event) or
       (verbosity_level >= 5)):
-    transition_reason = describe_transition (old_state_name, old_substate_name,
+    transition_reason = describe_transition (signal_face, old_state_name,
+                                             old_substate_name,
                                              state_name, substate_name,
                                              the_exit)
     if (len(transition_reason) > 0):
@@ -998,7 +1072,7 @@ def enter_state (signal_face, state_name, substate_name, the_exit):
              signal_face["name"] + " " + transition_reason + ".")
   if ((table_OK (3) and significant_event) or (table_OK (5))):
     if (transition_reason == None):
-      transition_reason = describe_transition (old_state_name,
+      transition_reason = describe_transition (signal_face, old_state_name,
                                                old_substate_name, state_name,
                                                substate_name, the_exit)
     if (len(transition_reason) > 0):
@@ -1859,8 +1933,11 @@ def move_traffic_element (traffic_element):
             
   return
 
-# Subroutine to activate any sensors that detect a traffic element.
+# Subroutine to activate any sensors that detect a traffic element
+# and deactivate them when the traffic element has left.
 def check_sensors():
+  global no_activity
+  
   for signal_face in signal_faces_list:
     signal_face_name = signal_face["name"]
     sensors = signal_face["sensors"]
@@ -1876,6 +1953,7 @@ def check_sensors():
         if (not sensor["controlled by script"]):
           if (sensor["value"] != triggered):
             sensor["value"] = triggered
+            no_activity = False
             if (verbosity_level >= 2):
               print (format_time(current_time)  + " sensor " +
                      signal_face["name"] + "/" + sensor_name + " set to " +
@@ -1962,7 +2040,7 @@ def update_timers():
         print (format_time(current_time) + " timer " +
                the_timer ["signal face name"] + "/" + the_timer["name"] +
                " completed.")
-      if (table_OK (4)):
+      if (table_OK (4) and ((not only_important) or the_timer["important"])):
         table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                           the_timer ["signal face name"] + " & Timer " +
                           the_timer ["name"] + " completed. \\\\\n")

@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_traffic_control_signals 0.58 2025-11-02',
+                     version='define_traffic_control_signals 0.59 2025-11-09',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -156,17 +156,6 @@ actions_list.append(action)
 
 substate["exits"] = list()
 exits_list = substate["exits"]
-conditional_tests = list()
-conditional_test = ("toggle is true", "Preempt Red")
-conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Red", "Travel Path is Clear" )
-exits_list.append(exit)
-
-conditional_tests = list()
-conditional_test = ("toggle is true", "Manual Red")
-conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Red", "Travel Path is Clear" )
-exits_list.append(exit)
 
 conditional_tests = list()
 conditional_test = ("toggle is true", "Flash Red")
@@ -183,13 +172,21 @@ exits_list.append(exit)
 conditional_tests = list()
 conditional_test = ("toggle is true", "Traffic Approaching")
 conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Red", "Going Green 1" )
+conditional_test = ("toggle is false", "Preempt Red")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Manual Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Delay Green 1a" )
 exits_list.append(exit)
 
 conditional_tests = list()
 conditional_test = ("toggle is true", "Traffic Present")
 conditional_tests.append(conditional_test)
-exit  = ( conditional_tests, "Red", "Going Green 1" )
+conditional_test = ("toggle is false", "Preempt Red")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Manual Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Delay Green 1p" )
 exits_list.append(exit)
 
 conditional_tests = list()
@@ -207,46 +204,69 @@ exits_list.append(exit)
 conditional_tests = list()
 conditional_test = ("timer is completed", "Red Limit")
 conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Preempt Red")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Manual Red")
+conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Red", "Going Green 4")
 exits_list.append(exit)
 
 red_state.append(substate)
 
 substate = dict()
-substate["name"] = "Going Green 1"
-substate["note"] = ("There is traffic approaching or present; we would like " +
-                    "to turn green.")
+substate["name"] = "Delay Green 1a"
+substate["note"] = ("There is traffic approaching; we would like " +
+                    "to turn green but wait to make sure the traffic " +
+                    "does not disappear by turning right.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 
-action=("set toggle", "Request Green")
+action = ("start timer", "Green Delay Approaching")
 actions_list.append(action)
-action=("clear toggle", "Traffic Present")
-actions_list.append(action)
-action=("clear toggle", "Traffic Approaching")
-actions_list.append(action)
-action = ("start timer", "Traffic Still Present")
+action = ("start timer", "Green Delay Present")
 actions_list.append(action)
 
 substate["exits"] = list()
 exits_list = substate["exits"]
+
 conditional_tests = list()
-conditional_test = ("timer not complete", "Traffic Still Present")
+conditional_test = ("toggle is true", "Traffic Approaching")
 conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Red", "Going Green 2" )
+exit = ( conditional_tests, "Red", "Delay Green 2a" )
 exits_list.append(exit)
 
 red_state.append(substate)
 
 substate = dict()
-substate["name"] = "Going Green 2"
-substate["note"] = ("Come here to wait for permission to turn green " +
-                    " and make sure we still have traffic.")
+substate["name"] = "Delay Green 1p"
+substate["note"] = ("There is traffic present; we would like " +
+                    "to turn green but wait to make sure the traffic " +
+                    "does not disappear by turning right.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 
-action = ("clear toggle", "Traffic Present")
+action = ("start timer", "Green Delay Present")
 actions_list.append(action)
+action = ("start timer", "Green Delay Approaching")
+actions_list.append(action)
+
+substate["exits"] = list()
+exits_list = substate["exits"]
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Traffic Present")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Delay Green 2p" )
+exits_list.append(exit)
+
+red_state.append(substate)
+
+substate = dict()
+substate["name"] = "Delay Green 2a"
+substate["note"] = ("Wait for the approaching traffic to clear the sensor.")
+substate["actions"] = list()
+actions_list = substate["actions"]
+
 action = ("clear toggle", "Traffic Approaching")
 actions_list.append(action)
 
@@ -278,21 +298,231 @@ exit = ( conditional_tests, "Red", "Travel Path is Clear")
 exits_list.append(exit)
 
 conditional_tests = list()
-conditional_test = ("toggle is true", "Green Request Granted")
+conditional_test = ("timer is completed", "Green Delay Approaching")
 conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Red", "Going Green 3" )
+conditional_test = ("toggle is false", "Preempt Red")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Manual Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Going Green 1" )
 exits_list.append(exit)
 
 conditional_tests = list()
-conditional_test = ("timer is completed", "Traffic Still Present")
+conditional_test = ("toggle is true", "Traffic Approaching")
 conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Delay Green 2a" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is false", "Traffic Approaching")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Delay Green 3a" )
+exits_list.append(exit)
+
+red_state.append(substate)
+
+substate = dict()
+substate["name"] = "Delay Green 2p"
+substate["note"] = ("Wait for the present traffic to clear the sensor.")
+substate["actions"] = list()
+actions_list = substate["actions"]
+
+action = ("clear toggle", "Traffic Present")
+actions_list.append(action)
+
+substate["exits"] = list()
+exits_list = substate["exits"]
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Preempt Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Manual Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Yellow")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("timer is completed", "Green Delay Present")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Preempt Red")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Manual Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Going Green 1" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Traffic Present")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Delay Green 2p" )
+exits_list.append(exit)
+
+conditional_tests = list()
 conditional_test = ("toggle is false", "Traffic Present")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Delay Green 3p" )
+exits_list.append(exit)
+
+red_state.append(substate)
+
+substate = dict()
+substate["name"] = "Delay Green 3a"
+substate["note"] = ("There is no vehicle on the Traffic Approaching sensor.")
+substate["actions"] = list()
+actions_list = substate["actions"]
+
+action = ("clear toggle", "Traffic Approaching")
+actions_list.append(action)
+
+substate["exits"] = list()
+exits_list = substate["exits"]
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Preempt Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Manual Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Yellow")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("timer is completed", "Green Delay Approaching")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Red", "Travel Path is Clear" )
 exits_list.append(exit)
 
 conditional_tests = list()
-conditional_test = ("timer not complete", "Traffic Still Present")
+conditional_test = ("toggle is true", "Traffic Approaching")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Delay Green 2a" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Traffic Present")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Delay Green 2p" )
+exits_list.append(exit)
+
+red_state.append(substate)
+
+substate = dict()
+substate["name"] = "Delay Green 3p"
+substate["note"] = ("There is no vehicle on the Traffic Present sensor.")
+substate["actions"] = list()
+actions_list = substate["actions"]
+
+action = ("clear toggle", "Traffic Present")
+actions_list.append(action)
+
+substate["exits"] = list()
+exits_list = substate["exits"]
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Preempt Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Manual Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Yellow")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("timer is completed", "Green Delay Present")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Traffic Present")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Delay Green 2p" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Traffic Approaching")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Delay Green 2a" )
+exits_list.append(exit)
+
+red_state.append(substate)
+
+substate = dict()
+substate["name"] = "Going Green 1"
+substate["note"] = ("Wait for permission to turn green.")
+substate["actions"] = list()
+actions_list = substate["actions"]
+
+action = ("set toggle", "Request Green")
+actions_list.append(action)
+
+substate["exits"] = list()
+exits_list = substate["exits"]
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Yellow")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Green Request Granted")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Preempt Red")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Manual Red")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Red", "Going Green 2" )
 exits_list.append(exit)
@@ -300,10 +530,9 @@ exits_list.append(exit)
 red_state.append(substate)
 
 substate=dict()
-substate["name"] = "Going Green 3"
-substate["note"] = ("We have permission to turn green and there is still " +
-                    "traffic present.  Ask conflicting signal faces " +
-                    "to turn green.")
+substate["name"] = "Going Green 2"
+substate["note"] = ("We have permission to turn green.  " +
+                    "Ask conflicting signal faces to turn red.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 
@@ -357,20 +586,6 @@ conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Green", "No Traffic" )
 exits_list.append(exit)
 
-conditional_tests = list()
-conditional_test = ("timer is completed", "Traffic Still Present")
-conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Traffic Present")
-conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Red", "Travel Path is Clear" )
-exits_list.append(exit)
-
-conditional_tests = list()
-conditional_test = ("timer not complete", "Traffic Still Present")
-conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Red", "Going Green 3" )
-exits_list.append(exit)
-
 red_state.append(substate)
 
 substate = dict()
@@ -419,7 +634,7 @@ red_state.append(substate)
 
 substate=dict()
 substate["name"] = "Going Green 5"
-substate["note"] = ("Come here when we have permission tu turn green " +
+substate["note"] = ("Come here when we have permission to turn green " +
                     "but no traffic.")
 substate["actions"] = list()
 actions_list = substate["actions"]
@@ -1337,7 +1552,8 @@ finite_state_machine["toggles"] = toggle_names
 
 timer_names = ( "Red Clearance", "Yellow Change", "Minimum Green",
                 "Passage", "Maximum Green",
-                "Green Limit", "Traffic Still Present",
+                "Green Limit", "Green Delay Approaching", \
+                "Green Delay Present",
                 "Left Flashing Yellow Waiting", 
                 "Minimum Left Flashing Yellow", "Red Limit")
 

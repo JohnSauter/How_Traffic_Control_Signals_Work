@@ -47,7 +47,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_four_corners 0.58 2025-11-02',
+                     version='define_four_corners 0.59 2025-11-09',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -147,10 +147,10 @@ for signal_face_name in ("A", "B", "C", "D"):
   timer_durations[timer_full_name] = float ("60.000")
   timer_full_name = signal_face_name + "/" + "Yellow Change"
   timer_durations[timer_full_name] = float ("5.000")
-  timer_full_name = signal_face_name + "/" + "Traffic Still Present"
-  timer_durations[timer_full_name] = float ("10.000")
-  timer_full_name = signal_face_name + "/" + "Traffic Still Present"
-  timer_durations[timer_full_name] = float ("10.000")
+  timer_full_name = signal_face_name + "/" + "Green Delay Approaching"
+  timer_durations[timer_full_name] = float ("0.000")
+  timer_full_name = signal_face_name + "/" + "Green Delay Present"
+  timer_durations[timer_full_name] = float ("0.000")
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Waiting"
   timer_durations[timer_full_name] = float ("inf")
   timer_full_name = signal_face_name + "/" + "Minimum Left Flashing Yellow"
@@ -168,7 +168,22 @@ for signal_face_name in signal_face_names:
     toggle = dict()
     toggle["name"] = toggle_name
     toggle["value"] = False
+
+    match toggle_name:
+      case "Traffic Approaching" | "Request Green" | \
+           "Green Request Granted" | "Request Partial Clearance" | \
+           "Clearance Requested" | "Cleared" | \
+           "Conflicting Paths are Clear" | "Traffic Flowing" \
+           "Preempt Green" | "Preempt Red":
+        important = True
+
+      case _:
+        important = False
+
+    toggle["important"] = important
+           
     toggles_list.append(toggle)
+    
   signal_face["toggles"] = toggles_list
 
   timers_list = list()
@@ -184,7 +199,7 @@ for signal_face_name in signal_face_names:
       case "Red Clearance" | "Yellow Change" | "Minimum Green" | \
            "Passage" | "Maximum Green" | \
            "Green Limit" | "Red Limit" | \
-           "Traffic Still Present":
+           "Green Delay Approaching" | "Green Delay Present":
         important = True
         
       case _:
@@ -234,11 +249,8 @@ for signal_face in signal_faces_list:
 # the last milestone it vanishes from the simulation.
 car_length = 15
 truck_length = 40
-approach_sensor_long_distance = 365
-approach_sensor_short_distance = 120
+approach_sensor_long_distance = 150
 long_lane_length = 528
-short_lane_length = 450
-very_short_lane_length = 40
 lane_width = 12
 crosswalk_width = 6
 
@@ -254,8 +266,6 @@ lane_names = ("A", "B", "C", "D", "1", "2", "3", "4")
 def find_lane_info (lane_name):
   global lane_width
   global long_lane_length
-  global short_lane_length
-  global very_short_lane_length
   
   center_y = 0
   center_x = 0
