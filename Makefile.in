@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# File: Makefile.am, author: John Sauter, date: November 8, 2025.
+# File: Makefile.am, author: John Sauter, date: November 9, 2025.
 #
 # Build traffic_control_signals.pdf and animations.
 
@@ -1453,7 +1453,7 @@ left_turn_delayed_script.txt
 --events-file $(builddir)/left_turn_delayed_animation_03.csv \
 --last-event-time \
 "${builddir}/last_event_time_left_turn_delayed_animation.txt" \
---duration 400 --table-start 199 --explain-state-transitions \
+--duration 400 --table-start 199 --explain-state-transitions --show-substates \
 --script ${srcdir}/left_turn_delayed_script.txt \
 --table-caption "Left Turn Delayed"
 
