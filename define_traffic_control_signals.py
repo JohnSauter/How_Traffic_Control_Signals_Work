@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_traffic_control_signals 0.59 2025-11-09',
+                     version='define_traffic_control_signals 0.60 2025-11-11',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -96,7 +96,7 @@ red_state = list()
 
 substate = dict()
 substate["name"] = "Waiting for Clearance"
-substate["note"] = ("Come here when the traffic control signal starts " +
+substate["note"] = ("Come here when the traffic control signal powers up " +
                     "and when we have finished flashing.")
 substate["actions" ] = list()
 actions_list = substate["actions"]
@@ -383,7 +383,8 @@ red_state.append(substate)
 
 substate = dict()
 substate["name"] = "Delay Green 3a"
-substate["note"] = ("There is no vehicle on the Traffic Approaching sensor.")
+substate["note"] = ("There is no vehicle on the Traffic Approaching " +
+                    "sensor.  If that remains true do not turn green.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 
@@ -439,7 +440,8 @@ red_state.append(substate)
 
 substate = dict()
 substate["name"] = "Delay Green 3p"
-substate["note"] = ("There is no vehicle on the Traffic Present sensor.")
+substate["note"] = ("There is no vehicle on the Traffic Present " +
+                    "sensor.  If that remains true do not turn green.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 
@@ -495,7 +497,10 @@ red_state.append(substate)
 
 substate = dict()
 substate["name"] = "Going Green 1"
-substate["note"] = ("Wait for permission to turn green.")
+substate["note"] = ("Turn green unless the conflicting traffic disappears.  " +
+                    "Wait until other lanes have had their green interval " +
+                    "so two lanes cannot exchange green time between " +
+                    "each other and starve a third.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 
@@ -531,7 +536,7 @@ red_state.append(substate)
 
 substate=dict()
 substate["name"] = "Going Green 2"
-substate["note"] = ("We have permission to turn green.  " +
+substate["note"] = ("This lane has permission to turn green.  " +
                     "Ask conflicting signal faces to turn red.")
 substate["actions"] = list()
 actions_list = substate["actions"]
@@ -591,7 +596,7 @@ red_state.append(substate)
 substate = dict()
 substate["name"] = "Going Green 4"
 substate["note"] = ("Come here to turn green even though there is no " +
-                    "traffic at this signal face.")
+                    "traffic in this lane.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 action=("set toggle", "Request Green")
@@ -634,8 +639,8 @@ red_state.append(substate)
 
 substate=dict()
 substate["name"] = "Going Green 5"
-substate["note"] = ("Come here when we have permission to turn green " +
-                    "but no traffic.")
+substate["note"] = ("This lane has permission to turn green even though it " +
+                    "has no traffic.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 action=("clear toggle", "Request Green")
@@ -726,7 +731,9 @@ states["Red"] = red_state
 green_state = list()
 substate = dict()
 substate["name"] = "No Traffic"
-substate["note"] = ("As long as there is no traffic we stay in this substate.")
+substate["note"] = ("This lane shows the green lamp on its signal face.  " +
+                    "As long as there is no traffic at the intersection " +
+                    "the finite state machine stays in this substate.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 action=("set lamp", "Steady Circular Green")
@@ -835,7 +842,9 @@ green_state.append(substate)
 
 substate = dict()
 substate["name"] = "Clearance Requested"
-substate["note"] = ("A conflicting travel path has asked us to turn red.")
+substate["note"] = ("A conflicting travel path has asked this lane " +
+                    "to turn red but there is not presently a gap " +
+                    "in the traffic.")
 
 substate["actions"] = list()
 actions_list = substate["actions"]
@@ -929,9 +938,9 @@ green_state.append(substate)
 
 substate = dict()
 substate["name"] = "Waiting for Gap 1"
-substate["note"] = ("We have been asked to turn red but there is traffic " +
-                    "entering the intersection from this lane " +
-                    "so we wait for a gap in our traffic.")
+substate["note"] = ("This lane has been asked to turn red but there is " +
+                    "traffic entering the intersection from this lane " +
+                    "so we wait for a gap in the traffic.")
 
 substate["actions"] = list()
 actions_list = substate["actions"]
@@ -1126,9 +1135,10 @@ green_state.append(substate)
 
 substate = dict()
 substate["name"] = "Looking for Gap 1"
-substate["note"] = ("We don't yet have a conflicting request " +
-                    "but we want to know if there is a gap " +
-                    "in our traffic in case a conflicting request appears. " +
+substate["note"] = ("There is traffic in this lane.  " +
+                    "There is currently no need to turn red " +
+                    "but there may be such a need in the future, " +
+                    "so keep track of gaps in the traffic.  "+
                     "Wait for the vehicle to finish passing over the sensor.")
 
 substate["actions"] = list()
@@ -1207,7 +1217,7 @@ green_state.append(substate)
 
 substate = dict()
 substate["name"] = "Looking for Gap 2"
-substate["note"] = ("The vehicle has cleared the sensor so wait for " +
+substate["note"] = ("The vehicle has cleared the sensor so look for " +
                     "a gap in the traffic.")
 
 substate["actions"] = list()
@@ -1283,6 +1293,8 @@ states["Green"] = green_state
 yellow_state = list()
 substate = dict()
 substate["name"] = "Going Red"
+substate["note"] = ("The signal face is passing through yellow on its way " +
+                    " to turning red.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 action=("set lamp", "Steady Circular Yellow")
@@ -1306,6 +1318,10 @@ yellow_state.append(substate)
 substate = dict()
 substate["name"] = "Left Flashing 1"
 substate["actions"] = list()
+substate["note"] = ("Flash the lower left arrow in the signal face " +
+                    "to indicate that the vehicle may make a permissive " +
+                    "left turn.")
+
 actions_list = substate["actions"]
 action = ("set lamp", "Flashing Left Arrow Yellow")
 actions_list.append(action)
@@ -1313,13 +1329,23 @@ action=("clear toggle", "Green Request Granted")
 actions_list.append(action)
 action = ("clear toggle", "Cleared")
 actions_list.append(action)
-action = ("set toggle", "Traffic Flowing")
+action=("clear toggle", "Request Partial Clearance")
+actions_list.append(action)
+action=("clear toggle", "Request Clearance")
+actions_list.append(action)
+action=("clear toggle", "Manual Green")
+actions_list.append(action)
+action=("clear toggle", "Preempt Green")
+actions_list.append(action)
+action=("clear toggle", "Traffic Present")
 actions_list.append(action)
 action = ("start timer", "Minimum Left Flashing Yellow")
 actions_list.append(action)
+action = ("start timer", "Left Flashing Yellow Limit")
+actions_list.append(action)
 action = ("start timer", "Left Flashing Yellow Waiting")
 actions_list.append(action)
-action = ("start timer", "Green Limit")
+action=("set toggle", "Traffic Flowing")
 actions_list.append(action)
 
 substate["exits"] = list()
@@ -1359,6 +1385,8 @@ yellow_state.append(substate)
 
 substate = dict()
 substate["name"] = "Left Flashing 2"
+substate["note"] = ("The signal face has been showing a left flashing " +
+                    "arrow long enough for the traffic to start moving.  ")
 substate["actions"] = list()
 actions_list = substate["actions"]
 action = ("clear toggle", "Traffic Present")
@@ -1382,6 +1410,12 @@ exit = ( conditional_tests, "Yellow", "Going Red" )
 exits_list.append(exit)
 
 conditional_tests = list()
+conditional_test = ("toggle is true", "Clearance Requested")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Going Red" )
+exits_list.append(exit)
+
+conditional_tests = list()
 conditional_test = ("toggle is true", "Flash Yellow")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Yellow", "Flashing" )
@@ -1394,11 +1428,19 @@ exit = (conditional_tests, "Green", "No Traffic")
 exits_list.append(exit)
 
 conditional_tests = list()
-conditional_test = ("timer is completed", "Green Limit")
+conditional_test = ("toggle is true", "Preempt Green")
 conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Preempt Green")
+exit = (conditional_tests, "Green", "No Traffic")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Manual Green")
 conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Manual Green")
+exit = (conditional_tests, "Green", "No Traffic")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("timer is completed", "Left Flashing Yellow Limit")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Yellow", "Going Red" )
 exits_list.append(exit)
@@ -1422,17 +1464,9 @@ exits_list.append(exit)
 conditional_tests = list()
 conditional_test = ("timer is completed", "Left Flashing Yellow Waiting")
 conditional_tests.append(conditional_test)
-conditional_test = ("toggle is false", "Traffic Present")
-conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Yellow", "Going Red" )
-exits_list.append(exit)
-
-conditional_tests = list()
-conditional_test = ("timer is completed", "Left Flashing Yellow Waiting")
-conditional_tests.append(conditional_test)
 conditional_test = ("toggle is true", "Traffic Present")
 conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Yellow", "Going Green" )
+exit = ( conditional_tests, "Yellow", "Going Green 1" )
 exits_list.append(exit)
 
 yellow_state.append(substate)
@@ -1440,6 +1474,7 @@ yellow_state.append(substate)
 substate = dict()
 substate["name"] = "Flashing"
 substate["actions"] = list()
+substate["note"] = ("Flash yellow until told to stop.")
 actions_list = substate["actions"]
 action = ("set lamp", "Flashing Circular Yellow")
 actions_list.append(action)
@@ -1484,9 +1519,13 @@ exits_list.append(exit)
 yellow_state.append(substate)
 
 substate = dict()
-substate["name"] = "Going Green"
+substate["name"] = "Going Green 1"
+substate["note"] = ("The vehicle is unable to make a permissive left turn " +
+                    "so stop the oncoming traffic.")
 substate["actions"] = list()
 actions_list = substate["actions"]
+action = ("clear toggle", "Request Green")
+actions_list.append(action)
 action = ("set toggle", "Request Clearance")
 actions_list.append(action)
 
@@ -1538,6 +1577,7 @@ exits_list.append(exit)
 yellow_state.append(substate)
 
 states["Yellow"] = yellow_state
+
 finite_state_machine["states"] = states
 
 toggle_names = ( "Clearance Requested", "Cleared",
@@ -1554,7 +1594,7 @@ timer_names = ( "Red Clearance", "Yellow Change", "Minimum Green",
                 "Passage", "Maximum Green",
                 "Green Limit", "Green Delay Approaching", \
                 "Green Delay Present",
-                "Left Flashing Yellow Waiting", 
+                "Left Flashing Yellow Waiting", "Left Flashing Yellow Limit",
                 "Minimum Left Flashing Yellow", "Red Limit")
 
 finite_state_machine["timer names"] = timer_names

@@ -25,6 +25,6 @@
 214.637 car 0000 in lane A enters the intersection at position (0, 48).
 215.019 sensor A/Traffic Present set to False by car 0000.
 217.341 car 0000 in lane 6 at position (-60, -12) distance to next milestone 528 ft speed 25.0 mph leaves the intersection.
-225.201 signal face A lamp set to Steady Left Arrow Yellow (upper).
-228.701 signal face A lamp set to Steady Left Arrow Red.
 231.741 car 0000 in lane 6 exits the simulation at position (-588, -12).
+255.201 signal face A lamp set to Steady Left Arrow Yellow (upper).
+258.701 signal face A lamp set to Steady Left Arrow Red.

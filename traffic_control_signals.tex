@@ -1,5 +1,5 @@
 % File: traffic_control_signals.tex, author: John Sauter,
-% date: November 9, 2025.
+% date: November 11, 2025.
 
 % Copyright © 2025 by John Sauter.
 % Licensed under the Creative Commons Attribution-ShareAlike 4.0 International
@@ -197,12 +197,12 @@
   pdfcontacturl={https://www.systemeyescomputerstore.com},
   pdfcopyright={Copyright {\copyright} 2025 by John Sauter},
   pdfurl={https://www.systemeyescomputerstore.com/How\%5FTraffic\%5FControl\%5FSignals\%5fWork/traffic\%5Fcontrol\%5Fsignals.pdf},
-  pdfdate={2025-11-09},
+  pdfdate={2025-11-11},
   pdflicenseurl={https://creativecommons.org/licenses/by-sa/4.0},
   pdfmetalang={en-US}
 }
 
-\date{2025-11-09}
+\date{2025-11-11}
 \maketitle
 \begin{abstract}
   Traffic control signals allow vehicles and pedestrians to move through
@@ -942,11 +942,16 @@ turn.
 
 \subsubsection{Minimum Left Flashing Yellow Time}
 
-Lanes A and E can allow a left turn in the presence of oncoming traffic,
-called a permissive left turn. Once the finite state machine has turned on
-the left flashing yellow light in the signal face, it keeps that light on
-for at least Minimum Left Flashing Yellow time to make sure the left turning
-traffic is able to start up.
+Once the finite state machine has turned on the left flashing yellow light
+in the signal face, it keeps that light on for at least Minimum Left Flashing
+Yellow seconds to make sure the left turning traffic is able to start up.
+
+\subsubsection{Left Flashing Yellow Limit Time}
+
+If the signal face has been showing the left flashing yellow light for
+Left Flashing Yellow Limit seconds the finite state machine will turn
+the signal face red even there is no conflicting traffic and there is
+still traffic turning left.
 
 \subsection{Timer Durations}
 
@@ -1068,7 +1073,7 @@ that will cause it to exit the substate and enter another.
   the finite state machine sets its Cleared toggle, which is tested by other
   signal faces to see if they can turn green.  If a vehicle or
   pedestrian arrives at this lane it starts the process
-  of itself turning its signal face green.
+  of turning its signal face green.
 
   Here are the details of the Red state:
       
@@ -1474,8 +1479,7 @@ will turn green without waiting for finite state machine A to clear, since
 they do not conflict.  When finite state machine A is clear finite state
 machines F and G will turn green, getting us back to the idle state.
 
-Here are the events of this illustration, with less detail than
-previously.
+Here are the events of this illustration.
 
 \input{pedestrian_and_left_turn_table.tex}
 

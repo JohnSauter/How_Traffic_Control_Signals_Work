@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='simulate_traffic 0.59 2025-11-08',
+                     version='simulate_traffic 0.60 2025-11-11',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -278,7 +278,9 @@ for signal_face in signal_faces_list:
 travel_paths = intersection_info ["travel paths"]
 speed_limits = intersection_info ["speed limits"]
 car_length = intersection_info ["car length"]
+car_width = intersection_info ["car width"]
 truck_length = intersection_info ["truck length"]
+truck_width = intersection_info ["truck width"]
 crosswalk_width = intersection_info ["crosswalk width"]
 
 for signal_face in signal_faces_list:
@@ -2129,7 +2131,7 @@ while ((current_time < end_time) and (error_counter == 0)):
         substate = the_substate
         break
     if (substate == None):
-      print ("Invalid substate: " + substate_name + ".")
+      print ("Invalid substate: " + state_name + "/" + substate_name + ".")
       error_counter = error_counter + 1
       break
     

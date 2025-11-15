@@ -47,7 +47,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_four_corners 0.59 2025-11-09',
+                     version='define_four_corners 0.60 2025-11-11',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -153,6 +153,8 @@ for signal_face_name in ("A", "B", "C", "D"):
   timer_durations[timer_full_name] = float ("0.000")
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Waiting"
   timer_durations[timer_full_name] = float ("inf")
+  timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Limit"
+  timer_durations[timer_full_name] = float ("inf")
   timer_full_name = signal_face_name + "/" + "Minimum Left Flashing Yellow"
   timer_durations[timer_full_name] = float ("inf")
 
@@ -248,7 +250,9 @@ for signal_face in signal_faces_list:
 # milestone, then proceeds to each following milestone.  When it reaches
 # the last milestone it vanishes from the simulation.
 car_length = 15
+car_width = 5
 truck_length = 40
+truck_width = 8
 approach_sensor_long_distance = 150
 long_lane_length = 528
 lane_width = 12
@@ -989,7 +993,9 @@ intersection_info["finite state machine"] = finite_state_machine
 intersection_info["signal faces"] = signal_faces_list
 intersection_info["travel paths"] = travel_paths
 intersection_info["car length"] = car_length
+intersection_info["car width"] = car_width
 intersection_info["truck length"] = truck_length
+intersection_info["truck width"] = truck_width
 intersection_info["lane width"] = lane_width
 intersection_info["crosswalk width"] = crosswalk_width
 intersection_info["speed limits"] = speed_limits

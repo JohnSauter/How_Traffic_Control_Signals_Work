@@ -1,4 +1,4 @@
-# File: state_diagram.txt, author: John Sauter, date: November 2, 2025.
+# File: state_diagram.txt, author: John Sauter, date: November 11, 2025.
 
 strict digraph Traffic_Control_Signals {
 fontname="Helvetica,Arial,sans-serif"
@@ -22,9 +22,14 @@ style=filled; fillcolor=coral;
 label="Red State";
 node [color=red, label="Waiting for\nClearance"] "Red\nWaiting for\nClearance";
 node [label="Travel Path\nis Clear"] "Red\nTravel Path\nis Clear";
+node [label="Delay Green 1a"] "Red\nDelay Green 1a";
+node [label="Delay Green 1p"] "Red\nDelay Green 1p";
+node [label="Delay Green 2a"] "Red\nDelay Green 2a";
+node [label="Delay Green 2p"] "Red\nDelay Green 2p";
+node [label="Delay Green 3a"] "Red\nDelay Green 3a";
+node [label="Delay Green 3p"] "Red\nDelay Green 3p";
 node [label="Going Green 1"] "Red\nGoing Green 1";
 node [label="Going Green 2"] "Red\nGoing Green 2";
-node [label="Going Green 3"] "Red\nGoing Green 3";
 node [label="Going Green 4"] "Red\nGoing Green 4";
 node [label="Going Green 5"] "Red\nGoing Green 5";
 #node [label="Flashing"] "Red\nFlashing";
@@ -47,78 +52,89 @@ label="Yellow State";
 node [color=yellow, label="Going Red"] "Yellow\nGoing Red";
 node [label="Left\nFlashing 1"] "Yellow\nLeft Flashing 1";
 node [label="Left\nFlashing 2"] "Yellow\nLeft Flashing 2";
-node [label="Going Green"] "Yellow\nGoing Green";
-#node [label="Flashing"] "Yellow\nFlashing";
+node [label="Going Green 1"] "Yellow\nGoing Green 1";
 }
 
 edge [label="clear"]
      "Red\nWaiting for\nClearance"->"Red\nTravel Path\nis Clear";
+edge [label="traffic\napproaching"]
+     "Red\nTravel Path\nis Clear"->"Red\nDelay Green 1a";
 edge [label="traffic\npresent"]
-     "Red\nTravel Path\nis Clear"->"Red\nGoing Green 1";
-#edge [label="flash\nyellow"]
-#     "Red\nTravel Path\nis Clear"->"Yellow\nFlashing";
+     "Red\nTravel Path\nis Clear"->"Red\nDelay Green 1p";
+edge [label="traffic\napproaching"]
+     "Red\nDelay Green 1a"->"Red\nDelay Green 2a";
+edge [label="traffic\npresent"]
+     "Red\nDelay Green 1p"->"Red\nDelay Green 2p";
+edge [label="sensor clear"]
+     "Red\nDelay Green 2a"->"Red\nDelay Green 3a";
+edge [label="traffic\nwaiting"]
+     "Red\nDelay Green 2a"->"Red\nGoing Green 1";
+edge [label="sensor clear"]
+     "Red\nDelay Green 2p"->"Red\nDelay Green 3p";
+edge [label="traffic\nwaiting"]
+     "Red\nDelay Green 2p"->"Red\nGoing Green 1";
+edge [label="too long"]
+     "Red\nDelay Green 3a"->"Red\nTravel Path\nis Clear";
+edge [label="traffic\napproaching"]
+     "Red\nDelay Green 3a"->"Red\nDelay Green 2a";
+edge [label="traffic\npresent"]
+     "Red\nDelay Green 3a"->"Red\nDelay Green 2p";
+edge [label="too long"]
+     "Red\nDelay Green 3p"->"Red\nTravel Path\nis Clear";
+edge [label="traffic\npresent"]
+     "Red\nDelay Green 3p"->"Red\nDelay Green 2p";
+edge [label="traffic\napproaching"]
+     "Red\nDelay Green 3p"->"Red\nDelay Green 2a";
 edge [label="permission\ngranted"] "Red\nGoing Green 1"->"Red\nGoing Green 2";
-edge [label=""]"Red\nGoing Green 2"->"Red\nGoing Green 3";
-edge [label="permissive\nleft turn"]
-     "Red\nGoing Green 3"->"Yellow\nLeft Flashing 1";
 edge [label="conflicting\npaths clear"]
-     	"Red\nGoing Green 3"->"Green\nNo Traffic";
-edge [label="traffic\ngone"]
-     	"Red\nGoing Green 3"->"Red\nTravel Path\nis Clear";
-#edge [label="stop\nflashing"] "Red\nFlashing"->"Red\nWaiting for\nClearance";
-#edge [label="flash\nyellow"] "Red\nFlashing"->"Yellow\nFlashing";
+     	"Red\nGoing Green 2"->"Green\nNo Traffic";
+edge [label="permissive\nleft turn"]
+     	"Red\nGoing Green 2"->"Yellow\nLeft Flashing 1";
 edge [label="long\nenough"]
      "Red\nTravel Path\nis Clear"->"Red\nGoing Green 4";
 edge [label="permission\ngranted"] "Red\nGoing Green 4"->"Red\nGoing Green 5";
-edge [label="conflicting\npaths clear"]
+edge [label="clear"]
      	"Red\nGoing Green 5"->"Green\nNo Traffic";
-edge [label="traffic\ngone"]
-     	"Red\nGoing Green 5"->"Red\nTravel Path\nis Clear";
+edge [label="permissive\nleft turn"]
+     	"Red\nGoing Green 5"->"Yellow\nLeft Flashing 1";
 
-edge [label="conflicting traffic"]
+edge [label="conflicting\ntraffic"]
      "Green\nNo Traffic"->"Green\nClearance Requested";
-edge [label="conflicting traffic"]
+edge [label="conflicting\ntraffic"]
      "Green\nNo Traffic"->"Yellow\nGoing Red";
 edge [label="traffic approaching"]
-     "Green\nNo Traffic"->"Green\nWaiting for Gap 1";
-edge [label="gap in traffic"]
+     "Green\nNo Traffic"->"Green\nLooking for Gap 1";
+edge [label="gap in\ntraffic"]
      "Green\nClearance Requested"-> "Yellow\nGoing Red"
-edge [label="traffic approaching"]
+edge [label="traffic\napproaching"]
      "Green\nClearance Requested"-> "Green\nWaiting for Gap 1"
-edge [label="traffic off sensor"]
+edge [label="traffic\noff sensor"]
      "Green\nWaiting for Gap 1"-> "Green\nWaiting for Gap 2"
 edge [label="found gap"]
      "Green\nWaiting for Gap 2"->"Yellow\nGoing Red";
-edge [label="traffic approaching"]
+edge [label="traffic\napproaching"]
      "Green\nWaiting for Gap 2"->"Green\nWaiting for Gap 1";
-edge [label="conflicting traffic"]
+edge [label="conflicting\ntraffic"]
      "Green\nLooking for Gap 1"->"Green\nClearance Requested";
-edge [label="conflicting traffic"]
+edge [label="conflicting\ntraffic"]
      "Green\nLooking for Gap 1"->"Yellow\nGoing Red";
-edge [label="traffic off sensor"]
+edge [label="traffic\noff sensor"]
      "Green\nLooking for Gap 1"-> "Green\nLooking for Gap 2"
-edge [label="conflicting traffic"]
+edge [label="conflicting\ntraffic"]
      "Green\nLooking for Gap 2"->"Yellow\nGoing Red";
-edge [label="conflicting traffic"]
+edge [label="conflicting\ntraffic"]
      "Green\nLooking for Gap 2"->"Green\nClearance Requested";
-edge [label="traffic approaching"]
+edge [label="traffic\napproaching"]
      "Green\nLooking for Gap 2"->"Green\nLooking for Gap 1";
 
-edge [label="yellow change time\ncompleted"]
+edge [label="yellow\nchange\ncompleted"]
      "Yellow\nGoing Red"->"Red\nWaiting for\nClearance";
-#edge [label="quick\nred"] "Yellow\nLeft Flashing 1"->"Yellow\nGoing Red";
-edge [label="long\nenough"]
+
+edge [label="permissive\nleft turn"]
      "Yellow\nLeft Flashing 1"->"Yellow\nLeft Flashing 2";
-#edge [label="quick\nred"] "Yellow\nLeft Flashing 2"->"Yellow\nGoing Red";
-edge [label="long\nwait"] "Yellow\nLeft Flashing 2"->"Yellow\nGoing Green";
-edge [label="traffic\ngone"] "Yellow\nLeft Flashing 2"->"Yellow\nGoing Red";
-edge [label="still\nwaiting"]
-     "Yellow\nLeft Flashing 2"->"Yellow\nLeft Flashing 2";
-#edge [label="quick\nred"] "Yellow\nGoing Green"->"Yellow\nGoing Red";
-edge [label="clear"] "Yellow\nGoing Green"->"Green\nNo Traffic";
-#edge [label="stop\nflashing"]
-#     "Yellow\nFlashing"->"Red\nWaiting for\nClearance";
-#edge [label="flash\nred"] "Yellow\nFlashing"->"Red\nFlashing";
+edge [label="unable to turn"]
+     "Yellow\nLeft Flashing 2"->"Yellow\nGoing Green 1";
+edge [label="clear"] "Yellow\nGoing Green 1"->"Green\nNo Traffic";
 }
 
 # End of file traffic_control_signals_state_diagram.txt
