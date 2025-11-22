@@ -27,5 +27,5 @@ time,operator,signal face,operand,permissive_delay,count,interval
 201.000,pedestrian,pnw,pnwpne,1,30,10
 202.000,pedestrian,pse,psepsw,1,30,10
 203.000,pedestrian,pne,pnepnw,1,30,10
-260.000,sensor on,all,Flash,1,1,1
-270.000,sensor off,all,Flash,1,1,1
+260.000,sensor on,all,Preempt,1,1,1
+270.000,sensor off,all,Preempt,1,1,1

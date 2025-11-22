@@ -1,4 +1,4 @@
-# File: state_diagram.txt, author: John Sauter, date: November 11, 2025.
+# File: state_diagram.txt, author: John Sauter, date: November 16, 2025.
 
 strict digraph Traffic_Control_Signals {
 fontname="Helvetica,Arial,sans-serif"
@@ -52,7 +52,7 @@ label="Yellow State";
 node [color=yellow, label="Going Red"] "Yellow\nGoing Red";
 node [label="Left\nFlashing 1"] "Yellow\nLeft Flashing 1";
 node [label="Left\nFlashing 2"] "Yellow\nLeft Flashing 2";
-node [label="Going Green 1"] "Yellow\nGoing Green 1";
+node [label="Going Green"] "Yellow\nGoing Green";
 }
 
 edge [label="clear"]
@@ -110,7 +110,7 @@ edge [label="traffic\napproaching"]
      "Green\nClearance Requested"-> "Green\nWaiting for Gap 1"
 edge [label="traffic\noff sensor"]
      "Green\nWaiting for Gap 1"-> "Green\nWaiting for Gap 2"
-edge [label="found gap"]
+edge [label="found\ngap"]
      "Green\nWaiting for Gap 2"->"Yellow\nGoing Red";
 edge [label="traffic\napproaching"]
      "Green\nWaiting for Gap 2"->"Green\nWaiting for Gap 1";
@@ -133,8 +133,10 @@ edge [label="yellow\nchange\ncompleted"]
 edge [label="permissive\nleft turn"]
      "Yellow\nLeft Flashing 1"->"Yellow\nLeft Flashing 2";
 edge [label="unable to turn"]
-     "Yellow\nLeft Flashing 2"->"Yellow\nGoing Green 1";
-edge [label="clear"] "Yellow\nGoing Green 1"->"Green\nNo Traffic";
+     "Yellow\nLeft Flashing 2"->"Yellow\nGoing Green";
+edge [label="too long"]
+     "Yellow\nLeft Flashing 2"->"Yellow\nGoing Red";
+edge [label="clear"] "Yellow\nGoing Green"->"Green\nNo Traffic";
 }
 
-# End of file traffic_control_signals_state_diagram.txt
+# End of file state_diagram.txt

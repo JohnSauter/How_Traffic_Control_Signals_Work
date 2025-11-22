@@ -1,4 +1,4 @@
-# File: Makefile.am, author: John Sauter, date: November 9, 2025.
+# File: Makefile.am, author: John Sauter, date: November 16, 2025.
 #
 # Build traffic_control_signals.pdf and animations.
 
@@ -258,7 +258,7 @@ flood_animation_03.mkv flood_table.tex
 	BIBINPUTS=${TEXINPUTS}:${builddir}:${srcdir} bibtex \
 "${builddir}/traffic_control_signals.aux"
 
-# Build a chart of states of the finite state machines
+# Build a chart of the important states of the finite state machines.
 state_diagram.eps : state_diagram.txt
 	neato -Teps "${srcdir}/state_diagram.txt" \
 -o "${builddir}/state_diagram.eps"
@@ -289,24 +289,33 @@ finite_state_machine.json
 
 # Create a JSON file which describes the one-way bridge example.
 one_way_bridge.json : define_one_way_bridge.py \
-finite_state_machine.json
-	python3 ${srcdir}/define_one_way_bridge.py \
---input=${builddir}/finite_state_machine.json \
---output=${builddir}/one_way_bridge.json
+finite_state_machine.json smooth_travel_paths.py
+	python3 "${srcdir}/define_one_way_bridge.py" \
+--input="${builddir}/finite_state_machine.json" \
+--output="${builddir}/one_way_bridge_unsmoothed.json"
+	python3 "${srcdir}/smooth_travel_paths.py" \
+"${builddir}/one_way_bridge_unsmoothed.json" \
+"${builddir}/one_way_bridge.json"
 
 # Create a JSON file which describes the four corners example.
 four_corners.json : define_four_corners.py \
-finite_state_machine.json
-	python3 ${srcdir}/define_four_corners.py \
---input=${builddir}/finite_state_machine.json \
---output=${builddir}/four_corners.json
+finite_state_machine.json smooth_travel_paths.py
+	python3 "${srcdir}/define_four_corners.py" \
+--input="${builddir}/finite_state_machine.json" \
+--output="${builddir}/four_corners_unsmoothed.json"
+	python3 "${srcdir}/smooth_travel_paths.py" \
+"${builddir}/four_corners_unsmoothed.json" \
+"${builddir}/four_corners.json"
 
 # Create a JSON file which describes the complex intersection example.
 complex_intersection.json : define_complex_intersection.py \
-finite_state_machine.json
-	python3 ${srcdir}/define_complex_intersection.py \
---input=${builddir}/finite_state_machine.json \
---output=${builddir}/complex_intersection.json
+finite_state_machine.json smooth_travel_paths.py
+	python3 "${srcdir}/define_complex_intersection.py" \
+--input="${builddir}/finite_state_machine.json" \
+--output="${builddir}/complex_intersection_unsmoothed.json"
+	python3 "${srcdir}/smooth_travel_paths.py" \
+"${builddir}/complex_intersection_unsmoothed.json" \
+"${builddir}/complex_intersection.json"
 
 lamp_map_names_01.tex : display_intersection.py one_way_bridge.json
 	python3 ${srcdir}/display_intersection.py \
@@ -371,14 +380,14 @@ idle_01_table.tex : simulate_traffic.py one_way_bridge.json
 --intersection ${builddir}/one_way_bridge.json --clock-step 0.001 \
 --explain-state-transitions --only-important \
 --table-level 4 --table-file ${builddir}/idle_01_table.tex --duration 200  \
---table-caption "Power On to Idle State, example 01"
+--table-caption "Power On to Idle Condition, example 01"
 
 idle_03_table.tex : simulate_traffic.py complex_intersection.json
 	python3 ${srcdir}/simulate_traffic.py \
 --intersection ${builddir}/complex_intersection.json --clock-step 0.001 \
 --explain-state-transitions --show-substates \
 --table-level 4 --table-file ${builddir}/idle_03_table.tex --duration 200  \
---table-caption "Power On to Idle State, example 03"
+--table-caption "Power On to Idle Condition, example 03"
 
 bridge_one_car_table.tex bridge_one_car_animation_01.csv &: \
 simulate_traffic.py one_way_bridge.json bridge_one_car_script.txt
@@ -483,7 +492,7 @@ flood_table.tex flood_animation_03.csv &: simulate_traffic.py \
 complex_intersection.json flood_script.txt
 	python3 "${srcdir}/simulate_traffic.py" \
 --intersection "${builddir}/complex_intersection.json" \
---table-level 4 --clock-step 0.009 \
+--table-level 4 --clock-step 0.001 \
 --events-file "$(builddir)/flood_animation_03.csv" \
 --last-event-time "${builddir}/last_event_time_flood_animation.txt" \
 --table-file "${builddir}/flood_table.tex" --duration 1200 \
@@ -761,6 +770,9 @@ finite_state_machine.json \
 complex_intersection.json \
 one_way_bridge.json \
 four_corners.json \
+complex_intersection_unsmoothed.json \
+one_way_bridge_unsmoothed.json \
+four_corners_unsmoothed.json \
 red_state_table.tex \
 green_state_table.tex \
 yellow_state_table.tex \

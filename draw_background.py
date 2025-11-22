@@ -53,7 +53,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='draw_background 0.55 2025-10-04',
+                     version='draw_background 0.61 2025-11-15',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -66,6 +66,8 @@ parser.add_argument ('--screen-width', type=int, metavar='screen_width',
                      help='width of the background image')
 parser.add_argument ('--screen-height', type=int, metavar='screen_height',
                      help='height of the background image')
+parser.add_argument ('--show-waypoints', action='store_true',
+                     help='Draw the waypoints on the background')
 parser.add_argument ('--verbose', type=int, metavar='verbosity_level',
                      help='control the amount of output from the program: ' +
                      '1 is normal, 0 suppresses summary messages')
@@ -78,6 +80,7 @@ do_intersection = False
 do_background = False
 screen_width = 3840
 screen_height = 2160
+show_waypoints = False
 background_file_name = ""
 
 ground_height = 143
@@ -109,6 +112,9 @@ if (arguments ['screen_width'] != None):
 if (arguments ['screen_height'] != None):
   screen_height = int(arguments ['screen_height'])
 
+if (arguments ['show_waypoints'] != None):
+  show_waypoints = arguments ['show_waypoints']
+
 if (arguments ['verbose'] != None):
   verbosity_level = int(arguments ['verbose'])
 
@@ -120,7 +126,7 @@ def map_location_ground_to_screen (y_feet, x_feet):
   global ground_height
   global screen_width
   global screen_height
-  
+
   # The ground is the same shape as the screen, but is measured in feet.
   ground_width = ground_height * (screen_width / screen_height)
   
@@ -177,7 +183,7 @@ def convert_screen_size_to_ground_size (size_in_pixels):
   size_in_feet = size_in_pixels * (ground_height / screen_height)
   return (int(size_in_feet))
 
-# Draw a line from (x1, y1) to (x2, y2) with the specified color
+# Subroutine to draw a line from (x1, y1) to (x2, y2) with the specified color
 # and line width.
 def draw_line (the_image, x1, y1, x2, y2, line_color, line_width,
                with_arrowhead):
@@ -206,9 +212,19 @@ def draw_line (the_image, x1, y1, x2, y2, line_color, line_width,
               line_color, screen_line_width, cv2.LINE_AA)
   return
 
+# Subroutine to draw a spot at (x1, y1) with specified radius and color.
+def draw_spot (the_image, x1, y1, the_radius, the_color):
+
+  screen_y1, screen_x1 = map_location_ground_to_screen (y1, x1)
+  screen_radius = convert_ground_size_to_screen_size (the_radius)
+  cv2.circle(the_image, (screen_x1, screen_y1), screen_radius, the_color, -1)
+  return
+
+# The colors
 color_black = (0, 0, 0)
 color_green = (0, 65535, 0)
 color_light_blue = (50000, 30000, 30000)
+color_light_red = (30000, 30000, 50000)
 color_gray = (40000, 40000, 40000)
 color_dark_gray = (30000, 30000, 30000)
 color_white = (65535, 65535, 65535)
@@ -297,6 +313,31 @@ for lane_name in lanes_info:
     pprint.pprint ((p1_x, p1_y, p2_x, p2_y), trace_file)
     pprint.pprint ((p3_x, p3_y, p4_x, p4_y), trace_file)
 
+# Draw each lane's center line.
+for travel_path_name in travel_paths:
+  travel_path = travel_paths [travel_path_name]
+  milestones = travel_path ["milestones"]
+  previous_milestone = None
+  for this_milestone in milestones:
+    if (previous_milestone != None):
+      previous_x = previous_milestone[1]
+      previous_y = previous_milestone[2]
+      this_x = this_milestone[1]
+      this_y = this_milestone[2]
+      draw_line (image, previous_x, previous_y, this_x, this_y,
+                 color_light_blue, 0.25, False)
+    previous_milestone = this_milestone
+      
+# Mark each waypoint if requested.
+if (show_waypoints):
+  for travel_path_name in travel_paths:
+    travel_path = travel_paths [travel_path_name]
+    milestones = travel_path ["milestones"]
+    for milestone in milestones:
+      x_position = milestone[1]
+      y_position = milestone[2]
+      draw_spot (image, x_position, y_position, 0.25, color_light_red)
+  
 # Place names on the lanes.
 font_face = cv2.FONT_HERSHEY_SIMPLEX
 font_scale = 2

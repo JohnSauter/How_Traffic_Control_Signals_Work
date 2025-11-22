@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='simulate_traffic 0.60 2025-11-11',
+                     version='simulate_traffic 0.61 2025-11-16',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -123,9 +123,9 @@ error_counter = 0
 # 1 only errors (and statistics if requested)
 # 2 add lamp changes, script actions, and vehicles and pedestrians
 #   arriving, leaving and reaching milestones
-# 3 add state changes and blocking
+# 3 add state changes 
 # 4 add toggle and sensor changes
-# 5 add lots of other items for debugging
+# 5 add blocking and lots of other items for debugging
 # 6 add tests of toggles
 
 # Parse the command line.
@@ -1221,10 +1221,10 @@ def add_traffic_element (type, travel_path_name, permissive_delay):
   match type:
     case "car":
       traffic_element["length"] = car_length
-      traffic_element["width"] = 5.8
+      traffic_element["width"] = car_width
     case "truck":
       traffic_element["length"] = truck_length
-      traffic_element["width"] = 8.5
+      traffic_element["width"] = truck_width
     case "pedestrian":
       traffic_element["length"] = 2
       traffic_element["width"] = (crosswalk_width / 3.0)
@@ -1242,10 +1242,10 @@ def add_traffic_element (type, travel_path_name, permissive_delay):
     # This traffic element does not get spawned.
     traffic_element["present"] = False
   
-    if (verbosity_level >= 2):
+    if (verbosity_level >= 5):
       print (format_time(current_time) + " " + this_name +
              " is blocked from spawning by " + blocker_name + ".")
-    if (table_OK (2)):
+    if (table_OK (5)):
       table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                         traffic_element["current lane"] + " & " +
                         cap_first_letter(this_name) +
@@ -1662,13 +1662,13 @@ def move_traffic_element (traffic_element):
       traffic_element["speed"] = old_speed
       traffic_element["blocker name"] = None
 
-      if (table_OK (3)):
+      if (table_OK (5)):
         table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                           traffic_element["current lane"] + " & " +
                           cap_first_letter(traffic_element["name"]) +
                           " is unblocked. \\\\\n")
         
-      if (verbosity_level >= 3):  
+      if (verbosity_level >= 5):  
         print (format_time(current_time) + " " + traffic_element["name"] +
                " in " + place_name(traffic_element) + " is unblocked.")
       
@@ -1741,7 +1741,7 @@ def move_traffic_element (traffic_element):
       if (traffic_element["speed"] > 0):
         traffic_element["old speed"] = traffic_element["speed"]
       traffic_element["speed"] = 0
-      if (verbosity_level >= 3):  
+      if (verbosity_level >= 5):  
         print (format_time(current_time) + " " + traffic_element["name"] +
                " in " + place_name(traffic_element) + " at position (" +
                format_location(traffic_element["position x"]) + ", " +
@@ -1749,7 +1749,7 @@ def move_traffic_element (traffic_element):
                " ) distance to next milestone  " +
                format_distance(traffic_element["distance remaining"]) +
                " is blocked by " + blocking_traffic_element_name + ".")
-      if (table_OK (3)):
+      if (table_OK (5)):
         table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                           traffic_element["current lane"] + " & " +
                           cap_first_letter(traffic_element["name"]) +

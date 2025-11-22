@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_traffic_control_signals 0.60 2025-11-11',
+                     version='define_traffic_control_signals 0.61 2025-11-15',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -1466,7 +1466,7 @@ conditional_test = ("timer is completed", "Left Flashing Yellow Waiting")
 conditional_tests.append(conditional_test)
 conditional_test = ("toggle is true", "Traffic Present")
 conditional_tests.append(conditional_test)
-exit = ( conditional_tests, "Yellow", "Going Green 1" )
+exit = ( conditional_tests, "Yellow", "Going Green" )
 exits_list.append(exit)
 
 yellow_state.append(substate)
@@ -1519,7 +1519,7 @@ exits_list.append(exit)
 yellow_state.append(substate)
 
 substate = dict()
-substate["name"] = "Going Green 1"
+substate["name"] = "Going Green"
 substate["note"] = ("The vehicle is unable to make a permissive left turn " +
                     "so stop the oncoming traffic.")
 substate["actions"] = list()

@@ -1,5 +1,5 @@
 % File: traffic_control_signals.tex, author: John Sauter,
-% date: November 11, 2025.
+% date: November 16, 2025.
 
 % Copyright © 2025 by John Sauter.
 % Licensed under the Creative Commons Attribution-ShareAlike 4.0 International
@@ -197,12 +197,12 @@
   pdfcontacturl={https://www.systemeyescomputerstore.com},
   pdfcopyright={Copyright {\copyright} 2025 by John Sauter},
   pdfurl={https://www.systemeyescomputerstore.com/How\%5FTraffic\%5FControl\%5FSignals\%5fWork/traffic\%5Fcontrol\%5Fsignals.pdf},
-  pdfdate={2025-11-11},
+  pdfdate={2025-11-16},
   pdflicenseurl={https://creativecommons.org/licenses/by-sa/4.0},
   pdfmetalang={en-US}
 }
 
-\date{2025-11-11}
+\date{2025-11-16}
 \maketitle
 \begin{abstract}
   Traffic control signals allow vehicles and pedestrians to move through
@@ -628,9 +628,15 @@ bridge, but now we need four of them: A, B, C, and D.
 \subsection{Sensors}
 
 Each entry lane has two sensors: Traffic Present just before the intersection
-and Traffic Approaching set some distance back.  In addition there is an
-emergency vehicle sensor which can sometimes tell which direction
-the emergency vehicle is coming from.
+and Traffic Approaching set some distance back.
+
+The intersection has an emergency vehicle detector which can sometimes tell
+which direction the emergency vehicle is coming from.
+It is presented to each lane's finite state machine as five sensors:
+Preempt, Preempt from West, Preempt from South, Preempt from East and
+Preempt from North.
+These sensors are connected to the Preempt Red and Preempt Green toggles
+as described below.
 
 It is customary for signal faces A and C to operate together,
 and similarly for signal faces B and D.  To accomplish this, the sensors for
@@ -653,7 +659,7 @@ traffic does not need to be stopped.
 \subsubsection{Green Delay Present Time}
 When a vehicle arrives at the Traffic Present sensor but the
 signal face is red, the finite state machine waits Green Delay
-Approaching seconds before requesting permission to turn green,
+Present seconds before requesting permission to turn green,
 in case the vehicle makes a permissive right turn so the cross
 traffic does not need to be stopped.
 
@@ -837,10 +843,10 @@ can be green at a time.
   J & A, pse, psw, D, F, G \\
 \end{longtable}
 
-We also need a table named Partial Signal Face Conflicts.  It is the same
-as Signal Face Conflicts except for signal face A which omits F and G,
-and signal face E which omits B and C.  This table is used for permissive
-left turns.
+We also need a table named Partial Conflicts.  It is the same
+as Conflicts except for lane A which omits lanes F and G,
+and lane E which omits lanes B and C.  The Partial Conflict table
+is used for permissive left turns.
 
 \subsection{Signal Faces}
 
@@ -926,7 +932,8 @@ in their respective finite state machines.
 
 Each pedestrian crossing is equipped with a button so the pedestrian can
 signal his desire to cross the street.  This is equivalent to the
-Traffic Present sensor for vehicles.
+Traffic Present sensor for vehicles.  When pushed it remains triggered
+until the pedestrian enters the crosswalk.
 
 \subsection{Timers}
 
@@ -987,12 +994,12 @@ will set its signal face to red as quickly as possible consistent with
 safety and keep it red until this toggle is cleared.
 
 \subsubsection{Manual Green}
-when a traffic control operator sets this toggle the finite state machine
+When a traffic control operator sets this toggle the finite state machine
 will set its signal face to green as quickly as possible consistent with
 safety and keep it green until this toggle is cleared.
 
 \subsubsection{Request Clearance}
-If a lane remains occupied after its finite state machine has signaled
+If a lane remains occupied after its signal face has signaled
 that a permissive left turn is allowed, the finite state machine
 asks that oncoming traffic also be stopped by setting toggle Request Clearance.
 
@@ -1009,8 +1016,8 @@ that is different from their conflict table.
 Each finite state machine is wired to the lamps in its signal face.
 This lets the signal face  use arrow lamps instead of circular lamps
 to indicate to the motorist which travel paths are available to him.
-Signal face A, for example, has its Steady Circular Red output
-connected to a lamp in the signal face which shows a Steady Left Arrow Red.
+Finite state machine A, for example, has its Steady Circular Red output
+connected to a lamp in itsd signal face which shows a Steady Left Arrow Red.
 Table \ref{lamp_map_03} shows wiring between the finite state
 machines and the lamps in the signal faces.
 
@@ -1106,7 +1113,7 @@ that will cause it to exit the substate and enter another.
 
 The State Diagram Summary in figure \ref{fig:State_Diagram_Summary}
 summarizes the most significant states, substates and
-transitions of the finite state machines:
+transitions of the finite state machines.
 
 \begin{figure}[htb]
   {\includegraphics{state_diagram}}
@@ -1307,7 +1314,7 @@ Similarly, the Conflicting Paths are Clear system program will set
 the Conflicting Paths are Clear toggle in those same finite state machines.
 
 Finite state machines B, C, F, and G will proceed from state Red substate
-Going Green 5 to state Green substate Minimum Green.
+Going Green 5 to state Green substate No Traffic.
 This will cause their signal faces to turn green and set toggle
 Traffic Flowing.
 
@@ -1339,7 +1346,8 @@ presses his button.  Assuming we are in the idle condition
 with finite state machines B, C, F, and G green and with A, D, E, H, J,
 and the pedestrian finite state machines red and clear.
 
-Finite state machines psw and pse will proceed to substate
+Finite state machines psw and pse will proceed through substates
+Delay Green 1p and Delay Green 2p to substate
 Going Green 1 where they will set toggle Request Green and
 advance to substate Going Green 2.
 The Green Request Granted system program will act
@@ -1447,8 +1455,8 @@ and so waits for the green arrow.
 
 However, if the vehicle makes the permissive left turn and there is
 no further traffic, finite state machine A
-returns to state red, never causing finite state machines F and G to turn red,
-as illustrated in the following events.
+returns to state red, never causing finite state machines F and G to turn
+their signal faces red, as illustrated in the following events.
 
 \input{left_turn_table.tex}
 
@@ -1547,10 +1555,10 @@ at this URL:
 
 \subsubsection{Heavy Traffic}
 
-To illustrate how the traffic control signal handles heavy traffic,
+To illustrate how this traffic control signal handles heavy traffic,
 here is an animation showing traffic arriving from all directions,
-and in the middle of the flood of traffic the intersection flashing
-for a few seconds due to a nearby emergency vehicle.
+and in the middle of the flood of traffic the intersection holds
+traffic for a few seconds due to a nearby emergency vehicle.
 
 \noindent\includemedia[width=\textwidth,
   addresource=flood_animation_03.mkv,
@@ -1592,8 +1600,8 @@ and the names of the finite state machines in each persistent list
 maintained by the Green Request Granted system program.
 
 The operator can choose to also see the state and substate of each
-finite state machine, the state of each timer, the time until completion
-of each running timer, and the state of each toggle.
+finite state machine, the condition of each timer, the time until completion
+of each running timer, and the condiiton of each toggle.
 
 \subsubsection{Manual}
 
@@ -1601,25 +1609,29 @@ With the mode switch set to Manual, the traffic control signal is
 not responsive to the sensors.  The operator has
 a 3-position switch on the display of each lane to cause that lane to turn red
 or green.  The Red position sets the Manual
-Red toggle and the green position sets the Manual Green toggle.
-The third position is neutral, which sets neither toggle.
+Red sensor, the green position sets the Manual Green sensor, and
+the third position is neutral, which sets neither sensor.
 
 In this mode, as in Automatic mode, the operator sees the color of
-each signal face and the state each vehicle detector.
+each signal face and the state of each vehicle sensor.
 Also as in Automatic mode,
 the operator can choose to also see the state and substate of each
-finite state machine, the state of each timer, the time until completion
-of each running timer, and the state of each toggle.
+finite state machine, the condition of each timer, the time until completion
+of each running timer, and the condition of each toggle.
 
-In this mode the operator must specify when each finite state machine turns
-red and green.  Notice that all of the safety interlocks still
-are in effect: setting a finite state machine to green while a conflicting
-finite state machine is already set to green will have no effect until the
-conflicting finite state machines are set to red or neutral.  There are
-options in the manual control panel to automatically set all
+In this mode the operator must manually turn each signal face
+red and green using his 3-position switches.  Setting all of the switches
+to neutral is equivalnet to automatic mode.
+
+Notice that all of the safety interlocks still
+are in effect: setting a finite state machine's Manual Green sensor
+while a conflicting finite state machine is in the green state
+because its Manual Green toggle is set will have no effect until the
+operator sets the conflicting signal faces to red or neutral.
+There are options in the manual control panel to automatically set all
 conflicting signal faces to red or to neutral when a signal face
-is manually set to green.  There are also options to group finite state
-machines together, so that moving one switch changes toggles in
+is manually set to green.  There are also options to group lanes
+together so that moving one switch changes toggles in
 more than one finite state machine.
 
 A manual control panel can be either local or remote.  If it is remote

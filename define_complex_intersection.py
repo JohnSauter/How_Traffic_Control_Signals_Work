@@ -47,7 +47,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_complex_intersection 0.60 2025-11-11',
+                     version='define_complex_intersection 0.61 2025-11-16',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -278,7 +278,7 @@ for signal_face_name in ("pse", "psw", "pne", "pnw"):
   timer_full_name = signal_face_name + "/" + "Green Limit"
   timer_durations[timer_full_name] = float ("60.000")
   timer_full_name = signal_face_name + "/" + "Yellow Change"
-  timer_durations[timer_full_name] = float ("20.000")
+  timer_durations[timer_full_name] = float ("25.000")
   timer_full_name = signal_face_name + "/" + "Green Delay Approaching"
   timer_durations[timer_full_name] = float ("0.000")
   timer_full_name = signal_face_name + "/" + "Green Delay Present"
@@ -634,7 +634,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x,
-           entry_intersection_y - (2 * car_length)),
+           entry_intersection_y - (car_length)),
           ("intersection", (exit_intersection_x + car_length),
            exit_intersection_y),
           ("intersection", exit_intersection_x, exit_intersection_y),
@@ -661,7 +661,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x,
-           entry_intersection_y - (2 * car_length)),
+           entry_intersection_y - (car_length)),
           ("intersection", exit_intersection_x,
            exit_intersection_y - car_length),
           ("intersection", exit_intersection_x, exit_intersection_y),
@@ -688,7 +688,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x,
-           entry_intersection_y + (2 * car_length)),
+           entry_intersection_y + (car_length)),
           ("intersection", exit_intersection_x,
            exit_intersection_y + car_length),
           ("intersection", exit_intersection_x, exit_intersection_y),
@@ -715,7 +715,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x,
-           entry_intersection_y + (2 * car_length)),
+           entry_intersection_y + (car_length)),
           ("intersection", exit_intersection_x - car_length,
            exit_intersection_y),
           ("intersection", exit_intersection_x, exit_intersection_y),
@@ -854,9 +854,7 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x - car_length,
-           entry_intersection_y),
-          ("intersection", exit_intersection_x - car_length,
-           exit_intersection_y),
+           (entry_intersection_y + exit_intersection_y) / 2.0),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
@@ -1022,11 +1020,22 @@ for signal_face in signal_faces_list:
         "Flashing Left Arrow Yellow (upper)")
       lamp_names_map["Flashing Left Arrow Yellow"] = (
         "Flashing Left Arrow Yellow (lower)")
+      
     case "B" | "F":
+      lamp_names_map["Steady Circular Red"] = "Steady Circular Red"
+      lamp_names_map["Steady Circular Yellow"] = "Steady Circular Yellow"
       lamp_names_map["Steady Circular Green"] = "Steady Circular Green"
+      lamp_names_map["Flashing Circular Red"] = "Flashing Circular Red"
+      lamp_names_map["Flashing Circular Yellow"] = "Flashing Circular Yellow"
+      
     case "H":
+      lamp_names_map["Steady Circular Red"] = "Steady Circular Red"
+      lamp_names_map["Steady Circular Yellow"] = "Steady Circular Yellow"
       lamp_names_map["Steady Circular Green"] = ("Steady Left Arrow Green" +
                                                  " and Steady Circular Green")
+      lamp_names_map["Flashing Circular Red"] = "Flashing Circular Red"
+      lamp_names_map["Flashing Circular Yellow"] = "Flashing Circular Yellow"
+
     case "J":
       lamp_names_map["Steady Circular Red"] = "Steady Right Arrow Red"
       lamp_names_map["Steady Circular Yellow"] = "Steady Right Arrow Yellow"
@@ -1034,6 +1043,7 @@ for signal_face in signal_faces_list:
       lamp_names_map["Flashing Circular Red"] = "Flashing Right Arrow Red"
       lamp_names_map["Flashing Circular Yellow"] = (
         "Flashing Right Arrow Yellow")
+
     case "psw" | "pse" | "pnw" | "pne":
       lamp_names_map["Steady Circular Red"] = "Don't Walk"
       lamp_names_map["Steady Circular Yellow"] = "Walk with Countdown"
