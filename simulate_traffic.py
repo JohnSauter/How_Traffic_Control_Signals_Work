@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='simulate_traffic 0.61 2025-11-16',
+                     version='simulate_traffic 0.62 2025-11-27',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -366,6 +366,11 @@ def format_distance(the_distance_in_feet):
   if (the_distance_in_inches >= 1):
     return (f'{the_distance_in_inches:.1f}' + " in")
   return (f'{the_distance_in_inches:.6f}' + " in")
+
+# format an angle for display
+def format_angle (the_angle_in_radians):
+  the_angle_in_degrees = math.degrees(the_angle_in_radians)
+  return (f'{the_angle_in_degrees:.1f}' + " degrees")
 
 # Format a traffic element's place name for display.
 def place_name(traffic_element):
@@ -1268,8 +1273,7 @@ def add_traffic_element (type, travel_path_name, permissive_delay):
              ") distance to next milestone " +
              format_distance(traffic_element["distance remaining"]) +
              " speed " + format_speed(traffic_element["speed"]) +
-             " angle " + str(math.degrees(traffic_element["angle"])) +
-             " degrees.")
+             " angle " + format_angle(traffic_element["angle"]) + ".")
     if (table_OK (2)):
       table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                         traffic_element["current lane"] + " & " +

@@ -1,5 +1,5 @@
 Name:           How_Traffic_Control_Signals_Work
-Version:        0.61
+Version:        0.62
 Release:        1%{?dist}
 Summary:        Explain traffic control signals
 
@@ -18,6 +18,8 @@ BuildRequires: inkscape
 BuildRequires: python3-shapely
 BuildRequires: python3-opencv
 BuildRequires: python3-img2pdf
+BuildRequires: python3-numpy
+BuildRequires: python3-scipy >= 1.5
 BuildRequires: texlive-scheme-full
 BuildRequires: sil-andika-fonts
 BuildRequires: sil-charis-fonts
@@ -62,6 +64,8 @@ make check VERBOSE=1
 %license COPYING
 
 %changelog
+ * Sat Nov 27 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.62-1 fix manual and preempt
  * Sat Nov 15 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.61-1 fix collision in flood
  * Tue Nov 11 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>

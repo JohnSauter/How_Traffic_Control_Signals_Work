@@ -50,7 +50,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='draw_background 0.61 2025-11-15',
+                     version='draw_background 0.62 2025-11-27',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -98,7 +98,7 @@ if (arguments ['output-file'] != None):
 if (arguments ['parts'] != None):
   num_parts = int(arguments ['parts'])
 else:
-  num_parts = 15
+  num_parts = 30
 
 if (arguments ['verbose'] != None):
   verbosity_level = int(arguments ['verbose'])
