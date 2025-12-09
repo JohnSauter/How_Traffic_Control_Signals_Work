@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_traffic_control_signals 0.62 2025-11-22',
+                     version='define_traffic_control_signals 0.63 2025-12-072',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -575,6 +575,18 @@ conditional_tests.append(conditional_test)
 conditional_test = ("toggle is false", "Manual Red")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Red", "Going Green 2" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Preempt Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Manual Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
 exits_list.append(exit)
 
 red_state.append(substate)

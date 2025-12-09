@@ -1,4 +1,4 @@
-# File: Makefile.am, author: John Sauter, date: November 27, 2025.
+# File: Makefile.am, author: John Sauter, date: December 8, 2025.
 #
 # Build traffic_control_signals.pdf and animations.
 
@@ -534,23 +534,29 @@ left_turn_script.txt
 #
 # Some of the animation CSV files are produced as a byproduct of creating
 # the corresponding events table.  The following CSV rules are for those
-# that aren't.
+# that aren't.  The table files are for debugging.
 %_animation_01.csv : %_script.txt simulate_traffic.py one_way_bridge.json
 	python3 "${srcdir}/simulate_traffic.py" \
 --intersection "${builddir}/one_way_bridge.json" --clock-step 0.001 \
---script "$<" --duration 1200 --events-file "$@" \
+--script "$<" --duration 1200 --events-file "$@" --flush-table-file \
+--table-level 4 --table-file "${builddir}/$(*F)_table.tex"  \
+--table-caption "$(*F) events" --show-substates --explain-state-transitions \
 --last-event-time "${builddir}/last_event_time_$(*F)_animation.txt"
 
 %_animation_02.csv : %_script.txt simulate_traffic.py four_corners.json
 	python3 "${srcdir}/simulate_traffic.py" \
 --intersection "${builddir}/four_corners.json" --clock-step 0.001 \
---script "$<" --duration 1200 --events-file "$@" \
+--script "$<" --duration 1200 --events-file "$@" --flush-table-file \
+--table-level 4 --table-file "${builddir}/$(*F)_table.tex"  \
+--table-caption "$(*F) events" --show-substates --explain-state-transitions \
 --last-event-time "${builddir}/last_event_time_$(*F)_animation.txt"
 
 %_animation_03.csv : %_script.txt simulate_traffic.py complex_intersection.json
 	python3 "${srcdir}/simulate_traffic.py" \
 --intersection "${builddir}/complex_intersection.json" --clock-step 0.001 \
---script "$<" --duration 1200 --events-file "$@" \
+--script "$<" --duration 1200 --events-file "$@" --flush-table-file \
+--table-level 4 --table-file "${builddir}/$(*F)_table.tex"  \
+--table-caption "$(*F) events" --show-substates --explain-state-transitions \
 --last-event-time "${builddir}/last_event_time_$(*F)_animation.txt"
 
 # Create the background image for the animations.

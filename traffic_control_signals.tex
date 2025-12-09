@@ -1,5 +1,5 @@
 % File: traffic_control_signals.tex, author: John Sauter,
-% date: November 27, 2025.
+% date: December 7, 2025.
 
 % Copyright © 2025 by John Sauter.
 % Licensed under the Creative Commons Attribution-ShareAlike 4.0 International
@@ -197,12 +197,12 @@
   pdfcontacturl={https://www.systemeyescomputerstore.com},
   pdfcopyright={Copyright {\copyright} 2025 by John Sauter},
   pdfurl={https://www.systemeyescomputerstore.com/How\%5FTraffic\%5FControl\%5FSignals\%5fWork/traffic\%5Fcontrol\%5Fsignals.pdf},
-  pdfdate={2025-11-27},
+  pdfdate={2025-12-07},
   pdflicenseurl={https://creativecommons.org/licenses/by-sa/4.0},
   pdfmetalang={en-US}
 }
 
-\date{2025-11-27}
+\date{2025-12-07}
 \maketitle
 \begin{abstract}
   Traffic control signals allow vehicles and pedestrians to move through
@@ -826,14 +826,14 @@ as shown in the following table.
 
 Since the traffic control signal only controls entry to the
 intersection, not which travel path will be taken,
-we can simplify the travel path conflict table into a signal face
-conflict table.  If any travel path from a first lane conflicts with
+we can simplify the travel path conflicts table into a signal face
+conflicts table.  If any travel path from a first lane conflicts with
 any travel path from a second lane, we say the two lanes conflict.
 This means that only one of the two corresponding signal faces
 can be green at a time.
 
 \begin{longtable}{c | l}
-  \caption{Conflict Table} \\
+  \caption{Conflicts Table} \\
   lane & conflicts with lane \\
   \hline \endfirsthead
   \caption{Conflict Table continued} \\
@@ -852,7 +852,7 @@ can be green at a time.
 
 We also need a table named Partial Conflicts.  It is the same
 as Conflicts except for lane A which omits lanes F and G,
-and lane E which omits lanes B and C.  The Partial Conflict table
+and lane E which omits lanes B and C.  The Partial Conflicts table
 is used for permissive left turns.
 
 \subsection{Signal Faces}
@@ -986,22 +986,26 @@ In addition, we need toggles to handle permissive versus protected
 left turns.
 
 \subsubsection{Flash Red}
-When a malfunction or a traffic control officer sets this toggle
+When a malfunction or a traffic control officer sets
+the sensor corresponding to this toggle
 the finite state machine will set its signal face to flashing red.
 
 \subsubsection{Flash Yellow}
-When a malfunction or a traffic control officer sets this toggle
+When a malfunction or a traffic control officer sets
+the sensor corresponding to this toggle
 the finite state machine will set its signal face to flashing yellow.
 Lanes A and E, which have two yellow lamps, will flash the upper lamp,
 since flashing the lower lamp means that left turn is permitted.
 
 \subsubsection{Manual Red}
-When a traffic control operator sets this toggle the finite state machine
+When a traffic control operator sets
+the sensor corresponding to this toggle the finite state machine
 will set its signal face to red as quickly as possible consistent with
 safety and keep it red until this toggle is cleared.
 
 \subsubsection{Manual Green}
-When a traffic control operator sets this toggle the finite state machine
+When a traffic control operator sets
+the sensor corresponding to this toggle the finite state machine
 will set its signal face to green as quickly as possible consistent with
 safety and keep it green until this toggle is cleared.
 
@@ -1015,8 +1019,8 @@ When a finite state machine  sees that this toggle is set
 but Conflicting Paths are Clear is not set, it can
 set its signal face to flashing left arrow yellow.
 This can only happen for lanes A and E, since only those
-finite state machines have a partial conflict table
-that is different from their conflict table.
+finite state machines have a partial conflicts table
+that is different from their conflicts table.
 
 \subsection{Wiring the Finite State Machines to the Lamps}
 
@@ -1024,7 +1028,7 @@ Each finite state machine is wired to the lamps in its signal face.
 This lets the signal face  use arrow lamps instead of circular lamps
 to indicate to the motorist which travel paths are available to him.
 Finite state machine A, for example, has its Steady Circular Red output
-connected to a lamp in itsd signal face which shows a Steady Left Arrow Red.
+connected to a lamp in its signal face which shows a Steady Left Arrow Red.
 Table \ref{lamp_map_03} shows wiring between the finite state
 machines and the lamps in the signal faces.
 
@@ -1032,8 +1036,7 @@ machines and the lamps in the signal faces.
 
 \subsection{Wiring the Finite State Machines to the Sensors}
 
-Each finite state machine is wired to the sensors
-for its lane.
+Each finite state machine is wired to the sensors for its lane.
 
 Lanes A and E have their Traffic Approaching sensor where
 the left turn lane begins; lanes B, C, F, and G have their
@@ -1057,7 +1060,7 @@ match so the pairs of finite state machines will operate in lockstep.
 Similarly, if pedestrians can cross the crosswalk in one direction,
 it is customary to also allow crossing in the opposite direction,
 even if the sensor has not been triggered.  Thus we connect the sensors
-for lanes psw and pse to both finite state machines faces psw and pse,
+for lanes psw and pse to both finite state machines psw and pse,
 and the sensors for lanes pnw and pne to both finite state machines
 pnw and pne.  We also make the timer durations match in finite state
 machines psw and pse and also pnw and pne.
@@ -1217,7 +1220,7 @@ finite state machines  by setting toggles in other finite state machines.
 
   Go through all of the finite state machines looking for those with toggle
   Request Clearance true.  For each such finite state machine,
-  consult the conflict table to see which lanes conflict with this one.
+  consult the conflicts table to see which lanes conflict with this one.
   For each such lane, set the Clearance Requested toggle in its finite
   state machine.
 
@@ -1225,12 +1228,12 @@ finite state machines  by setting toggles in other finite state machines.
 
   Go through all of the finite state machines looking for those with toggle
   Request Partial Clearance true.  For each such finite state machine,
-  consult the partial signal face conflict table to see which lanes conflict
+  consult the partial conflicts table to see which lanes conflict
   with this one.  For each such lane, set the Clearance Requested toggle
   in its finite state machine.
 
-  This is the same as Clearance Requested, but we use the partial signal face
-  conflict table, which matches the conflict table except
+  This is the same as Clearance Requested, but we use the partial
+  conflicts table, which matches the conflicts table except
   for the left turn lanes, where their conflict with oncoming traffic is
   omitted.
   This lets left turners try to make a permissive left turn.
@@ -1240,9 +1243,8 @@ finite state machines  by setting toggles in other finite state machines.
 \item[Conflicting Paths are Clear]
 
   Go through the finite state machines looking for those with toggle
-  Request Clearance
-  or toggle Request Partial Clearance
-  true.  For each such finite state machine, consult the conflict table
+  Request Clearance or toggle Request Partial Clearance
+  true.  For each such finite state machine, consult the conflicts table
   to determine which entry lanes contain a travel path that conflicts
   with any of the travel paths controlled by this finite state machine's
   entry lane.  If all of the
@@ -1253,10 +1255,10 @@ finite state machines  by setting toggles in other finite state machines.
 \item[Partial Conflicting Paths are Clear]
 
   Go through the finite state machines looking for those with toggle
-  Request Partial
-  Clearance true.  For each such finite state machine, consult the partial
-  conflict table to determine which entry lanes contain a travel path
-  that conflicts any of the travel paths controlled by this finite state
+  Request Partial Clearance true.
+  For each such finite state machine, consult the partial
+  conflicts table to determine which entry lanes contain a travel path
+  that conflicts with any of the travel paths controlled by this finite state
   machine's entry lane.  If all of the corresponding finite state machines
   have their Clear toggles
   true, set the Partial Conflicting Paths are Clear toggle in this

@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='simulate_traffic 0.62 2025-11-27',
+                     version='simulate_traffic 0.62 2025-12-07',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -71,6 +71,8 @@ parser.add_argument ('--table-end', type=decimal.Decimal,
                      metavar='table_end',
                      help='do not include information after this time' +
                      ' in the LaTex table, default is unlimited')
+parser.add_argument ('--flush-table-file', action='store_true',
+                     help='Flush the table file after each line for debugging')
 parser.add_argument ('--duration', type=decimal.Decimal, metavar='duration',
                      help='length of time to run the simulator, ' +
                      'default is 0.000')
@@ -114,6 +116,7 @@ do_last_event_time_output = False
 clock_step = fractions.Fraction ("0.001")
 print_statistics = False
 explain_state_transitions = False
+flush_table_file = False
 only_important = False
 show_substates = False
 verbosity_level = 1
@@ -189,6 +192,9 @@ if (arguments ['print_statistics'] != None):
 if (arguments ['explain_state_transitions'] != None):
   explain_state_transitions = arguments ['explain_state_transitions']
 
+if (arguments ['flush_table_file'] != None):
+  flush_table_file = arguments ['flush_table_file']
+
 if (arguments ['only_important'] != None):
   only_important = arguments ['only_important']
 
@@ -229,6 +235,8 @@ if (do_table_output):
   table_file.write ("  Time & Lane & Event \\endfirsthead \n")
   table_file.write ("  \\caption{" + table_caption + " continued} \\\\\n")
   table_file.write ("  Time & Lane & Events \\endhead \n")
+  if (flush_table_file):
+    table_file.flush()
 
 # Write the first line in the event file.
 if (do_events_output):
@@ -430,6 +438,8 @@ def set_toggle_value (signal_face, toggle_name, new_value, source):
           table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                             signal_face["name"] + " & " + operator + 
                             toggle_name + byline + ". \\\\\n")
+          if (flush_table_file):
+            table_file.flush()
         no_activity = False
         the_toggle["value"] = new_value
 
@@ -449,6 +459,8 @@ def set_toggle_value (signal_face, toggle_name, new_value, source):
                                 " & " + signal_face ["name"] +
                                 " & finishes waiting for " +
                                 format_time(wait_time) + ".\\\\\n")
+              if (flush_table_file):
+                table_file.flush()
             if ("max wait time" not in signal_face):
               signal_face ["max wait time"] = wait_time
               signal_face ["max wait start"] = signal_face["wait start"]
@@ -564,6 +576,8 @@ def green_request_granted():
         if (table_OK (5)):
           table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                             signal_face ["name"] + " & starts waiting. \\\\\n")
+          if (flush_table_file):
+            table_file.flush()
 
   # If the list of signal faces allowed to turn green is empty,
   # allow the oldest signal face on the list of signal faces
@@ -788,6 +802,8 @@ def safety_check ():
                           " & " + signal_face ["name"] + " & Sensor " +
                           "Flash" + " set to " + str(sensor["value"]) +
                           " by system program safety check. \\\\\n")
+        if (flush_table_file):
+          table_file.flush()
         
   if (verbosity_level >= 5):
     print (format_time(current_time) + " end safety check.")
@@ -833,6 +849,8 @@ def perform_actions (signal_face, substate):
                               " & " + signal_face["name"] +
                               " & Set lamp to " + external_lamp_name +
                               ". \\\\\n")
+            if (flush_table_file):
+              table_file.flush()
           if (do_events_output):
             events_file.write (str(current_time) + "," + signal_face["name"] +
                                ",lamp," + external_lamp_name + "\n")
@@ -886,6 +904,8 @@ def perform_actions (signal_face, substate):
                                         toggle_name + " because sensor " +
                                         full_test_sensor_name +
                                         " is still active." + "\\\\\n")
+                      if (flush_table_file):
+                        table_file.flush()
               
         if (not new_toggle_value):
           set_toggle_value (signal_face, toggle_name, new_toggle_value, "")
@@ -915,6 +935,8 @@ def perform_actions (signal_face, substate):
                                   " duration " +
                                   format_duration(the_timer["remaining time"])
                                   + ". \\\\\n")
+                if (flush_table_file):
+                  table_file.flush()
       case _:
         if (verbosity_level >= 1):
           print (format_time(current_time) + " signal face " +
@@ -1086,6 +1108,8 @@ def enter_state (signal_face, state_name, substate_name, the_exit):
       table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                         signal_face["name"] + " & " +
                         cap_first_letter (transition_reason) + ". \\\\\n")
+      if (flush_table_file):
+        table_file.flush()
   states = finite_state_machine["states"]
   state = states[state_name]
   for substate in state:
@@ -1256,6 +1280,8 @@ def add_traffic_element (type, travel_path_name, permissive_delay):
                         cap_first_letter(this_name) +
                         " is blocked from spawning by " + blocker_name +
                         ". \\\\\n")
+      if (flush_table_file):
+        table_file.flush()
     if (do_trace):
       trace_file.write ("New traffic element not created:\n")
       pprint.pprint (traffic_element, trace_file)
@@ -1282,6 +1308,8 @@ def add_traffic_element (type, travel_path_name, permissive_delay):
                         travel_path_name + " speed " +
                         format_speed(abs(traffic_element["speed"])) +
                         ". \\\\\n")
+      if (flush_table_file):
+        table_file.flush()
     if (do_events_output):
       write_event (traffic_element, "new")
                        
@@ -1671,6 +1699,8 @@ def move_traffic_element (traffic_element):
                           traffic_element["current lane"] + " & " +
                           cap_first_letter(traffic_element["name"]) +
                           " is unblocked. \\\\\n")
+        if (flush_table_file):
+          table_file.flush()
         
       if (verbosity_level >= 5):  
         print (format_time(current_time) + " " + traffic_element["name"] +
@@ -1759,6 +1789,8 @@ def move_traffic_element (traffic_element):
                           cap_first_letter(traffic_element["name"]) +
                           " is blocked by " +
                           blocking_traffic_element_name + ". \\\\\n")
+        if (flush_table_file):
+          table_file.flush()
         
       if (do_events_output):
         write_event(traffic_element, "blocked")
@@ -1796,6 +1828,8 @@ def move_traffic_element (traffic_element):
                           traffic_element["current lane"] + " & " +
                           cap_first_letter(traffic_element["name"]) +
                           " exits the simulation. \\\\\n")
+        if (flush_table_file):
+          table_file.flush()
       if (do_events_output):
         write_event (traffic_element, "exiting")
       
@@ -1834,6 +1868,8 @@ def move_traffic_element (traffic_element):
                                 " & " +
                                 cap_first_letter(traffic_element["name"]) +
                                 " stopped. \\\\\n")
+              if (flush_table_file):
+                table_file.flush()
             if (do_events_output):
               write_event (traffic_element, "stopped")
               
@@ -1858,6 +1894,8 @@ def move_traffic_element (traffic_element):
                                   cap_first_letter(traffic_element["name"]) +
                                   " enters the " + next_milestone[0] +
                                   ". \\\\\n")
+                if (flush_table_file):
+                  table_file.flush()
               
               new_milestone (traffic_element)
 
@@ -1898,6 +1936,8 @@ def move_traffic_element (traffic_element):
                                   " & " +
                                   cap_first_letter(traffic_element["name"]) +
                                   tail_text + ". \\\\\n")
+                if (flush_table_file):
+                  table_file.flush()
               if (do_trace):
                 trace_file.write ("Changing lane from " + old_lane + ":\n")
                 pprint.pprint (traffic_element, trace_file)
@@ -1928,6 +1968,8 @@ def move_traffic_element (traffic_element):
                             ", " +
                             format_location(traffic_element["position y"]) +
                             ") at a milestone. \\\\\n")
+          if (flush_table_file):
+            table_file.flush()
         no_activity = False
 
         if (do_trace):
@@ -1971,6 +2013,8 @@ def check_sensors():
                                 sensor_name + " set to " +
                                 str(sensor["value"]) + " by " +
                                 sensor["triggered by"] + ". \\\\\n")
+              if (flush_table_file):
+                table_file.flush()
             
   return
             
@@ -2010,6 +2054,8 @@ def perform_script_action (the_operator, signal_face_name, the_operand,
                               " & " + signal_face ["name"] + " & Sensor " +
                               sensor_name + " set to " + str(sensor["value"]) +
                               " by script. \\\\\n")
+            if (flush_table_file):
+              table_file.flush()
             
         case "car" | "truck" | "pedestrian":
           add_traffic_element (the_operator, the_operand, permissive_delay)
@@ -2050,6 +2096,8 @@ def update_timers():
         table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                           the_timer ["signal face name"] + " & Timer " +
                           the_timer ["name"] + " completed. \\\\\n")
+        if (flush_table_file):
+          table_file.flush()
 
   if ((verbosity_level >= 5) and (len(remove_timers) > 0)):
     remove_timers_list = ""
@@ -2283,6 +2331,8 @@ while ((current_time < end_time) and (error_counter == 0)):
                                 " & " + signal_face["name"] +
                                 " &  Sensor " + sensor_name +
                                 " is True. \\\\\n")
+              if (flush_table_file):
+                table_file.flush()
             set_toggle_value (toggle_signal_face, root_toggle_name, True,
                               "sensor " + signal_face["name"] + "/" +
                               sensor_name)
