@@ -47,7 +47,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_four_corners 0.60 2025-11-11',
+                     version='define_four_corners 0.65 2025-12-24',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -72,15 +72,6 @@ output_file_name = ""
 waiting_limit = 60
 verbosity_level = 1
 error_counter = 0
-
-# Verbosity_level and table level:
-# 1 only errors (and statistics if requested)
-# 2 add lamp changes, script actions, and vehicles and pedestrians
-#   arriving, leaving and reaching milestones
-# 3 add state changes and blocking
-# 4 add toggle and sensor changes
-# 5 add lots of other items for debugging
-# 6 add tests of toggles
 
 # Parse the command line.
 arguments = parser.parse_args ()
@@ -134,29 +125,30 @@ timer_durations = dict()
 
 for signal_face_name in ("A", "B", "C", "D"):
   timer_full_name = signal_face_name + "/" + "Red Limit"
-  timer_durations[timer_full_name] = float ("inf")
+  timer_durations[timer_full_name] = ("inf",)
   timer_full_name = signal_face_name + "/" + "Maximum Green"
-  timer_durations[timer_full_name] = float ("60.000")
+  timer_durations[timer_full_name] = ("30.000",)
   timer_full_name = signal_face_name + "/" + "Minimum Green"
-  timer_durations[timer_full_name] = float ("12.000")
+  timer_durations[timer_full_name] = ("12.000",)
   timer_full_name = signal_face_name + "/" + "Passage"
-  timer_durations[timer_full_name] = float ("3.500")
+  timer_durations[timer_full_name] = ("3.500", ("1.000", "Maximum Green",
+                                                "20.000", "15.000"))
   timer_full_name = signal_face_name + "/" + "Red Clearance"
-  timer_durations[timer_full_name] = float ("1.000")
+  timer_durations[timer_full_name] = ("1.000",)
   timer_full_name = signal_face_name + "/" + "Green Limit"
-  timer_durations[timer_full_name] = float ("60.000")
+  timer_durations[timer_full_name] = ("60.000",)
   timer_full_name = signal_face_name + "/" + "Yellow Change"
-  timer_durations[timer_full_name] = float ("5.000")
+  timer_durations[timer_full_name] = ("5.000",)
   timer_full_name = signal_face_name + "/" + "Green Delay Approaching"
-  timer_durations[timer_full_name] = float ("0.000")
+  timer_durations[timer_full_name] = ("0.000",)
   timer_full_name = signal_face_name + "/" + "Green Delay Present"
-  timer_durations[timer_full_name] = float ("0.000")
+  timer_durations[timer_full_name] = ("0.000",)
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Waiting"
-  timer_durations[timer_full_name] = float ("inf")
+  timer_durations[timer_full_name] = ("inf",)
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Limit"
-  timer_durations[timer_full_name] = float ("inf")
+  timer_durations[timer_full_name] = ("inf",)
   timer_full_name = signal_face_name + "/" + "Minimum Left Flashing Yellow"
-  timer_durations[timer_full_name] = float ("inf")
+  timer_durations[timer_full_name] = ("inf",)
 
 signal_faces_list = list()
 signal_faces_dict = dict()

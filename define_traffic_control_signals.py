@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_traffic_control_signals 0.63 2025-12-072',
+                     version='define_traffic_control_signals 0.65 2025-12-25',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -1636,6 +1636,8 @@ exits_list.append(exit)
 
 conditional_tests = list()
 conditional_test = ("timer is completed", "Left Flashing Yellow Limit")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Traffic Present")
 conditional_tests.append(conditional_test)
 conditional_test = ("toggle is false", "Manual Green")
 conditional_tests.append(conditional_test)

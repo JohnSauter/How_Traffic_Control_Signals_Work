@@ -45,7 +45,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='display_intersection 0.59 2025-11-08',
+                     version='display_intersection 0.65 2025-12-25',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -77,15 +77,6 @@ table_label = None
 only_important = False
 verbosity_level = 1
 error_counter = 0
-
-# Verbosity_level and table level:
-# 1 only errors (and statistics if requested)
-# 2 add lamp changes, script actions, and vehicles and pedestrians
-#   arriving, leaving and reaching milestones
-# 3 add state changes and blocking
-# 4 add toggle and sensor changes
-# 5 add lots of other items for debugging
-# 6 add tests of toggles
 
 # Parse the command line.
 arguments = parser.parse_args ()
@@ -197,6 +188,58 @@ if (do_sensor_map_output):
 
   sensor_file.write ("\\hline \\end{longtable}\n")
   sensor_file.close()
+
+def remote_exponent(d):
+  return d.quantize(Decimal(1)) if d == d.to_integral() else d.normalize()
+
+def format_duration (the_curation):
+  duration_value = decimal.Decimal(the_duration)
+  return ("\\qty{" + remove_exponent(duration_value) + "}{\\second}")
+
+# subroutine to display possibly variable timer duration
+def display_duration (signal_face, timer):
+  global error_counter
+
+  timer_duration_list = timer["duration"]
+  if (timer_duration_list[0] == "inf"):
+    # If a timer's duration is unlimited it cannot be variable.
+    return ("unlimited")
+
+  if (len(timer_duration_list) < 2):
+    # duration is finite and not variable
+    return ("\\tablenum{" + timer_duration_list[0] + "}")
+  
+  duration_max = timer_duration_list[0]
+  duration_variable = timer_duration_list[1]
+  duration_min = duration_variable[0]
+  duration_name = duration_variable[1]
+  variable_start = duration_variable[2]
+  variable_end = duration_variable[3]
+  timer_name = timer["name"]
+  timer_full_name = signal_face["name"] + "/" + timer_name
+  duration_full_name = signal_face["name"] + "/" + duration_name
+
+  target_found = False
+  timers_list = signal_face["timers"]
+  for target_timer in timers_list:
+    if (target_timer["name"] == duration_name):
+      target_found = True
+      break
+  
+  if (not target_found):
+    print ("No target for variable timer: " + duration_name)
+    error_counter = error_counter + 1
+    return ("error: " + duration_name)
+
+  result = "\\tablenum{" + duration_max + "}"
+  result = result + "\\footnote{Timer " + timer_full_name + " decreases from "
+  result = result + format_duration(duration_max) + " to "
+  result = result + format_duration(duration_min) 
+  result = result + " as the remaining time on timer "
+  result = result + duration_full_name + " decreases from " 
+  result = result + format_duration(variable_start) + " to " 
+  result = result + format_duration(variable_end) + "."
+  return (result)
   
 if (do_timer_durations_output):
   timer_durations_file = open (timer_durations_file_name, 'w')
@@ -218,22 +261,15 @@ if (do_timer_durations_output):
       timer_name = timer["name"]
 
       do_write = True
-      value_is_finite = True
       if (only_important):
         do_write = timer["important"]
-      if (timer["duration"] == float("inf")):
-        value_is_finite = False
       
       if (do_write):
         timer_durations_file.write ("   \\hline " + signal_face["name"] +
                                     " & " + timer_name + " & ")
-        if (value_is_finite):
-          timer_durations_file.write ("\\tablenum{" + str(timer["duration"]) +
-                                      "}")
-        else:
-          timer_durations_file.write ("unlimited")
-          
-        timer_durations_file.write ("\\\\\n")
+        timer_duration_string = display_duration (signal_face, timer)
+        timer_durations_file.write (timer_duration_string)
+        timer_durations_file.write (" \\\\\n")
 
   timer_durations_file.write ("\\hline \\end{longtable}\n")
   timer_durations_file.close()

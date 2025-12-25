@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# File: Makefile.am, author: John Sauter, date: December 8, 2025.
+# File: Makefile.am, author: John Sauter, date: December 21, 2025.
 #
 # Build traffic_control_signals.pdf and animations.
 
@@ -1479,7 +1479,7 @@ left_turn_script.txt
 --script "${srcdir}/left_turn_script.txt" \
 --table-caption "Left Turn"
 
-pedestrian_table.tex pedestrian_animation.csv &: simulate_traffic.py \
+pedestrian_table.tex pedestrian_animation_03.csv &: simulate_traffic.py \
 complex_intersection.json pedestrian_script.txt
 	python3 "${srcdir}/simulate_traffic.py" \
 --intersection "${builddir}/complex_intersection.json" --table-level 4 \

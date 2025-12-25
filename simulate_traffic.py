@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='simulate_traffic 0.62 2025-12-07',
+                     version='simulate_traffic 0.65 2025-12-25',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -341,9 +341,13 @@ def format_time_N(the_time):
   previous_time = the_time
   return (format_time (the_time))
 
-# Format a duration for display.
+# Format a duration for display as LaTeX.
+def remove_exponent(d):
+  return d.quantize(decimal(1)) if d == d.to_integral() else d.normalize()
+
 def format_duration (the_duration):
-  return ("\\qty{" + str(the_duration) + "}{\\second}")
+  duration_value = remove_exponent(decimal.Decimal(the_duration))
+  return ("\\qty{" + str(duration_value) + "}{\\second}")
 
 # The conversion factor from miles per hour to feet per second:
 mph_to_fps = fractions.Fraction(5280, 60*60)
@@ -812,6 +816,71 @@ def safety_check ():
 
 # the traffic signal simulator: run the finite state machines
 
+# subroutine to convert a fraction to a decimal
+def convert_fraction_to_decimal (the_fraction):
+  the_numerator = the_fraction.numerator
+  the_denominator = the_fraction.denominator
+  result = decimal.Decimal(the_numerator) / decimal.Decimal(the_denominator)
+  return (result)
+
+# Subroutine to compute the duration of a timer.
+def compute_duration (signal_face, timer):
+  global error_counter
+
+  timer_duration_list = timer["duration"]
+  if (timer_duration_list[0] == "inf"):
+    # If a timer's duration is unlimited it cannot be variable.
+    return ("timer is umlimited", decimal.Decimal("inf"))
+
+  if (len(timer_duration_list) < 2):
+    # duration is finite and not variable
+    return ("", decimal.Decimal(timer_duration_list[0]))
+  
+  duration_max = decimal.Decimal(timer_duration_list[0])
+  duration_variable = timer_duration_list[1]
+  duration_min = decimal.Decimal(duration_variable[0])
+  duration_name = duration_variable[1]
+  variable_start = decimal.Decimal(duration_variable[2])
+  variable_end = decimal.Decimal(duration_variable[3])
+  timer_name = timer["name"]
+
+  target_found = False
+  timers_list = signal_face["timers"]
+  for target_timer in timers_list:
+    if (target_timer["name"] == duration_name):
+      target_found = True
+      break
+  
+  if (not target_found):
+    print ("No target for variable timer: " + duration_name)
+    error_counter = error_counter + 1
+    return ("farget timer " + duration_name + " not found", duration_max)
+
+  if (target_timer["state"] != "running"):
+    return ("timer " + duration_name + " is not running", duration_max)
+  remaining_time = convert_fraction_to_decimal(target_timer["remaining time"])
+  if (remaining_time > variable_start):
+    return ("timer " + duration_name + " has remaining time " +
+            format_duration(remaining_time) +
+            " which is greater than " +
+            format_duration(variable_start), duration_max)
+  if (remaining_time < variable_end):
+    return ("timer " + duration_name + " has remaining time " +
+            format_duration(remaining_time) +
+            " which is less than " +
+            format_duration(variable_end), duration_min)
+  remaining_span = variable_start - variable_end
+  variable_span = duration_max - duration_min
+  span_ratio = variable_span / remaining_span
+  current_progress = variable_start - remaining_time
+  variable_progress = current_progress * span_ratio
+  duration_result = duration_max - variable_progress
+  return ("timer " + duration_name + " has remaining time " +
+          format_duration(remaining_time) +
+          " which is between " +
+          format_duration(variable_start) +
+          " and " + format_duration(variable_end), duration_result)
+
 running_timers = list()
 
 def perform_actions (signal_face, substate):
@@ -915,26 +984,36 @@ def perform_actions (signal_face, substate):
         timers_list = signal_face["timers"]
         for the_timer in timers_list:
           if (the_timer["name"] == timer_name):
-            if (the_timer["duration"] != decimal.Decimal ("inf")):
+            reason, timer_duration = compute_duration (signal_face, the_timer)
+            if (timer_duration != decimal.Decimal("inf")):
               the_timer["state"] = "running"
-              the_timer["remaining time"] = the_timer["duration"]
+              the_timer["remaining time"] = timer_duration
               remaining_time = fractions.Fraction(the_timer["remaining time"])
               the_timer["completion time"] = current_time + remaining_time
               if (the_timer not in running_timers):
                 running_timers.append(the_timer)
+                
+              if (reason != ""):
+                explanation = " because " + reason
+              else:
+                explanation = ""
+                
               if (verbosity_level >= 5):
                 print (format_time(current_time) + " signal face " +
                        signal_face["name"] + " start timer " +
                        timer_name + " duration " +
-                       format_duration(the_timer["remaining time"]) + ".")
+                       format_duration(the_timer["remaining time"]) +
+                       " will complete at " +
+                       format_time(the_timer["completion time"]) +
+                       explanation + ".")
               if (table_OK (4) and ((not only_important) or
                                     the_timer["important"])):
+                remaining_time = format_duration(the_timer["remaining time"])
                 table_file.write ("\\hline " + format_time_N(current_time) +
                                   " & " + signal_face ["name"] +
                                   " & Start timer " + timer_name +
-                                  " duration " +
-                                  format_duration(the_timer["remaining time"])
-                                  + ". \\\\\n")
+                                  " duration " + remaining_time +
+                                  explanation + ". \\\\\n")
                 if (flush_table_file):
                   table_file.flush()
       case _:

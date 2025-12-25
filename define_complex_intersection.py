@@ -47,7 +47,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_complex_intersection 0.61 2025-11-16',
+                     version='define_complex_intersection 0.65 2025-12-25',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -135,154 +135,155 @@ timer_durations = dict()
 
 for signal_face_name in ("A", "psw", "pse", "D", "E", "pnw", "pne", "H", "J"):
   timer_full_name = signal_face_name + "/" + "Red Limit"
-  timer_durations[timer_full_name] = float ("inf")
+  timer_durations[timer_full_name] = ("inf",)
 
 for signal_face_name in ("B", "C", "F", "G"):
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Waiting"
-  timer_durations[timer_full_name] = float ("inf")
+  timer_durations[timer_full_name] = ("inf",)
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Limit"
-  timer_durations[timer_full_name] = float ("inf")
+  timer_durations[timer_full_name] = ("inf",)
   timer_full_name = signal_face_name + "/" + "Minimum Left Flashing Yellow"
-  timer_durations[timer_full_name] = float ("inf")
+  timer_durations[timer_full_name] = ("inf",)
   timer_full_name = signal_face_name + "/" + "Red Limit"
-  timer_durations[timer_full_name] = float ("60.000")
+  timer_durations[timer_full_name] = ("60.000",)
   timer_full_name = signal_face_name + "/" + "Maximum Green"
-  timer_durations[timer_full_name] = float ("60.000")
+  timer_durations[timer_full_name] = ("60.000",)
   timer_full_name = signal_face_name + "/" + "Minimum Green"
-  timer_durations[timer_full_name] = float ("12.000")
+  timer_durations[timer_full_name] = ("12.000",)
   timer_full_name = signal_face_name + "/" + "Passage"
-  timer_durations[timer_full_name] = float ("3.500")
+  timer_durations[timer_full_name] = ("3.500", ("1.000", "Maximum Green",
+                                                "10.000", "7.000"))
   timer_full_name = signal_face_name + "/" + "Red Clearance"
-  timer_durations[timer_full_name] = float ("1.000")
+  timer_durations[timer_full_name] = ("1.000",)
   timer_full_name = signal_face_name + "/" + "Green Limit"
-  timer_durations[timer_full_name] = float ("inf")
+  timer_durations[timer_full_name] = ("inf",)
   timer_full_name = signal_face_name + "/" + "Yellow Change"
-  timer_durations[timer_full_name] = float ("5.000")
+  timer_durations[timer_full_name] = ("5.000",)
   timer_full_name = signal_face_name + "/" + "Green Delay Approaching"
-  timer_durations[timer_full_name] = float ("0.000")
+  timer_durations[timer_full_name] = ("0.000",)
   timer_full_name = signal_face_name + "/" + "Green Delay Present"
-  timer_durations[timer_full_name] = float ("0.000")
+  timer_durations[timer_full_name] = ("0.000",)
 
 for signal_face_name in ("A", "E"):
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Waiting"
-  timer_durations[timer_full_name] = float ("15.000")
+  timer_durations[timer_full_name] = ("15.000",)
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Limit"
-  timer_durations[timer_full_name] = float ("45.000")
+  timer_durations[timer_full_name] = ("45.000",)
   timer_full_name = signal_face_name + "/" + "Minimum Left Flashing Yellow"
-  timer_durations[timer_full_name] = float ("5.000")
+  timer_durations[timer_full_name] = ("5.000",)
   timer_full_name = signal_face_name + "/" + "Maximum Green"
-  timer_durations[timer_full_name] = float ("20.000")
+  timer_durations[timer_full_name] = ("20.000",)
   timer_full_name = signal_face_name + "/" + "Minimum Green"
-  timer_durations[timer_full_name] = float ("5.000")
+  timer_durations[timer_full_name] = ("5.000",)
   timer_full_name = signal_face_name + "/" + "Passage"
-  timer_durations[timer_full_name] = float ("1.900")
+  timer_durations[timer_full_name] = ("1.900",)
   timer_full_name = signal_face_name + "/" + "Red Clearance"
-  timer_durations[timer_full_name] = float ("1.000")
+  timer_durations[timer_full_name] = ("1.000",)
   timer_full_name = signal_face_name + "/" + "Green Limit"
-  timer_durations[timer_full_name] = float ("45.000")
+  timer_durations[timer_full_name] = ("45.000",)
   timer_full_name = signal_face_name + "/" + "Yellow Change"
-  timer_durations[timer_full_name] = float ("3.500")
+  timer_durations[timer_full_name] = ("3.500",)
   timer_full_name = signal_face_name + "/" + "Green Delay Approaching"
-  timer_durations[timer_full_name] = float ("0.000")
+  timer_durations[timer_full_name] = ("0.000",)
   timer_full_name = signal_face_name + "/" + "Green Delay Present"
-  timer_durations[timer_full_name] = float ("0.000")
+  timer_durations[timer_full_name] = ("0.000",)
 
 for signal_face_name in ("D"):
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Waiting"
-  timer_durations[timer_full_name] = float ("inf")
+  timer_durations[timer_full_name] = ("inf",)
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Limit"
-  timer_durations[timer_full_name] = float ("inf")
+  timer_durations[timer_full_name] = ("inf",)
   timer_full_name = signal_face_name + "/" + "Minimum Left Flashing Yellow"
-  timer_durations[timer_full_name] = float ("inf")
+  timer_durations[timer_full_name] = ("inf",)
   timer_full_name = signal_face_name + "/" + "Maximum Green"
-  timer_durations[timer_full_name] = float ("30.000")
+  timer_durations[timer_full_name] = ("30.000",)
   timer_full_name = signal_face_name + "/" + "Minimum Green"
-  timer_durations[timer_full_name] = float ("7.000")
+  timer_durations[timer_full_name] = ("7.000",)
   timer_full_name = signal_face_name + "/" + "Passage"
-  timer_durations[timer_full_name] = float ("1.900")
+  timer_durations[timer_full_name] = ("1.900",)
   timer_full_name = signal_face_name + "/" + "Red Clearance"
-  timer_durations[timer_full_name] = float ("1.500")
+  timer_durations[timer_full_name] = ("1.500",)
   timer_full_name = signal_face_name + "/" + "Green Limit"
-  timer_durations[timer_full_name] = float ("60.000")
+  timer_durations[timer_full_name] = ("60.000",)
   timer_full_name = signal_face_name + "/" + "Yellow Change"
-  timer_durations[timer_full_name] = float ("3.000")
+  timer_durations[timer_full_name] = ("3.000",)
   timer_full_name = signal_face_name + "/" + "Green Delay Approaching"
-  timer_durations[timer_full_name] = float ("3.000")
+  timer_durations[timer_full_name] = ("3.000",)
   timer_full_name = signal_face_name + "/" + "Green Delay Present"
-  timer_durations[timer_full_name] = float ("3.000")
+  timer_durations[timer_full_name] = ("3.000",)
 
 for signal_face_name in ("H"):
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Waiting"
-  timer_durations[timer_full_name] = float ("inf")
+  timer_durations[timer_full_name] = ("inf",)
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Limit"
-  timer_durations[timer_full_name] = float ("inf")
+  timer_durations[timer_full_name] = ("inf",)
   timer_full_name = signal_face_name + "/" + "Minimum Left Flashing Yellow"
-  timer_durations[timer_full_name] = float ("inf")
+  timer_durations[timer_full_name] = ("inf",)
   timer_full_name = signal_face_name + "/" + "Maximum Green"
-  timer_durations[timer_full_name] = float ("30.000")
+  timer_durations[timer_full_name] = ("30.000",)
   timer_full_name = signal_face_name + "/" + "Minimum Green"
-  timer_durations[timer_full_name] = float ("7.000")
+  timer_durations[timer_full_name] = ("7.000",)
   timer_full_name = signal_face_name + "/" + "Passage"
-  timer_durations[timer_full_name] = float ("1.900")
+  timer_durations[timer_full_name] = ("1.900",)
   timer_full_name = signal_face_name + "/" + "Red Clearance"
-  timer_durations[timer_full_name] = float ("1.500")
+  timer_durations[timer_full_name] = ("1.500",)
   timer_full_name = signal_face_name + "/" + "Green Limit"
-  timer_durations[timer_full_name] = float ("60.000")
+  timer_durations[timer_full_name] = ("60.000",)
   timer_full_name = signal_face_name + "/" + "Yellow Change"
-  timer_durations[timer_full_name] = float ("3.000")
+  timer_durations[timer_full_name] = ("3.000",)
   timer_full_name = signal_face_name + "/" + "Green Delay Approaching"
-  timer_durations[timer_full_name] = float ("0.000")
+  timer_durations[timer_full_name] = ("0.000",)
   timer_full_name = signal_face_name + "/" + "Green Delay Present"
-  timer_durations[timer_full_name] = float ("0.000")
+  timer_durations[timer_full_name] = ("0.000",)
 
 for signal_face_name in ("J"):
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Waiting"
-  timer_durations[timer_full_name] = float ("inf")
+  timer_durations[timer_full_name] = ("inf",)
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Limit"
-  timer_durations[timer_full_name] = float ("inf")
+  timer_durations[timer_full_name] = ("inf",)
   timer_full_name = signal_face_name + "/" + "Minimum Left Flashing Yellow"
-  timer_durations[timer_full_name] = float ("inf")
+  timer_durations[timer_full_name] = ("inf",)
   timer_full_name = signal_face_name + "/" + "Maximum Green"
-  timer_durations[timer_full_name] = float ("30.000")
+  timer_durations[timer_full_name] = ("30.000",)
   timer_full_name = signal_face_name + "/" + "Minimum Green"
-  timer_durations[timer_full_name] = float ("7.000")
+  timer_durations[timer_full_name] = ("7.000",)
   timer_full_name = signal_face_name + "/" + "Passage"
-  timer_durations[timer_full_name] = float ("1.900")
+  timer_durations[timer_full_name] = ("1.900",)
   timer_full_name = signal_face_name + "/" + "Red Clearance"
-  timer_durations[timer_full_name] = float ("1.000")
+  timer_durations[timer_full_name] = ("1.000",)
   timer_full_name = signal_face_name + "/" + "Green Limit"
-  timer_durations[timer_full_name] = float ("60.000")
+  timer_durations[timer_full_name] = ("60.000",)
   timer_full_name = signal_face_name + "/" + "Yellow Change"
-  timer_durations[timer_full_name] = float ("3.000")
+  timer_durations[timer_full_name] = ("3.000",)
   timer_full_name = signal_face_name + "/" + "Green Delay Approaching"
-  timer_durations[timer_full_name] = float ("0.000")
+  timer_durations[timer_full_name] = ("0.000",)
   timer_full_name = signal_face_name + "/" + "Green Delay Present"
-  timer_durations[timer_full_name] = float ("0.000")
+  timer_durations[timer_full_name] = ("0.000",)
 
 
 for signal_face_name in ("pse", "psw", "pne", "pnw"):
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Waiting"
-  timer_durations[timer_full_name] = float ("inf")
+  timer_durations[timer_full_name] = ("inf",)
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Limit"
-  timer_durations[timer_full_name] = float ("inf")
+  timer_durations[timer_full_name] = ("inf",)
   timer_full_name = signal_face_name + "/" + "Minimum Left Flashing Yellow"
-  timer_durations[timer_full_name] = float ("inf")
+  timer_durations[timer_full_name] = ("inf",)
   timer_full_name = signal_face_name + "/" + "Maximum Green"
-  timer_durations[timer_full_name] = float ("10.000")
+  timer_durations[timer_full_name] = ("10.000",)
   timer_full_name = signal_face_name + "/" + "Minimum Green"
-  timer_durations[timer_full_name] = float ("6.000")
+  timer_durations[timer_full_name] = ("6.000",)
   timer_full_name = signal_face_name + "/" + "Passage"
-  timer_durations[timer_full_name] = float ("1.000")
+  timer_durations[timer_full_name] = ("1.000",)
   timer_full_name = signal_face_name + "/" + "Red Clearance"
-  timer_durations[timer_full_name] = float ("3.000")
+  timer_durations[timer_full_name] = ("3.000",)
   timer_full_name = signal_face_name + "/" + "Green Limit"
-  timer_durations[timer_full_name] = float ("60.000")
+  timer_durations[timer_full_name] = ("60.000",)
   timer_full_name = signal_face_name + "/" + "Yellow Change"
-  timer_durations[timer_full_name] = float ("25.000")
+  timer_durations[timer_full_name] = ("25.000",)
   timer_full_name = signal_face_name + "/" + "Green Delay Approaching"
-  timer_durations[timer_full_name] = float ("0.000")
+  timer_durations[timer_full_name] = ("0.000",)
   timer_full_name = signal_face_name + "/" + "Green Delay Present"
-  timer_durations[timer_full_name] = float ("0.000")
+  timer_durations[timer_full_name] = ("0.000",)
 
 signal_faces_list = list()
 signal_faces_dict = dict()
@@ -343,8 +344,8 @@ for signal_face in signal_faces_list:
   match signal_face["name"]:
     case "A":
       conflict_set = ("psw", "pse", "D", "F", "G", "H", "J")
-      partial_conflict_set = ("psw", "pse", "D", "H", "H")
-    case "psw" | "pse":
+      partial_conflict_set = ("psw", "pse", "D", "H", "J")
+    case "pse" | "psw":
       conflict_set = ("A", "B", "C", "D", "F", "G", "J")
     case "B" | "C":
       conflict_set = ("psw", "pse", "D", "E", "pnw", "pne", "H")
@@ -352,16 +353,16 @@ for signal_face in signal_faces_list:
       conflict_set = ("A", "psw", "pse", "B", "C", "E", "pnw", "pne", "F",
                       "G", "H", "J")
     case "E":
-      conflict_set = ("B", "C", "D", "pnw", "pne", "H")
+      conflict_set = ("B", "C", "D", "pne", "pnw", "H")
       partial_conflict_set = ("D", "pnw", "pne", "H")
-    case "pnw" | "pne":
+    case "pne" | "pnw":
       conflict_set = ("B", "C", "D", "E", "F", "G", "H")
     case "F" | "G":
-      conflict_set = ("A", "psw", "pse", "D", "pnw", "pne", "H", "J")
+      conflict_set = ("A", "pse", "psw", "D", "pne", "pnw", "H", "J")
     case "H":
-      conflict_set = ("A", "B", "C", "D", "E", "pnw", "pne", "F", "G")
+      conflict_set = ("A", "B", "C", "D", "E", "pne", "pnw", "F", "G")
     case "J":
-      conflict_set = ("A", "psw", "pse", "D", "F", "G")
+      conflict_set = ("A", "pse", "psw", "D", "F", "G")
       
   if (partial_conflict_set == None):
     partial_conflict_set = conflict_set
@@ -540,8 +541,8 @@ def find_lane_info (lane_name):
 # Construct the travel paths.  Each valid path through the intersection
 # has an entry lane and an exit lane.  It also has milestones which
 # the traffic elements pass through on their way from the entrance to the exit.
-# Some travel paths have a shape which must be empty of vehicles before
-# a permissive turn can be taken.
+# Some travel paths have a shape which must be empty of vehicles
+# or of vehicles moving a certain way before a permissive turn can be taken.
 
 # Construct the shape of the intersection.
 max_x = None
@@ -662,6 +663,8 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           ("intersection", entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x,
            entry_intersection_y - (car_length)),
+          ("intersection", (entry_intersection_x + exit_intersection_x)/2.0,
+           entry_intersection_y - (2.0 * car_length)),
           ("intersection", exit_intersection_x,
            exit_intersection_y - car_length),
           ("intersection", exit_intersection_x, exit_intersection_y),
@@ -689,6 +692,8 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           ("intersection", entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x,
            entry_intersection_y + (car_length)),
+          ("intersection", (entry_intersection_x + exit_intersection_x)/2.0,
+           entry_intersection_y + (2.0 * car_length)),
           ("intersection", exit_intersection_x,
            exit_intersection_y + car_length),
           ("intersection", exit_intersection_x, exit_intersection_y),
@@ -854,6 +859,8 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x - car_length,
+           entry_intersection_y),
+          ("intersection", entry_intersection_x - (2.0 * car_length),
            (entry_intersection_y + exit_intersection_y) / 2.0),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
@@ -900,6 +907,27 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
            entry_intersection_y),
           ("intersection", exit_intersection_x,
            exit_intersection_y + car_length),
+          ("intersection", exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_end_x, exit_end_y))
+
+        green_colors = ("Steady Left Arrow Green" +
+                        " and Steady Circular Green")
+        
+      case "H6":
+        # Eastbound U turn
+        travel_path_valid = True
+
+        milestones = (
+          (entry_lane_name, entry_start_x, entry_start_y),
+          (entry_lane_name, entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x + car_length,
+           entry_intersection_y),
+          ("intersection", entry_intersection_x + (2.0 * car_length),
+           (entry_intersection_y + exit_intersection_y)/2.0),
+          ("intersection", exit_intersection_x + car_length,
+           exit_intersection_y),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))

@@ -1,5 +1,5 @@
 % File: traffic_control_signals.tex, author: John Sauter,
-% date: December 7, 2025.
+% date: December 25, 2025.
 
 % Copyright © 2025 by John Sauter.
 % Licensed under the Creative Commons Attribution-ShareAlike 4.0 International
@@ -197,12 +197,12 @@
   pdfcontacturl={https://www.systemeyescomputerstore.com},
   pdfcopyright={Copyright {\copyright} 2025 by John Sauter},
   pdfurl={https://www.systemeyescomputerstore.com/How\%5FTraffic\%5FControl\%5FSignals\%5fWork/traffic\%5Fcontrol\%5Fsignals.pdf},
-  pdfdate={2025-12-07},
+  pdfdate={2025-12-25},
   pdflicenseurl={https://creativecommons.org/licenses/by-sa/4.0},
   pdfmetalang={en-US}
 }
 
-\date{2025-12-07}
+\date{2025-12-25}
 \maketitle
 \begin{abstract}
   Traffic control signals allow vehicles and pedestrians to move through
@@ -370,6 +370,9 @@ the finite state machine can be sure that any vehicles are either so close
 to the intersection that they can safely make it through before the signal
 face turns red, or far enough away that they clearly cannot.
 We call this a gap in the traffic.
+
+The duration of the Passage timer can vary.  If a long gap is not found
+quickly the finite state machine will settle for a shorter gap.
 
 \subsubsection{Maximum Green time}
 If the finite state machine has been looking for a gap in the traffic
@@ -686,7 +689,11 @@ which lane the emergency vehicle is coming from.
 
 \subsection{Timer Durations}
 
-Here are the lengths of time that each timer runs:
+Here are the lengths of time that each timer runs.
+Notice that when the finite state machine is looking to turn its signal
+face red to allow conflicting traffic to flow, if the Maximum Green
+timer is close to completion it shortens the Passage timer in the hope
+of finding a short gap after not finding a long gap.
 
 \input {timer_durations_02.tex}
 
@@ -806,17 +813,18 @@ as shown in the following table.
   in & out & conflicts with \\ \hline \endfirsthead
   \caption{Travel Path Conflicts continued} \\
   in & out & conflicts with \\ \hline \endhead
-  A & 6, 2, 1 & D6, D1, D2, F2, G1, G6, H5, H4, H3, J1, pswpse, psepsw \\
+  A & 6, 2, 1 & D6, D1, D2, F2, G1, G6, H6, H5, H4, H3, J1, pswpse, psepsw \\
   B & 5 & D2, D1, D6, E5, E3, H5, H4, H3, pswpse, psepsw, pnwpne, pnepnw \\
   C & 3, 4 & D1, D2, D3, D4, D6, E4, H4, H3, pswpse, psepsw, pnwpne, pnepnw \\
   D & 3, 4, 5, 6, 1, 2 & A2, A1, A6, B5, C4, C3, E3, E4, E5, F2, G1, G6, H3,
-  H4, H5, J1, J2, pnwpne, pnepnw, pswpse, psepsw \\
+  H4, H5, H6, J1, J2, pnwpne, pnepnw, pswpse, psepsw \\
   E & 5, 4, 3 & B5, C4, D2, D1, D6, D4, H5, H4, pnwpne, pnepnw  \\
   F & 2 & A2, A1, A6, D1, D2, D6, H4, H4, H3, J2, pnwpne, pnepnw, pswpse,
   psepsw \\
-  G & 6, 1 & A6, A1, A2, D2, D1, D6, H5, H4, H3, J1, pnwpne, pnepnw, pswpse,
-  psepsw \\
-  H & 5, 4 & A6, B5, C4, D4, D6, D1, D2, E3, E5, E4, F2, G1, pnwpne, pnepnw \\
+  G & 6, 1 & A6, A1, A2, D2, D1, D6, H6, H5, H4, H3, J1, pnwpne, pnepnw,
+  pswpse, psepsw \\
+  H & 6, 5, 4 & A6, B5, C4, D4, D6, D1, D2, E3, E5, E4, F2, G1, pnwpne,
+  pnepnw \\
   J & 1, 2 & A1, A2, D2, D1, F2, G1, psepsw, pswpse \\
   psw & pse & A6, A1, A2, B5, C3, C4, D1, D2, F2, G1, J1, J2 \\
   pse & psw & A6, A1, A2, B5, C3, C4, D1, D2, F2, G1, J1, J2 \\
@@ -826,7 +834,7 @@ as shown in the following table.
 
 Since the traffic control signal only controls entry to the
 intersection, not which travel path will be taken,
-we can simplify the travel path conflicts table into a signal face
+we can simplify the travel path conflicts table into a lane
 conflicts table.  If any travel path from a first lane conflicts with
 any travel path from a second lane, we say the two lanes conflict.
 This means that only one of the two corresponding signal faces
@@ -836,7 +844,7 @@ can be green at a time.
   \caption{Conflicts Table} \\
   lane & conflicts with lane \\
   \hline \endfirsthead
-  \caption{Conflict Table continued} \\
+  \caption{Conflicts Table continued} \\
   lane & conflicts with lane \\
   \hline \endhead
   A & pse, psw, D, F, G, H, J \\
@@ -845,7 +853,7 @@ can be green at a time.
   D & A, pse, psw, B, C, E, pne, pnw, F, G, H, J \\
   E & B, C, D, pne, pnw, H \\
   pne and pnw & B, C, D, E, F, G, H \\
-  F and G & A, pse, psw, D, pne, pnw, , H, J \\
+  F and G & A, pse, psw, D, pne, pnw, H, J \\
   H & A, B, C, D, E, pne, pnw, F, G \\
   J & A, pse, psw, D, F, G \\
 \end{longtable}
@@ -909,13 +917,13 @@ For pedestrians, the signal face shows a picture which changes to indicate
 whether it is safe to walk, not safe to walk, or the walk time is about to end.
 
 \begin{figure}[H]
-  \fcapside
+  \fcapside[\FBwidth]
            {\includegraphics{MUTCD_Ped_Signal_-_Walk}}
            {\caption{Proceed into the intersection}}
 \end{figure}
 
 \begin{figure}[H]
-  \fcapside
+  \fcapside[\FBwidth]
            {\includegraphics{MUTCD_Ped_Signal_-_Hand_with_timer}}
            {\caption{The walk condition will end in the indicated
                number of seconds.  Do not enter the intersection
@@ -923,7 +931,7 @@ whether it is safe to walk, not safe to walk, or the walk time is about to end.
 \end{figure}
 
 \begin{figure}[H]
-  \fcapside
+  \fcapside[\FBwidth]
            {\includegraphics{MUTCD_Ped_Signal_-_Steady_hand}}
            {\caption{Do not enter the intersection.}}
 \end{figure}
@@ -972,6 +980,9 @@ still traffic turning left.
 Here are the lengths of times that the timers run for.  Unlimited means
 that the timer never completes; thus there is, for example, no limit on
 how long signal face A can remain red.
+
+Notice that the north and south lanes will shrink their Passage timers
+if they have been waiting a long time for a gap.
 
 \input {timer_durations_03.tex}
 
