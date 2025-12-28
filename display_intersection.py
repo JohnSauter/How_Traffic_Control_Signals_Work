@@ -30,6 +30,7 @@ import math
 import pprint
 import pathlib
 import json
+import decimal
 import argparse
 
 parser = argparse.ArgumentParser (
@@ -189,12 +190,14 @@ if (do_sensor_map_output):
   sensor_file.write ("\\hline \\end{longtable}\n")
   sensor_file.close()
 
-def remote_exponent(d):
-  return d.quantize(Decimal(1)) if d == d.to_integral() else d.normalize()
+# Format a duration for display as LaTeX.
+def remove_exponent(d):
+  return (d.quantize(decimal.Decimal(1)) if d == d.to_integral() \
+          else d.normalize())
 
-def format_duration (the_curation):
-  duration_value = decimal.Decimal(the_duration)
-  return ("\\qty{" + remove_exponent(duration_value) + "}{\\second}")
+def format_duration (the_duration):
+  duration_value = remove_exponent(decimal.Decimal(the_duration))
+  return ("\\qty{" + str(duration_value) + "}{\\second}")
 
 # subroutine to display possibly variable timer duration
 def display_duration (signal_face, timer):
@@ -238,7 +241,7 @@ def display_duration (signal_face, timer):
   result = result + " as the remaining time on timer "
   result = result + duration_full_name + " decreases from " 
   result = result + format_duration(variable_start) + " to " 
-  result = result + format_duration(variable_end) + "."
+  result = result + format_duration(variable_end) + ".}"
   return (result)
   
 if (do_timer_durations_output):

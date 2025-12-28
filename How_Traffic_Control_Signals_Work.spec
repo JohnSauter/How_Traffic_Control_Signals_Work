@@ -64,10 +64,10 @@ make check VERBOSE=1
 %license COPYING
 
 %changelog
- * Sat Dec 13 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
- - 0.64-1 fix improve U turns
- * Sat Dec 20 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ * Tue Dec 23 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.65-1 start work on variable passage time
+ * Sat Dec 20 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.64-1 fix improve U turns
  * Sun Dec 07 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.63-1 fix coming out of preset red from going green 1
  * Thu Nov 27 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>

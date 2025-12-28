@@ -343,7 +343,8 @@ def format_time_N(the_time):
 
 # Format a duration for display as LaTeX.
 def remove_exponent(d):
-  return d.quantize(decimal(1)) if d == d.to_integral() else d.normalize()
+  return (d.quantize(decimal.Decimal(1)) if d == d.to_integral() \
+          else d.normalize())
 
 def format_duration (the_duration):
   duration_value = remove_exponent(decimal.Decimal(the_duration))
