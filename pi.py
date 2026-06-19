@@ -12,12 +12,12 @@ if hasattr(sys, "set_int_max_str_digits"):
     upper_bound = 68000
     lower_bound = 20000
     current_limit = sys.get_int_max_str_digits()
-    print ("current " + str(current_limit))
+    print ("current max str digits: " + str(current_limit))
     if current_limit == 0 or current_limit > upper_bound:
         sys.set_int_max_str_digits(upper_bound)
-        print ("upper " + str(upper_bound))
+        print ("already more than: " + str(upper_bound))
     elif current_limit < lower_bound:
-        print ("lower " + str(lower_bound))
+        print ("increasing to: " + str(lower_bound))
         sys.set_int_max_str_digits(lower_bound)
 
 # This is a value for pi suggested as a rational fraction.

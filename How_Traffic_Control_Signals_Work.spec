@@ -1,9 +1,9 @@
 Name:           How_Traffic_Control_Signals_Work
-Version:        0.65
+Version:        0.69
 Release:        1%{?dist}
 Summary:        Explain traffic control signals
 
-License:        GPLv3+
+License:        GPL-3.0-or-later AND CC-BY-SA-4.0
 URL:            https://github.com/JohnSauter/How_Traffic_Control_Signals_Work
 Source0:        https://github.com/JohnSauter/How_Traffic_Control_Signals_Work/blob/master/How_Traffic_Control_Signals_Work-%{version}.tar.gz
                 
@@ -26,8 +26,6 @@ BuildRequires: sil-charis-fonts
 BuildRequires: liberation-mono-fonts
 BuildRequires: parallel
 BuildRequires: ffmpeg-free
-
-%global _hardened_build 1
 
 %description
 Explain how traffic control signals work using finite state machines
@@ -64,8 +62,16 @@ make check VERBOSE=1
 %license COPYING
 
 %changelog
+ * Sun Apr 26 2026 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.69-1 continue work on improving the four corners scenario
+ * Sun Apr 19 2026 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.68-1 start work on improving the four corners scenario
+ * Sun Mar 15 2026 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.67-1 use less parallelism during animation
+ * Sun Feb 22 2026 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.66-1 better explanations when turning green
  * Tue Dec 23 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
- - 0.65-1 start work on variable passage time
+ - 0.65-1 variable passage time
  * Sat Dec 20 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.64-1 fix improve U turns
  * Sun Dec 07 2025 John Sauter <John_Sauter@systemeyescomputerstore.com>

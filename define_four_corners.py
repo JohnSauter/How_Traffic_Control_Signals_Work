@@ -4,7 +4,7 @@
 # define_four_corners.py defines a simple intersection for the
 # traffic simulator.
 
-#   Copyright © 2025 by John Sauter <John_Sauter@systemeyescomputerstore.com>
+#   Copyright © 2026 by John Sauter <John_Sauter@systemeyescomputerstore.com>
 
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ import argparse
 parser = argparse.ArgumentParser (
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=('Define a simple traffic intersection.'),
-  epilog=('Copyright © 2025 by John Sauter' + '\n' +
+  epilog=('Copyright © 2026 by John Sauter' + '\n' +
           'License GPL3+: GNU GPL version 3 or later; ' + '\n' +
           'see <http://gnu.org/licenses/gpl.html> for the full text ' +
           'of the license.' + '\n' +
@@ -47,7 +47,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_four_corners 0.65 2025-12-24',
+                     version='define_four_corners 0.69 2026-06-13',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -69,7 +69,7 @@ do_input = False
 input_file_name = ""
 do_output = False
 output_file_name = ""
-waiting_limit = 60
+waiting_limit = "60.000"
 verbosity_level = 1
 error_counter = 0
 
@@ -117,13 +117,41 @@ else:
     
 # Build the finite state machines for the signal faces:
 
-signal_face_names = ( "A", "B", "C", "D" )
+signal_face_names = ( "A", "B", "C", "D", "E", "F", "G", "H" )
 
 # Set the duration of each timer in each signal face.
 
 timer_durations = dict()
+  
+for signal_face_name in ("A", "C", "E", "G"):
+  timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Waiting"
+  timer_durations[timer_full_name] = ("15.000",)
+  timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Limit"
+  timer_durations[timer_full_name] = ("45.000",)
+  timer_full_name = signal_face_name + "/" + "Minimum Left Flashing Yellow"
+  timer_durations[timer_full_name] = ("5.000",)
+  timer_full_name = signal_face_name + "/" + "Maximum Green"
+  timer_durations[timer_full_name] = ("20.000",)
+  timer_full_name = signal_face_name + "/" + "Minimum Green"
+  timer_durations[timer_full_name] = ("5.000",)
+  timer_full_name = signal_face_name + "/" + "Passage"
+  timer_durations[timer_full_name] = ("1.900",)
+  timer_full_name = signal_face_name + "/" + "Red Clearance"
+  timer_durations[timer_full_name] = ("1.000",)
+  timer_full_name = signal_face_name + "/" + "Green Limit"
+  timer_durations[timer_full_name] = ("45.000",)
+  timer_full_name = signal_face_name + "/" + "Yellow Change"
+  timer_durations[timer_full_name] = ("3.500",)
+  timer_full_name = signal_face_name + "/" + "Green Delay Approaching"
+  timer_durations[timer_full_name] = ("0.000",)
+  timer_full_name = signal_face_name + "/" + "Green Delay Present"
+  timer_durations[timer_full_name] = ("0.000",)
+  timer_full_name = signal_face_name + "/" + "Red Limit"
+  timer_durations[timer_full_name] = ("inf",)
 
-for signal_face_name in ("A", "B", "C", "D"):
+
+for signal_face_name in ("B", "D", "F", "H"):
+        
   timer_full_name = signal_face_name + "/" + "Red Limit"
   timer_durations[timer_full_name] = ("inf",)
   timer_full_name = signal_face_name + "/" + "Maximum Green"
@@ -149,6 +177,8 @@ for signal_face_name in ("A", "B", "C", "D"):
   timer_durations[timer_full_name] = ("inf",)
   timer_full_name = signal_face_name + "/" + "Minimum Left Flashing Yellow"
   timer_durations[timer_full_name] = ("inf",)
+  timer_full_name = signal_face_name + "/" + "Red Limit"
+  timer_durations[timer_full_name] = ("inf",)
 
 signal_faces_list = list()
 signal_faces_dict = dict()
@@ -166,9 +196,9 @@ for signal_face_name in signal_face_names:
     match toggle_name:
       case "Traffic Approaching" | "Request Green" | \
            "Green Request Granted" | "Request Partial Clearance" | \
+           "Request Clearance" | "Partial Conflicting Paths are Clear" | \
            "Clearance Requested" | "Cleared" | \
-           "Conflicting Paths are Clear" | "Traffic Flowing" \
-           "Preempt Green" | "Preempt Red":
+           "Conflicting Paths are Clear" | "Traffic Flowing":
         important = True
 
       case _:
@@ -193,7 +223,9 @@ for signal_face_name in signal_face_names:
       case "Red Clearance" | "Yellow Change" | "Minimum Green" | \
            "Passage" | "Maximum Green" | \
            "Green Limit" | "Red Limit" | \
-           "Green Delay Approaching" | "Green Delay Present":
+           "Left Flashing Yellow Waiting" | \
+           "Left Flashing Yellow Limit" | \
+           "Minimum Left Flashing Yellow":
         important = True
         
       case _:
@@ -219,13 +251,37 @@ for signal_face in signal_faces_list:
   partial_conflict_set = None
   
   match signal_face["name"]:
-    case "A" | "C":
-      conflict_set = ("B", "D")
-    case "B" | "D":
-      conflict_set = ("A", "C")
+    case "A":
+      conflict_set = ("C", "D", "F", "G", "H")
+      partial_conflict_set = ("C", "D", "G", "H")
+      
+    case "B":
+      conflict_set = ("C", "D", "E", "G", "H")
+      
+    case "C":
+      conflict_set = ("A", "B", "E", "F", "H")
+      partial_conflict_set = ("A", "B", "E", "F")
+
+    case "D":
+      conflict_set = ("A", "B", "E", "F", "G")
+
+    case "E":
+      conflict_set = ("B", "C", "D", "G", "H")
+      partial_conflict_set = ("C", "D", "G", "H")
+
+    case "F":
+      conflict_set = ("A", "C", "D", "G", "H")
+
+    case "G":
+      conflict_set = ("A", "B", "D", "E", "F")
+      partial_conflict_set = ("A", "B", "E", "F")
+
+    case "H":
+      conflict_set = ("A", "B", "C", "E", "F")
       
   if (partial_conflict_set == None):
     partial_conflict_set = conflict_set
+    
   signal_face["conflicts"] = conflict_set
   signal_face["partial conflicts"] = partial_conflict_set
 
@@ -235,8 +291,8 @@ for signal_face in signal_faces_list:
 
 for signal_face in signal_faces_list:
   match signal_face["name"]:
-    case "A" | "B" | "C" | "D":
-      signal_face["waiting limit"] = waiting_limit
+    case "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H":
+      signal_face["waiting limit"] = float(waiting_limit)
 
 # Construct the travel paths.  A traffic element appears at the first
 # milestone, then proceeds to each following milestone.  When it reaches
@@ -246,7 +302,9 @@ car_width = 5
 truck_length = 40
 truck_width = 8
 approach_sensor_long_distance = 150
+approach_sensor_short_distance = car_length * 3.0
 long_lane_length = 528
+short_lane_length = approach_sensor_short_distance + (1.5 * car_length)
 lane_width = 12
 crosswalk_width = 6
 
@@ -257,11 +315,12 @@ crosswalk_width = 6
 # The bottom is the other end of the lane, where vehicles enter or leave
 # the simulation.
 
-lane_names = ("A", "B", "C", "D", "1", "2", "3", "4")
+lane_names = ("A", "B", "C", "D", "E", "F", "G", "H", "1", "2", "3", "4")
 
 def find_lane_info (lane_name):
   global lane_width
   global long_lane_length
+  global short_lane_length
   
   center_y = 0
   center_x = 0
@@ -269,48 +328,72 @@ def find_lane_info (lane_name):
   match lane_name:
     case "1":
       top_x = center_x - (0.5 * lane_width)
-      top_y = center_y + (1.0 * lane_width)
+      top_y = center_y + (2.0 * lane_width)
       bottom_x = top_x
       bottom_y = top_y + long_lane_length
       
     case "A":
       top_x = center_x + (0.5 * lane_width)
-      top_y = center_y + (1.0 * lane_width)
+      top_y = center_y + (2.0 * lane_width)
+      bottom_x = top_x
+      bottom_y = top_y + short_lane_length
+            
+    case "B":
+      top_x = center_x + (1.5 * lane_width)
+      top_y = center_y + (2.0 * lane_width)
       bottom_x = top_x
       bottom_y = top_y + long_lane_length
-            
+      
     case "2":
-      top_x = center_x + (1.0 * lane_width)
+      top_x = center_x + (2.0 * lane_width)
       top_y = center_y + (0.5 * lane_width)
       bottom_x = top_x + long_lane_length
       bottom_y = top_y
       
-    case "B":
-      top_x = center_x + (1.0 * lane_width)
+    case "C":
+      top_x = center_x + (2.0 * lane_width)
       top_y = center_y - (0.5 * lane_width)
+      bottom_x = top_x + short_lane_length
+      bottom_y = top_y
+            
+    case "D":
+      top_x = center_x + (2.0 * lane_width)
+      top_y = center_y - (1.5 * lane_width)
       bottom_x = top_x + long_lane_length
       bottom_y = top_y
-      
+            
     case "3":
-      top_x = center_x + (0.5 * lane_width)
-      top_y = center_y - (1.0 * lane_width)
+      top_x = center_x + (1.5 * lane_width)
+      top_y = center_y - (2.0 * lane_width)
       bottom_x = top_x
       bottom_y = top_y - long_lane_length
             
-    case "C":
+    case "E":
+      top_x = center_x + (0.5 * lane_width)
+      top_y = center_y - (2.0 * lane_width)
+      bottom_x = top_x
+      bottom_y = top_y - short_lane_length
+            
+    case "F":
       top_x = center_x - (0.5 * lane_width)
-      top_y = center_y - (1.0 * lane_width)
+      top_y = center_y - (2.0 * lane_width)
       bottom_x = top_x
       bottom_y = top_y - long_lane_length
             
     case "4":
-      top_x = center_x - (1.0 * lane_width)
-      top_y = center_y - (0.5 * lane_width)
+      top_x = center_x - (2.0 * lane_width)
+      top_y = center_y - (1.5 * lane_width)
       bottom_x = top_x - long_lane_length
       bottom_y = top_y
             
-    case "D":
-      top_x = center_x - (1.0 * lane_width)
+    case "G":
+      top_x = center_x - (2.0 * lane_width)
+      top_y = center_y - (0.5 * lane_width)
+      bottom_x = top_x - short_lane_length
+      bottom_y = top_y
+      
+    case "H":
+      top_x = center_x - (2.0 * lane_width)
       top_y = center_y + (0.5 * lane_width)
       bottom_x = top_x - long_lane_length
       bottom_y = top_y
@@ -363,13 +446,34 @@ if (do_trace):
   
 travel_paths = dict()
 
-for entry_lane_name in ("A", "B", "C", "D"):
+for entry_lane_name in ("A", "B", "C", "D", "E", "F", "G", "H"):
   
   entry_lane_info = find_lane_info(entry_lane_name)
   entry_start_x = entry_lane_info[2]
   entry_start_y = entry_lane_info[3]
   entry_intersection_x = entry_lane_info[0]
   entry_intersection_y = entry_lane_info[1]
+
+  match entry_lane_name:
+    case "A":
+      adjacent_lane_name = "B"
+    case "C":
+      adjacent_lane_name = "D"
+    case "E":
+      adjacent_lane_name = "F"
+    case "G":
+      adjacent_lane_name = "H"
+    case _:
+      adjacent_lane_name = None
+
+  if (adjacent_lane_name != None):
+    adjacent_lane_info = find_lane_info(adjacent_lane_name)
+    adjacent_start_x = adjacent_lane_info[2]
+    adjacent_start_y = adjacent_lane_info[3]
+  else:
+    adjacent_lane_info = None
+    adjacent_start_x = None
+    adjacent_start_y = None
   
   for exit_lane_name in ("1", "2", "3", "4"):
 
@@ -398,11 +502,11 @@ for entry_lane_name in ("A", "B", "C", "D"):
         travel_path_valid = True
 
         milestones = (
+          (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
+          (adjacent_lane_name, adjacent_start_x, entry_start_y),
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
-          ("intersection", (entry_intersection_x + exit_intersection_x) / 2.0,
-           (entry_intersection_y + exit_intersection_y - car_length) / 2.0),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
@@ -416,44 +520,165 @@ for entry_lane_name in ("A", "B", "C", "D"):
         permissive_turn_info = (("moving South", intersection_shape),
                                 ("present", permissive_turn_shape))
         
-        permissive_colors = ("Steady Circular Green",)
-        green_colors = tuple()
-        
-      case "C2":
-        # Southbound left turn
+        permissive_colors = ("Flashing Left Arrow Yellow (lower)",)
+        green_colors = ("Steady Left Arrow Green",)
+
+      case "A4":
+        # Northbound left turn
         travel_path_valid = True
 
         milestones = (
+          (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
+          (adjacent_lane_name, adjacent_start_x, entry_start_y),
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
-          ("intersection", (entry_intersection_x + exit_intersection_x) / 2.0,
-           (entry_intersection_y + exit_intersection_y) / 2.0),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
         permissive_turn_shape = (
-          entry_intersection_x - permissive_distance,
-          exit_intersection_y - (0.5 * lane_width),
-          exit_intersection_x,
-          exit_intersection_y + (0.5 * lane_width))
-
-        permissive_turn_info = (("moving North", intersection_shape),
-                                ("present", permissive_turn_shape))
-        permissive_colors = ("Steady Circular Green",)
-        green_colors = tuple()
+          entry_intersection_x - (2.5 * lane_width),
+          entry_intersection_y - (3 * lane_width) - permissive_distance,
+          entry_intersection_x - (0.5 * lane_width), entry_intersection_y)
         
-      case "C3":
-        # Southbound U turn
+        permissive_turn_info = (("moving South", intersection_shape),
+                                ("present", permissive_turn_shape))
+        permissive_colors = ("Flashing Left Arrow Yellow (lower)",)
+        green_colors = ("Steady Left Arrow Green",)
+
+      case "B2":
+        # Northbound right turn
         travel_path_valid = True
 
         milestones = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
-          ("intersection", (entry_intersection_x + exit_intersection_x) / 2.0,
-           (entry_intersection_y + exit_intersection_y + car_length) / 2.0),
+          ("intersection", exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_end_x, exit_end_y))
+
+        permissive_turn_shape = (
+          entry_intersection_x - (lane_width / 2),
+          exit_intersection_y - (lane_width / 2),
+          exit_intersection_x + (lane_width * 2),
+          entry_intersection_y + (lane_width / 2))
+                                                       
+        permissive_turn_info = (("moving East", intersection_shape),
+                                ("present", permissive_turn_shape))
+        permissive_colors = ("Steady Circular Red", "Steady Circular Yellow")
+        green_colors = ("Steady Circular Green",)
+
+      case "B3":
+        # Northbound through lane
+        travel_path_valid = True
+
+        milestones = (
+          (entry_lane_name, entry_start_x, entry_start_y),
+          (entry_lane_name, entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_end_x, exit_end_y))
+
+        green_colors = ("Steady Circular Green",)
+
+      case "C2":
+        # Westbound U turn
+        travel_path_valid = True
+
+        milestones = (
+          (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
+          (adjacent_lane_name, entry_start_x, adjacent_start_y),
+          (entry_lane_name, entry_start_x, entry_start_y),
+          (entry_lane_name, entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_end_x, exit_end_y))
+        
+        permissive_turn_shape = (
+          entry_intersection_x - (4.0 * lane_width) - permissive_distance,
+          entry_intersection_y - (2.5 * lane_width),
+          entry_intersection_x, entry_intersection_y + (0.5 * lane_width))
+        
+        permissive_turn_info = (("moving East", intersection_shape),
+                                ("present", permissive_turn_shape))
+        permissive_colors = ("Flashing Left Arrow Yellow (lower)",)
+        green_colors = ("Steady Left Arrow Green",)
+
+      case "D3":
+        # Westbound right turn
+        travel_path_valid = True
+
+        milestones = (
+          (entry_lane_name, entry_start_x, entry_start_y),
+          (entry_lane_name, entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_end_x, exit_end_y))
+
+        permissive_turn_shape = (
+          exit_intersection_x - (lane_width / 2),
+          exit_intersection_y - (lane_width * 2),
+          exit_intersection_x + (lane_width / 2),
+          entry_intersection_y + (2.0 * lane_width) + permissive_distance)
+                                                       
+        permissive_turn_info = (("moving East", intersection_shape),
+                                ("present", permissive_turn_shape))
+        permissive_colors = ("Steady Circular Red", "Steady Circular Yellow")
+        green_colors = ("Steady Circular Green",)
+          
+      case "C1":
+        # Westbound left turn
+        travel_path_valid = True
+
+        milestones = (
+          (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
+          (adjacent_lane_name, entry_start_x, adjacent_start_y),
+          (entry_lane_name, entry_start_x, entry_start_y),
+          (entry_lane_name, entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_end_x, exit_end_y))
+
+        permissive_turn_shape = (
+          entry_intersection_x - (4.0 * lane_width) - permissive_distance,
+          entry_intersection_y - (2.5 * lane_width),
+          entry_intersection_x, entry_intersection_y + (0.5 * lane_width))
+        
+        permissive_turn_info = (("moving West", intersection_shape),
+                                ("present", permissive_turn_shape))
+        permissive_colors = ("Flashing Left Arrow Yellow (lower)",)
+        green_colors = ("Steady Left Arrow Green",)
+
+      case "D4":
+        # Westbound straight through
+        travel_path_valid = True
+        
+        milestones = (
+          (entry_lane_name, entry_start_x, entry_start_y),
+          (entry_lane_name, entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_intersection_x, exit_intersection_y),
+          (exit_lane_name, exit_end_x, exit_end_y))
+
+        green_colors = ("Steady Circular Green",)
+
+      case "E2":
+        # Southbound left turn
+        travel_path_valid = True
+
+        milestones = (
+          (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
+          (adjacent_lane_name, adjacent_start_x, entry_start_y),
+          (entry_lane_name, entry_start_x, entry_start_y),
+          (entry_lane_name, entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x, entry_intersection_y),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
@@ -463,177 +688,119 @@ for entry_lane_name in ("A", "B", "C", "D"):
           entry_intersection_x + (2.5 * lane_width),
           entry_intersection_y + (3.0 * lane_width) + permissive_distance)
 
-        permissive_turn_info = (("moving North", intersection_shape),
-                                ("present", permissive_turn_shape))
-        permissive_colors = ("Steady Circular Green",)
-        green_colors = tuple()
-                        
-      case "A3" | "B4" | "C1" | "D2":
-        # Through lanes
+        permissive_turn_info = (("present", permissive_turn_shape),)
+        permissive_colors = ("Flashing Left Arrow Yellow (lower)",)
+        green_colors = ("Steady Left Arrow Green",)
+
+      case "E3":
+        # Southbound U turn
         travel_path_valid = True
 
         milestones = (
+          (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
+          (adjacent_lane_name, adjacent_start_x, entry_start_y),
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
-          ("intersection", exit_intersection_x, exit_intersection_y),
-          (exit_lane_name, exit_intersection_x, exit_intersection_y),
-          (exit_lane_name, exit_end_x, exit_end_y))
-
-        green_colors = ("Steady Circular Green,")
-        
-      case "A2":
-        # Northbound right turn
-        travel_path_valid = True
-        
-        milestones = (
-          (entry_lane_name, entry_start_x, entry_start_y),
-          (entry_lane_name, entry_intersection_x, entry_intersection_y),
-          ("intersection", entry_intersection_x, entry_intersection_y),
-          ("intersection", (entry_intersection_x + exit_intersection_x) / 2.0,
-           (entry_intersection_y + exit_intersection_y) / 2.0),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
         permissive_turn_shape = (
-          entry_intersection_x - permissive_distance,
-          exit_intersection_y - (0.5 * lane_width),
-          exit_intersection_x,
-          exit_intersection_y + (0.5 * lane_width))
-                                                       
-        permissive_turn_info = (("moving East", intersection_shape),
-                                ("present", permissive_turn_shape))
-        permissive_colors = ("Steady Circular Red", "Steady Circular Yellow")
-        green_colors = ("Steady Circular Green,")
-        
-      case "A4":
-        # Northbound left turn
+          entry_intersection_x + (0.5 * lane_width), entry_intersection_y,
+          entry_intersection_x + (2.5 * lane_width),
+          entry_intersection_y + (3.0 * lane_width) + permissive_distance)
+
+        permissive_turn_info = (("present", permissive_turn_shape),)
+        permissive_colors = ("Flashing Left Arrow Yellow (lower)",)
+        green_colors = ("Steady Left Arrow Green",)
+
+      case "F1":
+        # Soundbound straight through
         travel_path_valid = True
 
         milestones = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
-          ("intersection", (entry_intersection_x + exit_intersection_x) / 2.0,
-           (entry_intersection_y + exit_intersection_y) / 2.0),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
-        permissive_turn_shape = (
-          exit_intersection_x,
-          exit_intersection_y - permissive_distance,
-          entry_intersection_x,
-          entry_intersection_y)
-                                                       
-        permissive_turn_info = (("moving South", intersection_shape),
-                                ("present", permissive_turn_shape))
-        permissive_colors = ("Steady Circular Green",)
-        green_colors = tuple()
-        
-      case "C4":
-        # Soundbound right turn
+        green_colors = ("Steady Circular Green",)
+
+      case "F4":
+        # Southbound right turn
         travel_path_valid = True
-        
+
         milestones = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
-          ("intersection", (entry_intersection_x + exit_intersection_x) / 2.0,
-           (entry_intersection_y + exit_intersection_y) / 2.0),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
         permissive_turn_shape = (
-          exit_intersection_x,
-          entry_intersection_y,
-          exit_intersection_x - permissive_distance,
-          exit_intersection_y + (0.5 * lane_width))
+          entry_intersection_x - (lane_width / 2),
+          exit_intersection_y - (lane_width / 2),
+          exit_intersection_x + (lane_width * 2),
+          entry_intersection_y + (lane_width / 2))
                                                        
         permissive_turn_info = (("moving West", intersection_shape),
                                 ("present", permissive_turn_shape))
         permissive_colors = ("Steady Circular Red", "Steady Circular Yellow")
-        green_colors = ("Steady Circular Green,")
-        
-      case "B1":
-        # Westbound left turn
+        green_colors = ("Steady Circular Green",)
+
+      case "G3":
+        # Eastbound left turn
         travel_path_valid = True
 
         milestones = (
+          (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
+          (adjacent_lane_name, entry_start_x, adjacent_start_y),
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
-          ("intersection", (entry_intersection_x + exit_intersection_x) / 2.0,
-           (entry_intersection_y + exit_intersection_y) / 2.0),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
         permissive_turn_shape = (
-          exit_intersection_x - permissive_distance,
-          exit_intersection_y - (0.5 * lane_width),
-          exit_intersection_x,
-          exit_intersection_y + (0.5 * lane_width))
-                                                       
-        permissive_turn_info = (("moving South", intersection_shape),
-                                 ("present", permissive_turn_shape))
-        permissive_colors = ("Steady Circular Green,")
-        green_colors = tuple()
+          entry_intersection_x + (4.0 * lane_width) + permissive_distance,
+          entry_intersection_y - (2.5 * lane_width),
+          entry_intersection_x, entry_intersection_y + (0.5 * lane_width))
         
-      case "B2":
-        # Westbound U turn
-        travel_path_valid = True
-
-        milestones = (
-          (entry_lane_name, entry_start_x, entry_start_y),
-          (entry_lane_name, entry_intersection_x, entry_intersection_y),
-          ("intersection", entry_intersection_x, entry_intersection_y),
-          ("intersection", (entry_intersection_x + exit_intersection_x -
-                            car_length) / 2.0,
-           (entry_intersection_y + exit_intersection_y) / 2.0),
-          ("intersection", exit_intersection_x, exit_intersection_y),
-          (exit_lane_name, exit_intersection_x, exit_intersection_y),
-          (exit_lane_name, exit_end_x, exit_end_y))
-        
-        permissive_turn_shape = (
-          exit_intersection_x - permissive_distance,
-          entry_intersection_y - (0.5 * lane_width),
-          exit_intersection_x,
-          exit_intersection_y + (0.5 * lane_width))
-                                                       
         permissive_turn_info = (("moving East", intersection_shape),
-                                 ("present", permissive_turn_shape))
-        permissive_colors = ("Steady Circular Green,")
-        green_colors = tuple()
-        
-      case "B3":
-        # Westbound right turn
+                                ("present", permissive_turn_shape))
+        permissive_colors = ("Flashing Left Arrow Yellow (lower)",)
+        green_colors = ("Steady Left Arrow Green",)
+
+      case "G4":
+        # Eastbound U turn
         travel_path_valid = True
 
         milestones = (
+          (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
+          (adjacent_lane_name, entry_start_x, adjacent_start_y),
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
-          ("intersection", (entry_intersection_x + exit_intersection_x) / 2.0,
-           (entry_intersection_y + exit_intersection_y) / 2.0),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
         
         permissive_turn_shape = (
-          exit_intersection_x - (0.5 * lane_width),
-          exit_intersection_y,
-          exit_intersection_x + (0.5 * lane_width),
-          entry_intersection_y + permissive_distance)
-                                                       
-        permissive_turn_info = (("moving North", intersection_shape),
-                                 ("present", permissive_turn_shape))
-        permissive_colors = ("Steady Circular Red", "Steady Circular Yellow")
-        green_colors = ("Steady Circular Green,")
+          entry_intersection_x + (4.0 * lane_width) + permissive_distance,
+          entry_intersection_y - (2.5 * lane_width),
+          entry_intersection_x, entry_intersection_y + (0.5 * lane_width))
         
-      case "D1":
+        permissive_turn_info = (("moving East", intersection_shape),
+                                ("present", permissive_turn_shape))
+        permissive_colors = ("Flashing Left Arrow Yellow (lower)",)
+        green_colors = ("Steady Left Arrow Green",)
+
+      case "H1":
         # Eastbound right turn
         travel_path_valid = True
 
@@ -641,73 +808,34 @@ for entry_lane_name in ("A", "B", "C", "D"):
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
-          ("intersection", (entry_intersection_x + exit_intersection_x) / 2.0,
-           (entry_intersection_y + exit_intersection_y) / 2.0),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
-        
-        permissive_turn_shape = (
-          exit_intersection_x - (0.5 * lane_width),
-          entry_intersection_y,
-          exit_intersection_x + (0.5 * lane_width),
-          entry_intersection_y - permissive_distance)
-                                                       
-        permissive_turn_info = (("moving South", intersection_shape),
-                                 ("present", permissive_turn_shape))
-        permissive_colors = ("Steady Circular Red", "Steady Circular Yellow")
-        green_colors = ("Steady Circular Green,")
-                
-      case "D4":
-        # Eastbound U turn
-        travel_path_valid = True
 
-        milestones = (
-          (entry_lane_name, entry_start_x, entry_start_y),
-          (entry_lane_name, entry_intersection_x, entry_intersection_y),
-          ("intersection", entry_intersection_x, entry_intersection_y),
-          ("intersection", (entry_intersection_x + exit_intersection_x +
-                            car_length) / 2.0,
-           (entry_intersection_y + exit_intersection_y) / 2.0),
-          ("intersection", exit_intersection_x, exit_intersection_y),
-          (exit_lane_name, exit_intersection_x, exit_intersection_y),
-          (exit_lane_name, exit_end_x, exit_end_y))
-                
         permissive_turn_shape = (
-          exit_intersection_x,
-          exit_intersection_y - (0.5 * lane_width),
-          exit_intersection_x + permissive_distance,
-          entry_intersection_y + (0.5 * lane_width))
+          exit_intersection_x + (lane_width / 2),
+          exit_intersection_y - (lane_width * 2),
+          exit_intersection_x - (lane_width / 2),
+          entry_intersection_y + (2.0 * lane_width) + permissive_distance)
                                                        
         permissive_turn_info = (("moving West", intersection_shape),
                                 ("present", permissive_turn_shape))
-        permissive_colors = ("Steady Circular Green,")
-        green_colors = tuple()
-
-      case "D3":
-        # Eastbound left turn
+        permissive_colors = ("Steady Circular Red", "Steady Circular Yellow")
+        green_colors = ("Steady Circular Green",)
+          
+      case "H2":
+        # Eastbound straight through
         travel_path_valid = True
-
+        
         milestones = (
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
-          ("intersection", (entry_intersection_x + exit_intersection_x) / 2.0,
-           (entry_intersection_y + exit_intersection_y) / 2.0),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
-                
-        permissive_turn_shape = (
-          exit_intersection_x - (0.5 * lane_width),
-          exit_intersection_y - permissive_distance,
-          exit_intersection_x + (0.5 * lane_width),
-          exit_intersection_y)
-                                                       
-        permissive_turn_info = (("moving South", intersection_shape),
-                                ("present", permissive_turn_shape))
-        permissive_colors = ("Steady Circular Green,")
-        green_colors = tuple()
+
+        green_colors = ("Steady Circular Green",)
         
       case _:
         milestones = None
@@ -735,7 +863,18 @@ for signal_face in signal_faces_list:
   lamp_names_map = dict()
   
   match signal_face["name"]:
-    case "A" | "B" | "C" | "D":
+    case "A" | "C" | "E" | "G":
+      lamp_names_map["Steady Circular Red"] = "Steady Left Arrow Red"
+      lamp_names_map["Steady Circular Yellow"] = (
+        "Steady Left Arrow Yellow (upper)")
+      lamp_names_map["Steady Circular Green"] = "Steady Left Arrow Green"
+      lamp_names_map["Flashing Circular Red"] = "Flashing Left Arrow Red"
+      lamp_names_map["Flashing Circular Yellow"] = (
+        "Flashing Left Arrow Yellow (upper)")
+      lamp_names_map["Flashing Left Arrow Yellow"] = (
+        "Flashing Left Arrow Yellow (lower)")
+
+    case "B" | "D" | "F" | "H":
       lamp_names_map["Steady Circular Red"] = "Steady Circular Red"
       lamp_names_map["Steady Circular Yellow"] = "Steady Circular Yellow"
       lamp_names_map["Steady Circular Green"] = "Steady Circular Green"
@@ -761,32 +900,10 @@ for signal_face in signal_faces_list:
   sensor_map["Traffic Approaching"] = ("Traffic Approaching",)
   sensor_map["Traffic Present"] = ("Traffic Present",)
 
-  # Non-default mapping of traffic sensors
-  match signal_face["name"]:
-    case "A":
-      sensor_map["Traffic Approaching"] = ("Traffic Approaching",
-                                           "C/Traffic Approaching")
-      sensor_map["Traffic Present"] = ("Traffic Present", "C/Traffic Present")
-      
-    case "B":
-      sensor_map["Traffic Approaching"] = ("Traffic Approaching",
-                                           "D/Traffic Approaching")
-      sensor_map["Traffic Present"] = ("Traffic Present", "D/Traffic Present")
-      
-    case "C":
-      sensor_map["Traffic Approaching"] = ("Traffic Approaching",
-                                           "A/Traffic Approaching")
-      sensor_map["Traffic Present"] = ("Traffic Present", "A/Traffic Present")
-      
-    case "D":
-      sensor_map["Traffic Approaching"] = ("Traffic Approaching",
-                                           "D/Traffic Approaching")
-      sensor_map["Traffic Present"] = ("Traffic Present", "D/Traffic Present")
-
   # Flash command
   match signal_face["name"]:
       
-    case "A" | "B" | "C" | "D":
+    case "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H":
       sensor_map["Flash"] = ("Flash Red",)
 
   # Preempt command
@@ -795,25 +912,25 @@ for signal_face in signal_faces_list:
   # Preempt command with the direction the emergency vehicle is approaching
   # from.
   match signal_face["name"]:
-    case "D":
+    case "G" | "H":
       sensor_map["Preempt from West"] = ("Preempt Green",)
       sensor_map["Preempt from South"] = ("Preempt Red",)
       sensor_map["Preempt from East"] = ("Preempt Red",)
       sensor_map["Preempt from North"] = ("Preempt Red",)
 
-    case "A":
+    case "A" | "B":
       sensor_map["Preempt from West"] = ("Preempt Red",)
       sensor_map["Preempt from South"] = ("Preempt Green",)
       sensor_map["Preempt from East"] = ("Preempt Red",)
       sensor_map["Preempt from North"] = ("Preempt Red",)
 
-    case "B":
+    case "C" | "D":
       sensor_map["Preempt from West"] = ("Preempt Red",)
       sensor_map["Preempt from South"] = ("Preempt Red",)
       sensor_map["Preempt from East"] = ("Preempt Green",)
       sensor_map["Preempt from North"] = ("Preempt Red",)
 
-    case "C":
+    case "E" | "F":
       sensor_map["Preempt from West"] = ("Preempt Red",)
       sensor_map["Preempt from South"] = ("Preempt Red",)
       sensor_map["Preempt from East"] = ("Preempt Red",)
@@ -846,7 +963,7 @@ for signal_face in signal_faces_list:
         match signal_face["name"]:
           
           case "A":
-            sensor_offset = approach_sensor_long_distance
+            sensor_offset = approach_sensor_short_distance
             sensor["x min"] = lane_info[0] - (sensor_width / 2.0)
             sensor["y min"] = lane_info[1] + sensor_offset
             sensor["x max"] = lane_info[0] + (sensor_width / 2.0)
@@ -854,19 +971,47 @@ for signal_face in signal_faces_list:
             
           case "B":
             sensor_offset = approach_sensor_long_distance
+            sensor["x min"] = lane_info[0] - (sensor_width / 2.0)
+            sensor["y min"] = lane_info[1] + sensor_offset
+            sensor["x max"] = lane_info[0] + (sensor_width / 2.0)
+            sensor["y max"] = lane_info[1] + sensor_offset + sensor_length
+            
+          case "C":
+            sensor_offset = approach_sensor_short_distance
             sensor["x min"] = lane_info[0] + sensor_offset
             sensor["y min"] = lane_info[1] - (sensor_width / 2.0)
             sensor["x max"] = lane_info[0] + (sensor_offset + sensor_length)
             sensor["y max"] = lane_info[1] + (sensor_width / 2.0)
             
-          case "C":
+          case "D":
+            sensor_offset = approach_sensor_long_distance
+            sensor["x min"] = lane_info[0] + sensor_offset
+            sensor["y min"] = lane_info[1] - (sensor_width / 2.0)
+            sensor["x max"] = lane_info[0] + (sensor_offset + sensor_length)
+            sensor["y max"] = lane_info[1] + (sensor_width / 2.0)
+            
+          case "E":
+            sensor_offset = approach_sensor_short_distance
+            sensor["x min"] = lane_info[0] - (sensor_width / 2.0)
+            sensor["y min"] = lane_info[1] - sensor_offset - sensor_length
+            sensor["x max"] = lane_info[0] + (sensor_width / 2.0)
+            sensor["y max"] = lane_info[1] - sensor_offset
+            
+          case "F":
             sensor_offset = approach_sensor_long_distance
             sensor["x min"] = lane_info[0] - (sensor_width / 2.0)
             sensor["y min"] = lane_info[1] - sensor_offset - sensor_length
             sensor["x max"] = lane_info[0] + (sensor_width / 2.0)
             sensor["y max"] = lane_info[1] - sensor_offset
             
-          case "D":
+          case "G":
+            sensor_offset = approach_sensor_short_distance
+            sensor["x min"] = lane_info[0] - (sensor_offset + sensor_length)
+            sensor["y min"] = lane_info[1] - (sensor_width / 2.0)
+            sensor["x max"] = lane_info[0] - sensor_offset
+            sensor["y max"] = lane_info[1] + (sensor_width / 2.0)
+            
+          case "H":
             sensor_offset = approach_sensor_long_distance
             sensor["x min"] = lane_info[0] - (sensor_offset + sensor_length)
             sensor["y min"] = lane_info[1] - (sensor_width / 2.0)
@@ -877,25 +1022,25 @@ for signal_face in signal_faces_list:
         sensor_offset = 1
         match signal_face["name"]:
 
-          case "A":
+          case "A" | "B":
             sensor["x min"] = lane_info[0] - (sensor_width / 2.0)
             sensor["y min"] = lane_info[1] + sensor_offset
             sensor["x max"] = lane_info[0] + (sensor_width / 2.0)
             sensor["y max"] = lane_info[1] + (sensor_offset + sensor_length)
             
-          case "B":
+          case "C" | "D":
             sensor["x min"] = lane_info[0] + sensor_offset
             sensor["y min"] = lane_info[1] - (sensor_width / 2.0)
             sensor["x max"] = lane_info[0] + (sensor_offset + sensor_length)
             sensor["y max"] = lane_info[1] + (sensor_width / 2.0)
 
-          case "C":
+          case "E" | "F":
             sensor["x min"] = lane_info[0] - (sensor_width / 2.0)
             sensor["y min"] = lane_info[1] - (sensor_offset + sensor_length)
             sensor["x max"] = lane_info[0] + (sensor_width / 2.0)
             sensor["y max"] = lane_info[1] - sensor_offset
 
-          case "D":
+          case "G" | "H":
             sensor["x min"] = lane_info[0] - (sensor_offset + sensor_length)
             sensor["y min"] = lane_info[1] - (sensor_width / 2.0)
             sensor["x max"] = lane_info[0] - sensor_offset
@@ -926,15 +1071,37 @@ for signal_face in signal_faces_list:
 # Record the offsets of the signal faces relative to the top of the lane.
 
 def find_signal_face_offset (signal_face_name):
+  signal_height = lane_width * 1.5
+  signal_lamp_size = signal_height / 4
+  
   match signal_face_name:
     case "A":
-      return ((1.0 * lane_width), (0.5 * lane_width))
+      return (0, 0.5 * signal_lamp_size)
+
     case "B":
-      return (0.5 * lane_width, -(1.5 * lane_width))
+      signal_height = signal_height * 0.75
+      return (0, 0.5 * signal_lamp_size)
+    
     case "C":
-      return (-(1.0 * lane_width), - (1.5 * lane_width))
+      return (signal_lamp_size, -0.5 * lane_width)
+
     case "D":
-      return (-(0.5 * lane_width), (0.5 * lane_width))
+      signal_height = signal_height * 0.75
+      return (signal_lamp_size * 2.0, -0.5 * lane_width)
+    
+    case "E":
+      return (0, -signal_height)
+    
+    case "F":
+      signal_height = signal_height * 0.75
+      return (0, -signal_height)
+    
+    case "G":
+      return (-signal_lamp_size, -0.5 * lane_width)
+
+    case "H":
+      signal_height = signal_height * 0.75
+      return (-2.0 * signal_lamp_size, -0.5 * lane_width)
     
   return None
 
@@ -948,9 +1115,12 @@ for signal_face in signal_faces_list:
 # traffic element is.
 intersection_speed_limit = 25 * mph_to_fps
 def compute_speed_limit (lane_name, travel_path_name):
+  
   match lane_name:
-    case "1" | "A" | "2" | "B" | "3" | "C" | "4" | "D":
-      return (35 * mph_to_fps)
+    case "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | \
+         "1" | "2" | "3" | "4":
+      return (45.0 * mph_to_fps)
+    
     case "intersection":
       # If a vehicle is passing through the intersection without
       # having stopped, it need not slow down.
@@ -1008,12 +1178,16 @@ for lane_name in lane_names:
   lane_info ["width"] = lane_width
 
   match lane_name:
-    case "A" | "B" | "C" | "D":
+    case "A" | "C" | "E" | "G":
+      lane_info["root signal face image"] = "signal_llll"
+    case "B" | "D" | "F" | "H":
       lane_info["root signal face image"] = "signal_ccc"
       
   lanes_info [lane_name] = lane_info
 
 intersection_info ["lanes info"] = lanes_info
+
+intersection_info ["travel path smoothness"] = car_width / 6
 
 # Output the information about the intersection for the simulator.
 if (do_output):

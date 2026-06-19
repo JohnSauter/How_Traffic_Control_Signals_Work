@@ -4,7 +4,7 @@
 # define_traffic_control_signals.py defines the control logic for a traffic
 # signal using finite state machines.
 
-#   Copyright © 2025 by John Sauter <John_Sauter@systemeyescomputerstore.com>
+#   Copyright © 2026 by John Sauter <John_Sauter@systemeyescomputerstore.com>
 
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_traffic_control_signals 0.65 2025-12-25',
+                     version='define_traffic_control_signals 0.69 2026-06-07',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -594,7 +594,9 @@ red_state.append(substate)
 substate=dict()
 substate["name"] = "Going Green 2"
 substate["note"] = ("This lane has permission to turn green.  " +
-                    "Ask conflicting signal faces to turn red.")
+                    "Ask conflicting signal faces to turn red.  " +
+                    "If some conflicting paths are not clear " +
+                    "show a flashing left arrow instead of green.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 
@@ -789,9 +791,7 @@ green_state = list()
 
 substate = dict()
 substate["name"] = "No Traffic"
-substate["note"] = ("This lane shows the green lamp on its signal face.  " +
-                    "As long as there is no traffic at the intersection " +
-                    "the finite state machine stays in this substate.")
+substate["note"] = ("This lane shows the green lamp on its signal face.  ")
 substate["actions"] = list()
 actions_list = substate["actions"]
 action=("set lamp", "Steady Circular Green")

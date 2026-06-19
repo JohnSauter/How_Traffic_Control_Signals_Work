@@ -1,8 +1,8 @@
-# File: Makefile.am, author: John Sauter, date: December 21, 2025.
+# File: Makefile.am, author: John Sauter, date: May 24, 2026.
 #
 # Build traffic_control_signals.pdf and animations.
 
-#   Copyright © 2025 by John Sauter <John_Sauter@systemeyescomputerstore.com>
+#   Copyright © 2026 by John Sauter <John_Sauter@systemeyescomputerstore.com>
 
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -190,6 +190,7 @@ MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf signal_ccc.pdf signal_ccu.pdf signal_rrr.pdf \
 signal_cccl.pdf signal_llll.pdf background_01.png background_02.png \
 background_03.png \
+first_frame_01.png first_frame_02.png first_frame_03.png \
 bridge_one_car_animation_01.mkv bridge_one_car_table.tex \
 bridge_two_cars_animation_01.mkv bridge_two_cars_table.tex \
 four_corners_many_animation_02.mkv four_corners_many_table.tex \
@@ -245,6 +246,7 @@ MUTCD_Ped_Signal_-_Steady_hand.pdf \
 MUTCD_Ped_Signal_-_Walk.pdf signal_ccc.pdf signal_ccu.pdf signal_rrr.pdf \
 signal_cccl.pdf signal_llll.pdf background_01.png background_02.png \
 background_03.png \
+first_frame_01.png first_frame_02.png first_frame_03.png \
 bridge_one_car_animation_01.mkv bridge_one_car_table.tex \
 bridge_two_cars_animation_01.mkv bridge_two_cars_table.tex \
 four_corners_many_animation_02.mkv four_corners_many_table.tex \
@@ -499,13 +501,15 @@ pdf-local: traffic_control_signals.pdf
 .PHONEY: pdf-local
 
 # Include the PGP signature file in the repository.  Create it using
-# "make signature".
+# "make signature".  Include my public key.
 signature : ${PACKAGE}-${VERSION}.tar.gz.asc
 .PHONEY: signature
 
 ${PACKAGE}-${VERSION}.tar.gz.asc : ${PACKAGE}-${VERSION}.tar.gz
 	rm -f ${PACKAGE}-*.tar.gz.asc
 	gpg2 --detach-sign --armor ${PACKAGE}-${VERSION}.tar.gz
+
+EXTRA_DIST += John_Sauter_public_key.asc
 
 # Support make check and make distcheck
 dist_check_DATA = check_expected_output.txt left_turn_script.txt
@@ -559,21 +563,33 @@ left_turn_script.txt
 --table-caption "$(*F) events" --show-substates --explain-state-transitions \
 --last-event-time "${builddir}/last_event_time_$(*F)_animation.txt"
 
-# Create the background image for the animations.
+# Create the background and first frame images for the animations.
 background_01.png : draw_background.py one_way_bridge.json
 	python3 "${srcdir}/draw_background.py" \
 --intersection "${builddir}/one_way_bridge.json" \
 --background "${builddir}/background_01.png"
+
+first_frame_01.png : bridge_one_car_animation_01.pdf
+	cp -v "${builddir}/animation_bridge_one_car_temp/frame_000000.png" \
+"${builddir}/first_frame_01.png"
 
 background_02.png : draw_background.py four_corners.json
 	python3 "${srcdir}/draw_background.py" \
 --intersection "${builddir}/four_corners.json" \
 --background "${builddir}/background_02.png"
 
+first_frame_02.png : four_corners_many_animation_02.pdf
+	cp -v "${builddir}/animation_four_corners_many_temp/frame_000000.png" \
+"${builddir}/first_frame_02.png"
+
 background_03.png : draw_background.py complex_intersection.json
 	python3 "${srcdir}/draw_background.py" \
 --intersection "${builddir}/complex_intersection.json" \
 --background "${builddir}/background_03.png"
+
+first_frame_03.png : multiple_animation_03.pdf
+	cp -v "${builddir}/animation_multiple_temp/frame_000000.png" \
+"${builddir}/first_frame_03.png"
 
 # Render the animation as individual images.
 
@@ -619,7 +635,8 @@ MUTCD_Ped_Signal_-_Steady_hand.png MUTCD_Ped_Signal_-_Walk.png \
 car-38800411-right.png \
 car-38800411-up.png truck-51893967-up.png truck-51893967-right.png \
 man_walking_right.png
-	bash "${srcdir}/build_animation.sh" "${srcdir}/render_animation.sh" \
+	bash "${srcdir}/build_animation.sh" \
+"${srcdir}/render_animation.sh" \
 "${srcdir}/process_events.py" \
 "$<" "${builddir}/last_event_time_$(*F)_animation.txt" \
 "${builddir}/animation_$(*F)_temp" \
@@ -675,7 +692,8 @@ MUTCD_Ped_Signal_-_Steady_hand.png MUTCD_Ped_Signal_-_Walk.png \
 car-38800411-right.png \
 car-38800411-up.png truck-51893967-up.png truck-51893967-right.png \
 man_walking_right.png
-	bash "${srcdir}/build_animation.sh" "${srcdir}/render_animation.sh" \
+	bash "${srcdir}/build_animation.sh" \
+"${srcdir}/render_animation.sh" \
 "${srcdir}/process_events.py" \
 "$<" "${builddir}/last_event_time_$(*F)_animation.txt" \
 "${builddir}/animation_$(*F)_temp" \
@@ -731,7 +749,8 @@ MUTCD_Ped_Signal_-_Steady_hand.png MUTCD_Ped_Signal_-_Walk.png \
 car-38800411-right.png \
 car-38800411-up.png truck-51893967-up.png truck-51893967-right.png \
 man_walking_right.png
-	bash "${srcdir}/build_animation.sh" "${srcdir}/render_animation.sh" \
+	bash "${srcdir}/build_animation.sh" \
+"${srcdir}/render_animation.sh" \
 "${srcdir}/process_events.py" \
 "$<" "${builddir}/last_event_time_$(*F)_animation.txt" \
 "${builddir}/animation_$(*F)_temp" \
@@ -786,6 +805,7 @@ truck-51893967-up.png \
 pedestrian.png \
 man_walking_right.png \
 background_*.png \
+first_frame_*.png \
 *_table.tex \
 *_animation_*.csv \
 *_animation_*.mkv \

@@ -3,7 +3,7 @@
 #
 # smooth_travel_paths.py smooths the curved travel paths.
 
-#   Copyright © 2025 by John Sauter <John_Sauter@systemeyescomputerstore.com>
+#   Copyright © 2026 by John Sauter <John_Sauter@systemeyescomputerstore.com>
 
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ import argparse
 parser = argparse.ArgumentParser (
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=('Smooth the curved travel paths.'),
-  epilog=('Copyright © 2025 by John Sauter' + '\n' +
+  epilog=('Copyright © 2026 by John Sauter' + '\n' +
           'License GPL3+: GNU GPL version 3 or later; ' + '\n' +
           'see <http://gnu.org/licenses/gpl.html> for the full text ' +
           'of the license.' + '\n' +
@@ -50,7 +50,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='draw_background 0.62 2025-11-27',
+                     version='smooth_travel_paths 0.69 2026-05-24',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -61,6 +61,8 @@ parser.add_argument ('output-file', metavar='background_file',
                      help='write the intersection description to this file')
 parser.add_argument ('--parts', type=int, metavar='parts',
                      help='number of parts in each curve')
+parser.add_argument ('--smoothness', type=float, metavar='smoothness',
+                     help='how much to smooth the curve')
 parser.add_argument ('--verbose', type=int, metavar='verbosity_level',
                      help='control the amount of output from the program: ' +
                      '1 is normal, 0 suppresses summary messages')
@@ -114,10 +116,16 @@ if (do_trace):
   trace_file.write ("intersection info:\n")
   pprint.pprint (intersection_info, trace_file)
 
+# Get values from the intersection definition.
+# Override the smoothness if the value is on the command line.
+  
 lanes_info = intersection_info ["lanes info"]
 travel_paths = intersection_info ["travel paths"]
+smoothness = intersection_info ["travel path smoothness"]
+if (arguments ['smoothness'] != None):
+  smoothness = float(arguments ['smoothness'])
 
-def smooth_travel_path (the_milestones, num_parts):
+def smooth_travel_path (the_milestones, num_parts, smoothness):
   new_milestones = list()
   num_segments = len(the_milestones)
 
@@ -131,16 +139,31 @@ def smooth_travel_path (the_milestones, num_parts):
     x_values.append (the_milestone[1])
     y_values.append (the_milestone[2])
 
+  if (do_trace):
+    trace_file.write ("Smoothing travel path:\n")
+    pprint.pprint (the_milestones, trace_file)
+    trace_file.write ("\n")
+    
   (B_spline, u) = scipy.interpolate.make_splprep ((x_values, y_values),
-                                                  s= 0.1)
+                                                  s = smoothness)
+  if (do_trace):
+    trace_file.write ("Resulting B_spline:\n")
+    pprint.pprint (B_spline, trace_file)
+    trace_file.write ("\n")
+    
   # The B-spline is indexed by a value between 0 and 1, where 0
   # is the first point and 1 is the last.
   (new_x, new_y) = B_spline (0)
+  new_x = float(str(new_x))
+  new_y = float(str(new_y))
   new_milestones.append ((name_values[0], new_x, new_y))
 
+  if (do_trace):
+    trace_file.write ("First new milestone: " + name_values[0] + ", " +
+                      str(new_x) + ", " + str(new_y) + ".\n")
+    
   for seg_index in range(num_segments-1):
-    # Whenever the line between two milestones is not
-    # horizontal or vertical, add points using the B_spline
+    # Add points along the B-spline.
     this_milestone = the_milestones [seg_index]
     next_milestone = the_milestones [seg_index+1]
     this_name = this_milestone[0]
@@ -152,22 +175,56 @@ def smooth_travel_path (the_milestones, num_parts):
     this_u = u [seg_index]
     next_u = u [seg_index+1]
     delta_u = next_u - this_u
-    if ((this_x != next_x) and (this_y != next_y)):
+
+    if (do_trace):
+      trace_file.write ("Processing milestone " + str(seg_index) + ":\n")
+      pprint.pprint (this_milestone, trace_file)
+      trace_file.write ("to:\n")
+      pprint.pprint (next_milestone, trace_file)
+      trace_file.write ("this u: " + str(this_u) + ", next_u: " +
+                        str(next_u) + ", delta_u: " + str(delta_u) + ".\n")
+    # To keep vehicles in the roadway, only follow the spline curve
+    # between milestones while in the intersection.
+    if ((this_name == "intersection") and (next_name == "intersection")):
+
+      if (do_trace):
+        trace_file.write ("Dividing milestone into " + str(num_parts) +
+                          " parts.\n")
+        
       for u_index in range(1,num_parts):
         u_val = this_u + (u_index*(delta_u/num_parts))
         (new_x, new_y) = B_spline (u_val)
         new_milestones.append ((this_name, new_x, new_y))
+
+        if (do_trace):
+          trace_file.write ("Inserted milestone: " + this_name + ", " +
+                            str(new_x) + ", " + str(new_y) + ".\n")
+          
     (new_x, new_y) = B_spline (next_u)
     new_x = float(str(new_x))
     new_y = float(str(new_y))
     new_milestones.append ((next_name, new_x, new_y))
 
+    if (do_trace):
+      trace_file.write ("Added milestone: " + next_name + ", " +
+                        str(new_x) + ", " + str(new_y) + ".\n")
+
+  if (do_trace):
+    trace_file.write ("Resulting milestones:\n")
+    pprint.pprint (new_milestones, trace_file)
+    trace_file.write ("\n")
+    
   return (new_milestones)
 
 for travel_path_name in travel_paths:
   travel_path = travel_paths[travel_path_name]
+
+  if (do_trace):
+    trace_file.write ("Travel path:\n")
+    pprint.pprint (travel_path, trace_file)
+    
   the_milestones = travel_path ["milestones"]
-  new_milestones = smooth_travel_path (the_milestones, num_parts)
+  new_milestones = smooth_travel_path (the_milestones, num_parts, smoothness)
   travel_path ["milestones"] = new_milestones
   
 # Output the information about the intersection for the simulator.
@@ -175,7 +232,6 @@ if (do_output):
     output_file = open (output_file_name, 'w')
     json.dump (intersection_info, output_file, indent = " ")
     output_file.close()
-  
 
 if (do_trace):
   trace_file.close()

@@ -3,7 +3,7 @@
 #
 # define_one_way_bridge.py defines a one-way bridge for the traffic simulator.
 
-#   Copyright © 2025 by John Sauter <John_Sauter@systemeyescomputerstore.com>
+#   Copyright © 2026 by John Sauter <John_Sauter@systemeyescomputerstore.com>
 
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_one_way_bridge 0.65 2025-12-20',
+                     version='define_one_way_bridge 0.69 2026-06-13',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -68,7 +68,7 @@ do_input = False
 input_file_name = ""
 do_output = False
 output_file_name = ""
-waiting_limit = 60
+waiting_limit = "60.000"
 verbosity_level = 1
 error_counter = 0
 
@@ -134,7 +134,7 @@ for signal_face_name in signal_face_names:
   timer_full_name = signal_face_name + "/" + "Red Clearance"
   timer_durations[timer_full_name] = ("10.000",)
   timer_full_name = signal_face_name + "/" + "Green Limit"
-  timer_durations[timer_full_name] = ("60.0",)
+  timer_durations[timer_full_name] = ("60.000",)
   timer_full_name = signal_face_name + "/" + "Yellow Change"
   timer_durations[timer_full_name] = ("5.000",)
   timer_full_name = signal_face_name + "/" + "Green Delay Approaching"
@@ -227,7 +227,7 @@ for signal_face in signal_faces_list:
 for signal_face in signal_faces_list:
   match signal_face["name"]:
     case "A" | "B":
-      signal_face["waiting limit"] = waiting_limit
+      signal_face["waiting limit"] = float(waiting_limit)
 
 # Construct the travel paths.  A traffic element appears at the first
 # milestone, then proceeds to each following milestone.  When it reaches
@@ -374,6 +374,8 @@ for entry_lane_name in ("A", "B"):
           ("intersection", entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x + car_length,
            entry_intersection_y - (0.5 * lane_width)),
+          ("intersection", 0.5 * (entry_intersection_x + exit_intersection_x),
+           entry_intersection_y - (0.5 * lane_width)),
           ("intersection", exit_intersection_x - car_length,
            exit_intersection_y - (0.5 * lane_width)),
           ("intersection", exit_intersection_x, exit_intersection_y),
@@ -407,6 +409,8 @@ for entry_lane_name in ("A", "B"):
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x - car_length,
+           entry_intersection_y + (0.5 * lane_width)),
+          ("intersection", 0.5 * (entry_intersection_x + exit_intersection_x),
            entry_intersection_y + (0.5 * lane_width)),
           ("intersection", exit_intersection_x + car_length,
            exit_intersection_y + (0.5 * lane_width)),
@@ -653,6 +657,8 @@ for lane_name in lane_names:
   lanes_info [lane_name] = lane_info
 
 intersection_info ["lanes info"] = lanes_info
+
+intersection_info ["travel path smoothness"] = car_width / 60
 
 if (do_trace):
   trace_file.write ("Intersection info::\n")
