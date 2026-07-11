@@ -47,7 +47,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_complex_intersection 0.69 2026-06-13',
+                     version='define_complex_intersection 0.70 2026-06-21',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -661,12 +661,8 @@ for entry_lane_name in ("A", "psw", "pse", "B", "C", "D", "E", "pnw", "pne",
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
-          ("intersection", entry_intersection_x,
-           entry_intersection_y - (car_length)),
           ("intersection", (entry_intersection_x + exit_intersection_x)/2.0,
            entry_intersection_y - (2.0 * car_length)),
-          ("intersection", exit_intersection_x,
-           exit_intersection_y - car_length),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))

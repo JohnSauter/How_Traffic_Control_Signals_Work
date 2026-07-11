@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# File: Makefile.am, author: John Sauter, date: May 24, 2026.
+# File: Makefile.am, author: John Sauter, date: June 28, 2026.
 #
 # Build traffic_control_signals.pdf and animations.
 
@@ -1417,7 +1417,7 @@ idle_01_table.tex : simulate_traffic.py one_way_bridge.json
 idle_03_table.tex : simulate_traffic.py complex_intersection.json
 	python3 "${srcdir}/simulate_traffic.py" \
 --intersection "${builddir}/complex_intersection.json" --clock-step 0.001 \
---explain-state-transitions --show-substates \
+--explain-state-transitions --show-substates --show-green-lists \
 --table-level 4 --table-file "${builddir}/idle_03_table.tex" --duration 200  \
 --table-caption "Power On to Idle Condition, example 03"
 
@@ -1467,7 +1467,7 @@ left_turn_delayed_script.txt
 --last-event-time \
 "${builddir}/last_event_time_left_turn_delayed_animation.txt" \
 --duration 400 --table-start 199 --explain-state-transitions --show-substates \
---script "${srcdir}/left_turn_delayed_script.txt" \
+--show-green-lists --script "${srcdir}/left_turn_delayed_script.txt" \
 --table-caption "Left Turn Delayed"
 
 left_turn_table.tex left_turn_animation_03.csv &: \
@@ -1480,7 +1480,7 @@ left_turn_script.txt
 --last-event-time \
 "${builddir}/last_event_time_left_turn_animation.txt" \
 --duration 400 --table-start 199 --explain-state-transitions --show-substates \
---script "${srcdir}/left_turn_script.txt" \
+--show-green-lists --script "${srcdir}/left_turn_script.txt" \
 --table-caption "Left Turn"
 
 pedestrian_table.tex pedestrian_animation_03.csv &: simulate_traffic.py \
@@ -1491,6 +1491,7 @@ complex_intersection.json pedestrian_script.txt
 --events-file "$(builddir)/pedestrian_animation_03.csv" \
 --last-event-time "${builddir}/last_event_time_pedestrian_animation.txt" \
 --clock-step 0.001 --explain-state-transitions --show-substates \
+--show-green-lists \
 --table-start 199 --script "${srcdir}/pedestrian_script.txt" \
 --table-caption "Pedestrian Crosses"
 
@@ -1504,6 +1505,7 @@ complex_intersection.json pedestrian_and_left_turn_script.txt
 --last-event-time \
 "${builddir}/last_event_time_pedestrian_and_left_turn_animation.txt" \
 --clock-step 0.001 --explain-state-transitions --show-substates \
+--show-green-lists \
 --table-start 199 --script "${srcdir}/pedestrian_and_left_turn_script.txt" \
 --table-caption "Pedestrian then Left Turn"
 
@@ -1512,7 +1514,7 @@ complex_intersection.json multiple_script.txt
 	python3 "${srcdir}/simulate_traffic.py" \
 --intersection "${builddir}/complex_intersection.json" \
 --table-level 2 --clock-step 0.001 \
---explain-state-transitions --show-substates \
+--explain-state-transitions --show-substates --show-green-lists \
 --events-file "$(builddir)/multiple_animation_03.csv" \
 --last-event-time "${builddir}/last_event_time_multiple_animation.txt" \
 --table-file "${builddir}/multiple_table.tex" --duration 400 \
@@ -1569,6 +1571,7 @@ left_turn_script.txt
 --script "$<" --duration 1200 --events-file "$@" --flush-table-file \
 --table-level 4 --table-file "${builddir}/$(*F)_table.tex"  \
 --table-caption "$(*F) events" --show-substates --explain-state-transitions \
+--show-green-lists \
 --last-event-time "${builddir}/last_event_time_$(*F)_animation.txt"
 
 %_animation_02.csv : %_script.txt simulate_traffic.py four_corners.json
@@ -1577,6 +1580,7 @@ left_turn_script.txt
 --script "$<" --duration 1200 --events-file "$@" --flush-table-file \
 --table-level 4 --table-file "${builddir}/$(*F)_table.tex"  \
 --table-caption "$(*F) events" --show-substates --explain-state-transitions \
+--show-green-lists \
 --last-event-time "${builddir}/last_event_time_$(*F)_animation.txt"
 
 %_animation_03.csv : %_script.txt simulate_traffic.py complex_intersection.json
@@ -1585,6 +1589,7 @@ left_turn_script.txt
 --script "$<" --duration 1200 --events-file "$@" --flush-table-file \
 --table-level 4 --table-file "${builddir}/$(*F)_table.tex"  \
 --table-caption "$(*F) events" --show-substates --explain-state-transitions \
+--show-green-lists \
 --last-event-time "${builddir}/last_event_time_$(*F)_animation.txt"
 
 # Create the background and first frame images for the animations.

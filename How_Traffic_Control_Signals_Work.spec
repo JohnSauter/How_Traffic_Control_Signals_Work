@@ -1,5 +1,5 @@
 Name:           How_Traffic_Control_Signals_Work
-Version:        0.69
+Version:        0.70
 Release:        1%{?dist}
 Summary:        Explain traffic control signals
 
@@ -25,7 +25,7 @@ BuildRequires: sil-andika-fonts
 BuildRequires: sil-charis-fonts
 BuildRequires: liberation-mono-fonts
 BuildRequires: parallel
-BuildRequires: ffmpeg-free
+BuildRequires: ffmpeg
 
 %description
 Explain how traffic control signals work using finite state machines
@@ -62,6 +62,8 @@ make check VERBOSE=1
 %license COPYING
 
 %changelog
+ * Sat Jun 27 2026 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.70-1 improve explanations
  * Sun Apr 26 2026 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.69-1 continue work on improving the four corners scenario
  * Sun Apr 19 2026 John Sauter <John_Sauter@systemeyescomputerstore.com>

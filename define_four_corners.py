@@ -47,7 +47,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_four_corners 0.69 2026-06-13',
+                     version='define_four_corners 0.70 2026-07-04',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -304,9 +304,10 @@ truck_width = 8
 approach_sensor_long_distance = 150
 approach_sensor_short_distance = car_length * 3.0
 long_lane_length = 528
-short_lane_length = approach_sensor_short_distance + (1.5 * car_length)
+short_lane_length = approach_sensor_short_distance + car_length
 lane_width = 12
 crosswalk_width = 6
+intersection_width = 5.0 * lane_width
 
 # Subroutine to find the top and bottom of a lane.
 # The top is the place where traffic elements stop if they cannot
@@ -327,74 +328,74 @@ def find_lane_info (lane_name):
 
   match lane_name:
     case "1":
-      top_x = center_x - (0.5 * lane_width)
-      top_y = center_y + (2.0 * lane_width)
+      top_x = center_x - lane_width
+      top_y = center_y + (0.5 * intersection_width)
       bottom_x = top_x
       bottom_y = top_y + long_lane_length
       
     case "A":
-      top_x = center_x + (0.5 * lane_width)
-      top_y = center_y + (2.0 * lane_width)
+      top_x = center_x
+      top_y = center_y + (0.5 * intersection_width)
       bottom_x = top_x
       bottom_y = top_y + short_lane_length
             
     case "B":
-      top_x = center_x + (1.5 * lane_width)
-      top_y = center_y + (2.0 * lane_width)
+      top_x = center_x + lane_width
+      top_y = center_y + (0.5 * intersection_width)
       bottom_x = top_x
       bottom_y = top_y + long_lane_length
       
     case "2":
-      top_x = center_x + (2.0 * lane_width)
-      top_y = center_y + (0.5 * lane_width)
+      top_x = center_x + (0.5 * intersection_width)
+      top_y = center_y + lane_width
       bottom_x = top_x + long_lane_length
       bottom_y = top_y
       
     case "C":
-      top_x = center_x + (2.0 * lane_width)
-      top_y = center_y - (0.5 * lane_width)
+      top_x = center_x + (0.5 * intersection_width)
+      top_y = center_y
       bottom_x = top_x + short_lane_length
       bottom_y = top_y
             
     case "D":
-      top_x = center_x + (2.0 * lane_width)
-      top_y = center_y - (1.5 * lane_width)
+      top_x = center_x + (0.5 * intersection_width)
+      top_y = center_y - lane_width
       bottom_x = top_x + long_lane_length
       bottom_y = top_y
             
     case "3":
-      top_x = center_x + (1.5 * lane_width)
-      top_y = center_y - (2.0 * lane_width)
+      top_x = center_x + lane_width
+      top_y = center_y - (0.5 * intersection_width)
       bottom_x = top_x
       bottom_y = top_y - long_lane_length
             
     case "E":
-      top_x = center_x + (0.5 * lane_width)
-      top_y = center_y - (2.0 * lane_width)
+      top_x = center_x
+      top_y = center_y - (0.5 * intersection_width)
       bottom_x = top_x
       bottom_y = top_y - short_lane_length
             
     case "F":
-      top_x = center_x - (0.5 * lane_width)
-      top_y = center_y - (2.0 * lane_width)
+      top_x = center_x - lane_width
+      top_y = center_y - (0.5 * intersection_width)
       bottom_x = top_x
       bottom_y = top_y - long_lane_length
             
     case "4":
-      top_x = center_x - (2.0 * lane_width)
-      top_y = center_y - (1.5 * lane_width)
+      top_x = center_x - (0.5 * intersection_width)
+      top_y = center_y - lane_width
       bottom_x = top_x - long_lane_length
       bottom_y = top_y
             
     case "G":
-      top_x = center_x - (2.0 * lane_width)
-      top_y = center_y - (0.5 * lane_width)
+      top_x = center_x - (0.5 * intersection_width)
+      top_y = center_y
       bottom_x = top_x - short_lane_length
       bottom_y = top_y
       
     case "H":
-      top_x = center_x - (2.0 * lane_width)
-      top_y = center_y + (0.5 * lane_width)
+      top_x = center_x - (0.5 * intersection_width)
+      top_y = center_y + lane_width
       bottom_x = top_x - long_lane_length
       bottom_y = top_y
       
@@ -503,17 +504,19 @@ for entry_lane_name in ("A", "B", "C", "D", "E", "F", "G", "H"):
 
         milestones = (
           (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
-          (adjacent_lane_name, adjacent_start_x, entry_start_y),
+          (adjacent_lane_name, adjacent_start_x, entry_start_y + car_length),
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", (entry_intersection_x + exit_intersection_x) / 2.0,
+           entry_intersection_y - car_length),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
         permissive_turn_shape = (
           exit_intersection_x - (0.5 * lane_width),
-          exit_intersection_y - (3 * lane_width) - permissive_distance,
+          exit_intersection_y - intersection_width - permissive_distance,
           exit_intersection_x + (0.5 * lane_width),
           exit_intersection_y)
 
@@ -529,7 +532,7 @@ for entry_lane_name in ("A", "B", "C", "D", "E", "F", "G", "H"):
 
         milestones = (
           (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
-          (adjacent_lane_name, adjacent_start_x, entry_start_y),
+          (adjacent_lane_name, adjacent_start_x, entry_start_y + car_length),
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
@@ -538,8 +541,8 @@ for entry_lane_name in ("A", "B", "C", "D", "E", "F", "G", "H"):
           (exit_lane_name, exit_end_x, exit_end_y))
 
         permissive_turn_shape = (
-          entry_intersection_x - (2.5 * lane_width),
-          entry_intersection_y - (3 * lane_width) - permissive_distance,
+          entry_intersection_x - (1.5 * lane_width),
+          entry_intersection_y - intersection_width - permissive_distance,
           entry_intersection_x - (0.5 * lane_width), entry_intersection_y)
         
         permissive_turn_info = (("moving South", intersection_shape),
@@ -555,15 +558,17 @@ for entry_lane_name in ("A", "B", "C", "D", "E", "F", "G", "H"):
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", (entry_intersection_x + exit_intersection_x) / 2.0,
+           entry_intersection_y - car_length),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
         permissive_turn_shape = (
-          entry_intersection_x - (lane_width / 2),
+          exit_intersection_x - intersection_width - permissive_distance,
           exit_intersection_y - (lane_width / 2),
-          exit_intersection_x + (lane_width * 2),
-          entry_intersection_y + (lane_width / 2))
+          exit_intersection_x,
+          exit_intersection_y + (lane_width / 2))
                                                        
         permissive_turn_info = (("moving East", intersection_shape),
                                 ("present", permissive_turn_shape))
@@ -590,18 +595,20 @@ for entry_lane_name in ("A", "B", "C", "D", "E", "F", "G", "H"):
 
         milestones = (
           (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
-          (adjacent_lane_name, entry_start_x, adjacent_start_y),
+          (adjacent_lane_name, entry_start_x + car_length, adjacent_start_y),
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x - car_length,
+           (entry_intersection_y + exit_intersection_y) / 2.0),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
         
         permissive_turn_shape = (
-          entry_intersection_x - (4.0 * lane_width) - permissive_distance,
-          entry_intersection_y - (2.5 * lane_width),
-          entry_intersection_x, entry_intersection_y + (0.5 * lane_width))
+          exit_intersection_x - intersection_width - permissive_distance,
+          exit_intersection_y - (0.5 * lane_width),
+          exit_intersection_x, exit_intersection_y + (0.5 * lane_width))
         
         permissive_turn_info = (("moving East", intersection_shape),
                                 ("present", permissive_turn_shape))
@@ -616,17 +623,19 @@ for entry_lane_name in ("A", "B", "C", "D", "E", "F", "G", "H"):
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x - car_length,
+           (entry_intersection_y + exit_intersection_y) / 2.0),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
         permissive_turn_shape = (
           exit_intersection_x - (lane_width / 2),
-          exit_intersection_y - (lane_width * 2),
+          exit_intersection_y,
           exit_intersection_x + (lane_width / 2),
-          entry_intersection_y + (2.0 * lane_width) + permissive_distance)
+          exit_intersection_y + intersection_width + permissive_distance)
                                                        
-        permissive_turn_info = (("moving East", intersection_shape),
+        permissive_turn_info = (("moving North", intersection_shape),
                                 ("present", permissive_turn_shape))
         permissive_colors = ("Steady Circular Red", "Steady Circular Yellow")
         green_colors = ("Steady Circular Green",)
@@ -637,7 +646,7 @@ for entry_lane_name in ("A", "B", "C", "D", "E", "F", "G", "H"):
 
         milestones = (
           (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
-          (adjacent_lane_name, entry_start_x, adjacent_start_y),
+          (adjacent_lane_name, entry_start_x + car_length, adjacent_start_y),
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
@@ -646,11 +655,11 @@ for entry_lane_name in ("A", "B", "C", "D", "E", "F", "G", "H"):
           (exit_lane_name, exit_end_x, exit_end_y))
 
         permissive_turn_shape = (
-          entry_intersection_x - (4.0 * lane_width) - permissive_distance,
-          entry_intersection_y - (2.5 * lane_width),
+          entry_intersection_x - intersection_width - permissive_distance,
+          entry_intersection_y - (0.5 * lane_width),
           entry_intersection_x, entry_intersection_y + (0.5 * lane_width))
-        
-        permissive_turn_info = (("moving West", intersection_shape),
+                
+        permissive_turn_info = (("moving East", intersection_shape),
                                 ("present", permissive_turn_shape))
         permissive_colors = ("Flashing Left Arrow Yellow (lower)",)
         green_colors = ("Steady Left Arrow Green",)
@@ -675,7 +684,7 @@ for entry_lane_name in ("A", "B", "C", "D", "E", "F", "G", "H"):
 
         milestones = (
           (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
-          (adjacent_lane_name, adjacent_start_x, entry_start_y),
+          (adjacent_lane_name, adjacent_start_x, entry_start_y - car_length),
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
@@ -684,11 +693,13 @@ for entry_lane_name in ("A", "B", "C", "D", "E", "F", "G", "H"):
           (exit_lane_name, exit_end_x, exit_end_y))
 
         permissive_turn_shape = (
-          entry_intersection_x + (0.5 * lane_width), entry_intersection_y,
-          entry_intersection_x + (2.5 * lane_width),
-          entry_intersection_y + (3.0 * lane_width) + permissive_distance)
-
-        permissive_turn_info = (("present", permissive_turn_shape),)
+          entry_intersection_x + (0.5 * lane_width),
+          entry_intersection_y,
+          entry_intersection_x + (1.5 * lane_width),
+          entry_intersection_y + intersection_width + permissive_distance)
+        
+        permissive_turn_info = (("moving North", intersection_shape),
+                                ("present", permissive_turn_shape))
         permissive_colors = ("Flashing Left Arrow Yellow (lower)",)
         green_colors = ("Steady Left Arrow Green",)
 
@@ -698,20 +709,23 @@ for entry_lane_name in ("A", "B", "C", "D", "E", "F", "G", "H"):
 
         milestones = (
           (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
-          (adjacent_lane_name, adjacent_start_x, entry_start_y),
+          (adjacent_lane_name, adjacent_start_x, entry_start_y - car_length),
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", (entry_intersection_x + exit_intersection_x) / 2.0,
+           entry_intersection_y + car_length),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
         permissive_turn_shape = (
-          entry_intersection_x + (0.5 * lane_width), entry_intersection_y,
-          entry_intersection_x + (2.5 * lane_width),
-          entry_intersection_y + (3.0 * lane_width) + permissive_distance)
+          exit_intersection_x - (0.5 * lane_width), exit_intersection_y,
+          exit_intersection_x + (0.5 * lane_width),
+          exit_intersection_y + intersection_width + permissive_distance)
 
-        permissive_turn_info = (("present", permissive_turn_shape),)
+        permissive_turn_info = (("moving North", intersection_shape),
+                                ("present", permissive_turn_shape))
         permissive_colors = ("Flashing Left Arrow Yellow (lower)",)
         green_colors = ("Steady Left Arrow Green",)
 
@@ -737,15 +751,17 @@ for entry_lane_name in ("A", "B", "C", "D", "E", "F", "G", "H"):
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", (entry_intersection_x + exit_intersection_x) / 2.0,
+           entry_intersection_y + car_length),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
         permissive_turn_shape = (
-          entry_intersection_x - (lane_width / 2),
+          exit_intersection_x,
           exit_intersection_y - (lane_width / 2),
-          exit_intersection_x + (lane_width * 2),
-          entry_intersection_y + (lane_width / 2))
+          exit_intersection_x + intersection_width + permissive_distance,
+          exit_intersection_y + (lane_width / 2))
                                                        
         permissive_turn_info = (("moving West", intersection_shape),
                                 ("present", permissive_turn_shape))
@@ -758,7 +774,7 @@ for entry_lane_name in ("A", "B", "C", "D", "E", "F", "G", "H"):
 
         milestones = (
           (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
-          (adjacent_lane_name, entry_start_x, adjacent_start_y),
+          (adjacent_lane_name, entry_start_x - car_length, adjacent_start_y),
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
@@ -767,11 +783,12 @@ for entry_lane_name in ("A", "B", "C", "D", "E", "F", "G", "H"):
           (exit_lane_name, exit_end_x, exit_end_y))
 
         permissive_turn_shape = (
-          entry_intersection_x + (4.0 * lane_width) + permissive_distance,
-          entry_intersection_y - (2.5 * lane_width),
-          entry_intersection_x, entry_intersection_y + (0.5 * lane_width))
+          entry_intersection_x,
+          entry_intersection_y - (1.5 * lane_width),
+          entry_intersection_x + intersection_width + permissive_distance,
+          entry_intersection_y - (0.5 * lane_width))
         
-        permissive_turn_info = (("moving East", intersection_shape),
+        permissive_turn_info = (("moving West", intersection_shape),
                                 ("present", permissive_turn_shape))
         permissive_colors = ("Flashing Left Arrow Yellow (lower)",)
         green_colors = ("Steady Left Arrow Green",)
@@ -782,18 +799,21 @@ for entry_lane_name in ("A", "B", "C", "D", "E", "F", "G", "H"):
 
         milestones = (
           (adjacent_lane_name, adjacent_start_x, adjacent_start_y),
-          (adjacent_lane_name, entry_start_x, adjacent_start_y),
+          (adjacent_lane_name, entry_start_x - car_length, adjacent_start_y),
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x + car_length,
+           (entry_intersection_y + exit_intersection_y) / 2.0),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
         
         permissive_turn_shape = (
-          entry_intersection_x + (4.0 * lane_width) + permissive_distance,
-          entry_intersection_y - (2.5 * lane_width),
-          entry_intersection_x, entry_intersection_y + (0.5 * lane_width))
+          entry_intersection_x,
+          entry_intersection_y - (1.5 * lane_width),
+          entry_intersection_x + intersection_width + permissive_distance,
+          entry_intersection_y - (0.5 * lane_width))
         
         permissive_turn_info = (("moving East", intersection_shape),
                                 ("present", permissive_turn_shape))
@@ -808,17 +828,18 @@ for entry_lane_name in ("A", "B", "C", "D", "E", "F", "G", "H"):
           (entry_lane_name, entry_start_x, entry_start_y),
           (entry_lane_name, entry_intersection_x, entry_intersection_y),
           ("intersection", entry_intersection_x, entry_intersection_y),
+          ("intersection", entry_intersection_x + car_length,
+           (entry_intersection_y + exit_intersection_y) / 2.0),
           ("intersection", exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_intersection_x, exit_intersection_y),
           (exit_lane_name, exit_end_x, exit_end_y))
 
         permissive_turn_shape = (
-          exit_intersection_x + (lane_width / 2),
-          exit_intersection_y - (lane_width * 2),
           exit_intersection_x - (lane_width / 2),
-          entry_intersection_y + (2.0 * lane_width) + permissive_distance)
+          exit_intersection_y - intersection_width - permissive_distance,
+          exit_intersection_x + (lane_width / 2), exit_intersection_y)
                                                        
-        permissive_turn_info = (("moving West", intersection_shape),
+        permissive_turn_info = (("moving South", intersection_shape),
                                 ("present", permissive_turn_shape))
         permissive_colors = ("Steady Circular Red", "Steady Circular Yellow")
         green_colors = ("Steady Circular Green",)

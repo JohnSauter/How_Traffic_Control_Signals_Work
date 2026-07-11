@@ -1,5 +1,5 @@
 % File: traffic_control_signals.tex, author: John Sauter,
-% date: June 13, 2026.
+% date: July 7, 2026
 
 % Copyright © 2026 by John Sauter.
 % Licensed under the Creative Commons Attribution-ShareAlike 4.0 International
@@ -196,12 +196,12 @@
   pdfcontacturl={https://www.systemeyescomputerstore.com},
   pdfcopyright={Copyright {\copyright} 2026 by John Sauter},
   pdfurl={https://www.systemeyescomputerstore.com/How\%5FTraffic\%5FControl\%5FSignals\%5fWork/traffic\%5Fcontrol\%5Fsignals.pdf},
-  pdfdate={2026-06-13},
+  pdfdate={2026-07-07},
   pdflicenseurl={https://creativecommons.org/licenses/by-sa/4.0},
   pdfmetalang={en-US}
 }
 
-\date{2026-06-13}
+\date{2026-07-07}
 \maketitle
 \begin{abstract}
   Traffic control signals allow vehicles and pedestrians to move through
@@ -1600,7 +1600,8 @@ of each running timer, and the condiiton of each toggle.
 \subsubsection{Manual}
 
 With the mode switch set to Manual, the traffic control signal is
-not responsive to the sensors.  The operator has
+controlled by the operator, who will usually be a traffic control officer.
+The operator has
 a 3-position switch on the display of each lane to cause that lane to turn red
 or green.  The Red position sets the Manual
 Red sensor, the green position sets the Manual Green sensor, and
@@ -1613,7 +1614,7 @@ the operator can choose to also see the state and substate of each
 finite state machine, the condition of each timer, the time until completion
 of each running timer, and the condition of each toggle.
 
-In this mode the operator must manually turn each signal face
+In this mode the operator is expected to manually turn each signal face
 red and green using his 3-position switches.  Setting all of the switches
 to neutral is equivalnet to automatic mode.
 
@@ -1639,7 +1640,7 @@ machine is set, causing each finite state machine to turn its signal face
 red or yellow as quickly as possible consistent with safety, and then flash
 its signal face either red or yellow.
 
-If the traffic control signal detects an malfunction within itself
+If the traffic control signal detects a malfunction within itself
 it switches itself to Flashing mode.
 In addition, if the computer in the traffic
 control signal fails there is hardware in the traffic control signal
@@ -1668,7 +1669,7 @@ directed by the central controller.
 
 The algorithm used by the central controller is beyond the scope of this
 description, but from the point of view of an individual intersection
-the central controller will use the Manual Green toggle to clear paths
+the central controller will use the Manual Green sensor to clear paths
 through several intersections so that traffic can flow freely in the
 chosen directions.
 

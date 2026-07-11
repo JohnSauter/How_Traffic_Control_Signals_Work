@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='simulate_traffic 0.68 2026-04-20',
+                     version='simulate_traffic 0.70 2026-07-03',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -93,6 +93,8 @@ parser.add_argument ('--only-important', action='store_true',
                      help='Only log important toggles and timers')
 parser.add_argument ('--show-substates', action='store_true',
                      help='show substates in the table')
+parser.add_argument ('--show-green-lists', action='store_true',
+                     help='show the green lists in the table')
 parser.add_argument ('--verbose', type=int, metavar='verbosity_level',
                      help='control the amount of output from the program: ' +
                      '1 is normal, 0 suppresses summary messages')
@@ -119,6 +121,7 @@ explain_state_transitions = False
 flush_table_file = False
 only_important = False
 show_substates = False
+show_green_lists = False
 verbosity_level = 1
 error_counter = 0
 
@@ -200,6 +203,9 @@ if (arguments ['only_important'] != None):
 
 if (arguments ['show_substates'] != None):
   show_substates = arguments ['show_substates']
+
+if (arguments ['show_green_lists'] != None):
+  show_green_lists = arguments ['show_green_lists']
 
 if (arguments ['verbose'] != None):
   verbosity_level = int(arguments ['verbose'])
@@ -341,7 +347,7 @@ def format_time_N(the_time):
   previous_time = the_time
   return (format_time (the_time))
 
-# Format a duration for display as LaTeX.
+# Format a duration in seconds for display using LaTeX.
 def remove_exponent(d):
   return (d.quantize(decimal.Decimal(1)) if d == d.to_integral() \
           else d.normalize())
@@ -483,19 +489,34 @@ def set_toggle_value (signal_face, toggle_name, new_value, source):
   return
 
 # Return True if traffic can not be permitted to flow through the specified
-# signal face because traffic is already flowing through the specified
+# signal face if traffic is already allowed to flow through the specified
 # conflicting signal face.
 def does_conflict (signal_face, conflicting_signal_face):
   conflict_set = signal_face["conflicts"]
   if (conflicting_signal_face ["name"] in conflict_set):
     if (verbosity_level >= 5):
-      print (format_time(current_time) + " signal face " +
+      print (format_time(current_time) + " lane " +
              signal_face["name"] + " conflicts with " +
              conflicting_signal_face ["name"] + ".")
+    if (do_trace):
+      trace_file.write ("Lane " + signal_face ["name"] +
+                        " conflicts with lane " +
+                        conflicting_signal_face["name"] + ".\n")
+      pprint.pprint (conflict_set, trace_file)
+      trace_file.write ("\n")
+
     return True
+  
   if (verbosity_level >= 5):
     print (format_time(current_time) + " signal face " + signal_face["name"] +
            " does not conflict with " + conflicting_signal_face ["name"] + ".")
+  if (do_trace):
+    trace_file.write ("Lane " + signal_face ["name"] +
+                      " does not conflct with lane " +
+                      conflicting_signal_face["name"] + ".\n")
+    pprint.pprint (conflict_set, trace_file)
+    trace_file.write ("\n")
+    
   return False
 
 # Allow signal faces to turn green in the order they requested, but
@@ -508,12 +529,52 @@ requesting_green = list()
 allowed_green = list()
 had_its_chance = list()
 
+# Format one of the above lists for display, if requested.
+def format_list (the_list, list_name, extra_text):
+  if (not show_green_lists):
+    return ("")
+  
+  if (len(the_list) == 0):
+    return (list_name + " is empty.")
+  
+  if (len(the_list) == 1):
+    list_element = the_list[0]
+    return (list_name + extra_text + list_element["name"] + ". ")
+  
+  if (len(the_list) == 2):
+    list_element_1 = the_list[0]
+    list_element_2 = the_list[1]
+    return (list_name + extra_text + list_element_1["name"] + " and " +
+            list_element_2["name"] + ". ")
+  
+  the_elements = list()
+  the_elements.append (list_name + extra_text)
+  for list_element in the_list:
+    the_elements.append (list_element["name"] + ", ")
+  last_element = the_elements.pop()
+  last_element = last_element[0:-2]
+  last_element = "and " + last_element + ". "
+  the_elements.append(last_element)
+  return ("".join(the_elements))
+
+def format_lists():
+  string_01 = format_list (requesting_green, "List Requesting Green",
+                           " contains ")
+  string_02 = format_list (allowed_green, "List Requesting Clearance",
+                           " contains ")
+  string_03 = format_list (had_its_chance, "List Turned Green Early",
+                           " contains ")
+  return (string_01 + " " + string_02 + " " + string_03)
+
 def green_request_granted():
   global requesting_green
   global allowed_green
   global had_its_chance
   global no_activity
 
+  if (do_trace):
+    trace_file.write ("Starting Green Request Granted system program.\n")
+    
   # If a signal face is on the requesting green list, but is no longer
   # requesting green, remove it from the list.  This usually happens
   # because the signal face has turned green, but can also happen
@@ -525,11 +586,19 @@ def green_request_granted():
     if (not toggle_value(signal_face, "Request Green")):
       if (verbosity_level >= 4):
         print (format_time(current_time) + " signal face " +
-               signal_face["name"] + " no longer requesting green.")
+               signal_face["name"] + " is no longer requesting green.")
       to_remove.append(signal_face)
   for signal_face in to_remove:
     requesting_green.remove(signal_face)
-
+    if (table_OK (4)):
+      table_file.write ("\\hline " + format_time_N(current_time) + " & " +
+                        signal_face["name"] + " & " +
+                        "is no longer requesting green.  " +
+                        format_lists() + "\\\\\n")
+      
+      if (flush_table_file):
+        table_file.flush()
+    
   # Likewise, if a signal face is on the allowed green list, but is no
   # longer interested in turning green, remove it from the list.
   to_remove = list()
@@ -544,6 +613,15 @@ def green_request_granted():
   for signal_face in to_remove:
     allowed_green.remove(signal_face)
     signal_face_name = signal_face["name"]
+    if (table_OK (4)):
+      table_file.write ("\\hline " + format_time_N(current_time) + " & " +
+                          signal_face["name"] + " & " +
+                          "This lane is no longer requesting clearance.  " +
+                          format_lists() + "\\\\\n")
+      
+      if (flush_table_file):
+        table_file.flush()
+
     # Remove the clearance request from the signal faces we sent it to.
     for conflicting_face in signal_faces_list:
       if (signal_face_name in conflicting_face["clearance requested by"]):
@@ -554,9 +632,10 @@ def green_request_granted():
         conflicting_face["clearance requested by"].remove(signal_face_name)
         if (len(conflicting_face["clearance requested by"]) == 0):
           set_toggle_value (conflicting_face, "Clearance Requested", False,
-                            "system program Partial Clearance Requested" +
+                            "system program Green Request Granted" +
                             " because lane " + signal_face_name +
-                            " no longer wishes to turn green.")
+                            " (and perhaps others) " +
+                            " is no longer requesting clearance.")
               
   # If a signal face is requesting green, place it on the list of
   # signal faces requesting green unless it is already on the list
@@ -565,16 +644,16 @@ def green_request_granted():
     if ((toggle_value(signal_face, "Request Green")) and
          (signal_face not in requesting_green) and
          (signal_face not in allowed_green)):
-      if (verbosity_level >= 5):
+      if (verbosity_level >= 4):
         print (format_time(current_time) + " signal face " +
                signal_face["name"] + " requesting green.")
-      if (table_OK (5)):
+      requesting_green.append(signal_face)
+      if (table_OK (4)):
         table_file.write ("\\hline " + format_time_N(current_time) + " & " +
-                          signal_face ["name"] + " & Requesting green." +
-                          "\\\\\n")
+                          signal_face ["name"] + " & Requesting green.  " +
+                          format_lists () + "\\\\\n")
         if (flush_table_file):
           table_file.flush()
-      requesting_green.append(signal_face)
 
       # Start the waiting clock.  It will end when traffic flows
       # at this signal face.              
@@ -609,10 +688,15 @@ def green_request_granted():
       table_file.write ("\\hline " + format_time_N(current_time) + " & " +
                         next_green ["name"] + " &" +
                         " This lane is allowed to request clearance because" +
-                        " no other lane is allowed to request clearance." +
-                        "\\\\\n")
+                        " no other lane is allowed to request clearance.  " +
+                        format_lists () + "\\\\\n")
       if (flush_table_file):
         table_file.flush()
+
+      if (do_trace):
+        trace_file.write ("Lane " + signal_face["name"] +
+                          " may request clearance: first in line.\n")
+        trace_file.write (format_lists () + "\n\n")
 
   # If the oldest signal face on the list of signal faces requesting
   # to turn green does not conflict with any of the signal faces already
@@ -636,43 +720,33 @@ def green_request_granted():
     # used to build the documentation, to switch to flashing.
     
     if (no_conflicts): 
+      requesting_green.remove(signal_face)
+      allowed_green.append(signal_face)
+      had_its_chance.append(signal_face)
+
+      if (do_trace):
+        trace_file.write ("Lane " + signal_face["name"] +
+                          " may request clearance: in order.\n")
+        trace_file.write (format_lists () + "\n\n")
+
+        
       if (verbosity_level >= 4):
         print (format_time(current_time) + " lane " + signal_face["name"] +
-               " is allowed to turn green because it does not conflict" +
-               " with any lane that is already allowed to turn" +
-               " green.")
+               " is allowed to request clearance because it does not" +
+               " conflict with any lane that is already allowed to" +
+               " request clearance.")
       if (table_OK (4)):
-        allowed_lane_names = ""
-        for conflicting_signal_face in allowed_green:
-          if (allowed_lane_names != ""):
-            allowed_lane_names = allowed_lane_names + ", "
-          allowed_lane_names = (allowed_lane_names +
-                                conflicting_signal_face ["name"])
-
-        if (len(allowed_green) > 1):
-          table_file.write ("\\hline " + format_time_N(current_time) + " & " +
-                            signal_face ["name"] + " &" +
-                            " This lane is allowed to request clearance " +
-                            " because it does not conflict with lanes " +
-                            allowed_lane_names +
-                            " which are already allowed to request"
-                            " clearance.\\\\\n")
-        else:
-          table_file.write ("\\hline " + format_time_N(current_time) + " & " +
-                            signal_face ["name"] + " &" +
-                            " This lane is allowed to request clearance " +
-                            " because it does not conflict with lane " +
-                            allowed_lane_names +
-                            " which is already allowed to request"
-                            " clearance.\\\\\n")
+        table_file.write ("\\hline " + format_time_N(current_time) + " & " +
+                          signal_face ["name"] + " &" +
+                          " This lane is allowed to request clearance " +
+                          " because it does not conflict with any lanes " +
+                          " that are already allowed to request"
+                          " clearance.  " + format_lists() + "\\\\\n")
           
                             
         if (flush_table_file):
           table_file.flush()
           
-      requesting_green.remove(signal_face)
-      allowed_green.append(signal_face)
-      had_its_chance.append(signal_face)
       keep_greening = True
       no_activity = False
     
@@ -698,8 +772,8 @@ def green_request_granted():
                         signal_face ["name"] + " & This lane is given" +
                         " preference for requesting clearance" +
                         " because it has been waiting" +
-                        " for " + format_time(waiting_time) + "." +
-                        "\\\\\n")
+                        " for " + format_time(waiting_time) + ".  " +
+                        format_lists() + "\\\\\n")
         if (flush_table_file):
           table_file.flush()
     else:
@@ -709,11 +783,13 @@ def green_request_granted():
         for conflicting_signal_face in allowed_green:
           if (does_conflict (signal_face, conflicting_signal_face)):
             no_conflicts = False
+        for conflicting_signal_face in to_remove:
+          if (does_conflict (signal_face, conflicting_signal_face)):
+            no_conflicts = False
         if (no_conflicts and (signal_face not in had_its_chance)):
           to_remove.append(signal_face)
-          allowed_green.append(signal_face)
-          had_its_chance.append(signal_face)
           no_activity = False
+          
           if (verbosity_level >= 4):
             print (format_time(current_time) + " signal face " +
                    signal_face["name"] +
@@ -721,48 +797,42 @@ def green_request_granted():
                    " with any other face that is already allowed to turn" +
                    " green and has not already turned green while the oldest" +
                    " signal face has been waiting for its turn.")
-          if (table_OK (4)):
-            table_file.write ("\\hline " + format_time_N(current_time) +
-                              " & " + signal_face ["name"] + " &" +
-                              " This lane is allowed to request clearance" +
-                              " because it does not conflict with any other" +
-                              " lane that is already allowed to request" +
-                              " clearance and it has not already been" +
-                              " allowed to request clearance while the" +
-                              " lane that has been waiting longest, " +
-                              oldest_signal_face ["name"] +
-                              ", has been  waiting for its turn." +
-                              "\\\\\n")
-            if (flush_table_file):
-              table_file.flush()
             
       for signal_face in to_remove:
         requesting_green.remove(signal_face)
+        allowed_green.append(signal_face)
+        had_its_chance.append(signal_face)
 
-  if (verbosity_level >= 5):
-    requesting_green_names = ""
-    for signal_face in requesting_green:
-      requesting_green_names = (requesting_green_names +
-                                signal_face["name"] + " ")
-    if (len(requesting_green_names) > 0):
-      print (format_time(current_time) + " signal faces " +
-             requesting_green_names + "are requesting to turn green.")
-    allowed_green_names = ""
-    for signal_face in allowed_green:
-      allowed_green_names = allowed_green_names + signal_face["name"] + " "
-    if (len(allowed_green_names) > 0):
-      print (format_time(current_time) + " signal faces " +
-             allowed_green_names + "are allowed to turn green.")
+        if (do_trace):
+          trace_file.write ("Lane " + signal_face["name"] +
+                            " may request clearance: jump the line.\n")
+          trace_file.write (format_lists () + "\n\n")
 
+          
+        if (table_OK (4)):
+          table_file.write ("\\hline " + format_time_N(current_time) +
+                            " & " + signal_face ["name"] + " &" +
+                            " This lane is allowed to request clearance" +
+                            " because it does not conflict with any other" +
+                            " lane that is already allowed to request" +
+                            " clearance and it has not already been" +
+                            " allowed to request clearance while the" +
+                            " lane that has been waiting longest " +
+                            " has been waiting for its turn.  " +
+                            format_lists() + "\\\\\n")
+          if (flush_table_file):
+            table_file.flush()
+            
   # Remove a signal face from the allowed green list if it has its
   # traffic flowing.  This will allow the next signal face in the
   # requesting green list, if there is one, to be allowed to turn green.
   # That signal face will conflict with a signal face that is already green,
   # thus causing it to turn red.
+  to_remove = list()
   for signal_face in allowed_green:
     if (toggle_value(signal_face, "Traffic Flowing")):
       no_activity = False
-      allowed_green.remove(signal_face)
+      to_remove.append(signal_face)
       set_toggle_value (signal_face, "Green Request Granted", False,
                         "system program Green Request Granted" +
                         " because its traffic is flowing")
@@ -771,9 +841,15 @@ def green_request_granted():
         print (format_time(current_time) + " signal face " +
                signal_face["name"] + " traffic is now flowing.")
       
+  for signal_face in to_remove:
+    allowed_green.remove(signal_face)
+    
   for signal_face in allowed_green:
     set_toggle_value (signal_face, "Green Request Granted", True,
                       "system program Green Request Granted")
+  if (do_trace):
+    trace_file.write ("End of Green Request Granted system program.\n")
+    
   return
 
 def clearance_requested():
@@ -841,6 +917,7 @@ def safety_check ():
   global error_counter
 
   conflict_detected = False
+  conflict_list = list()
   if (verbosity_level >= 5):
     print (format_time(current_time) + " start safety check.")
     
@@ -859,6 +936,7 @@ def safety_check ():
               pprint.pprint (signal_face, trace_file)
               pprint.pprint (conflicting_signal_face, trace_file)
             conflict_detected = True
+            conflict_list.append((signal_face, conflicting_signal_face))
 
   # If there is a conflict set all signal faces to flashing.
   if (conflict_detected):
@@ -875,10 +953,22 @@ def safety_check ():
         table_file.write ("\\hline " + format_time_N(current_time) +
                           " & " + signal_face ["name"] + " & Sensor " +
                           "Flash" + " set to " + str(sensor["value"]) +
-                          " by system program safety check. \\\\\n")
+                          " by system program safety check. " +
+                          "\\\\\n")
         if (flush_table_file):
           table_file.flush()
-        
+
+  if (table_OK (2)):
+    for signal_face_pair in conflict_list:
+      signal_face = signal_face_pair[0]
+      conflicting_signal_face = signal_face_pair[1]
+      table_file.write ("\\hline " + format_time_N(current_time) +
+                        " & " + signal_face ["name"] + " & conflicts with " +
+                        conflicting_signal_face["name"] +
+                        " and both are green. \\\\\n")
+      if (flush_table_file):
+        table_file.flush()
+      
   if (verbosity_level >= 5):
     print (format_time(current_time) + " end safety check.")
 
@@ -1382,6 +1472,12 @@ def add_traffic_element (type, travel_path_name, permissive_delay):
   global traffic_elements
   global next_traffic_element_number
   global current_time
+  global error_counter
+
+  if (travel_path_name not in travel_paths):
+    print ("Travel path name " + travel_path_name + " is invalid.")
+    error_counter = error_counter + 1
+    return
   
   traffic_element = dict()
 
