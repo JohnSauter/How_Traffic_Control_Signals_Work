@@ -47,7 +47,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_four_corners 0.70 2026-07-04',
+                     version='define_four_corners 0.71 2026-07-11',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -148,7 +148,8 @@ for signal_face_name in ("A", "C", "E", "G"):
   timer_durations[timer_full_name] = ("0.000",)
   timer_full_name = signal_face_name + "/" + "Red Limit"
   timer_durations[timer_full_name] = ("inf",)
-
+  timer_full_name = signal_face_name + "/" + "Traffic Waiting"
+  timer_durations[timer_full_name] = ("3.000",)
 
 for signal_face_name in ("B", "D", "F", "H"):
         
@@ -179,6 +180,8 @@ for signal_face_name in ("B", "D", "F", "H"):
   timer_durations[timer_full_name] = ("inf",)
   timer_full_name = signal_face_name + "/" + "Red Limit"
   timer_durations[timer_full_name] = ("inf",)
+  timer_full_name = signal_face_name + "/" + "Traffic Waiting"
+  timer_durations[timer_full_name] = ("3.000",)
 
 signal_faces_list = list()
 signal_faces_dict = dict()
@@ -225,7 +228,8 @@ for signal_face_name in signal_face_names:
            "Green Limit" | "Red Limit" | \
            "Left Flashing Yellow Waiting" | \
            "Left Flashing Yellow Limit" | \
-           "Minimum Left Flashing Yellow":
+           "Minimum Left Flashing Yellow" | \
+           "Traffic Waiting":
         important = True
         
       case _:

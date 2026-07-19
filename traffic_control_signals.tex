@@ -1,5 +1,5 @@
 % File: traffic_control_signals.tex, author: John Sauter,
-% date: July 7, 2026
+% date: July 19, 2026
 
 % Copyright © 2026 by John Sauter.
 % Licensed under the Creative Commons Attribution-ShareAlike 4.0 International
@@ -196,12 +196,12 @@
   pdfcontacturl={https://www.systemeyescomputerstore.com},
   pdfcopyright={Copyright {\copyright} 2026 by John Sauter},
   pdfurl={https://www.systemeyescomputerstore.com/How\%5FTraffic\%5FControl\%5FSignals\%5fWork/traffic\%5Fcontrol\%5Fsignals.pdf},
-  pdfdate={2026-07-07},
+  pdfdate={2026-07-19},
   pdflicenseurl={https://creativecommons.org/licenses/by-sa/4.0},
   pdfmetalang={en-US}
 }
 
-\date{2026-07-07}
+\date{2026-07-19}
 \maketitle
 \begin{abstract}
   Traffic control signals allow vehicles and pedestrians to move through
@@ -666,7 +666,8 @@ as described in subsection \ref{subsection:wiring_sensors_02}.
 \subsection{Timers}
 
 In addition to the timers we described for the single-lane bridge,
-we need additional timers to handle permissive left turns.
+we need additional timers to handle permissive left turns and a timer
+to handle the case of traffic that vanishes.
 
 \subsubsection{Left Flashing Yellow Waiting Time}
 
@@ -689,7 +690,20 @@ Left Flashing Yellow Limit seconds the finite state machine will turn
 the signal face red even if there is no conflicting traffic and there is
 still traffic turning left.
 
-\subsection{Timer Durations}
+\subsubsection{Traffic Waiting}
+
+If the Traffic Approaching or Traffic Present sensors are triggered
+when the signal face is red, but a vehicle does not appear at the
+intersection, there is no need to stop the cross traffic.
+This can happen if a vehicle turns right or enters a driveway between
+the sensor and the intersection.  This can also happen if a turning
+vehicle runs over the sensor in an adjacent lane.
+
+If, after triggering a sensor, a vehicle is not holding down the
+Traffic Present sensor after this many seconds, stop asking for
+permission to turn green.
+
+\subsubsection{Timer Durations}
 
 Here are the lengths of time that each timer runs.
 Notice that when the finite state machine is looking to turn its signal

@@ -47,7 +47,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_complex_intersection 0.70 2026-06-21',
+                     version='define_complex_intersection 0.71 2026-07-11',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -136,6 +136,10 @@ timer_durations = dict()
 for signal_face_name in ("A", "psw", "pse", "D", "E", "pnw", "pne", "H", "J"):
   timer_full_name = signal_face_name + "/" + "Red Limit"
   timer_durations[timer_full_name] = ("inf",)
+  
+for signal_face_name in signal_face_names:
+  timer_full_name = signal_face_name + "/" + "Traffic Waiting"
+  timer_durations[timer_full_name] = ("3.000",)
 
 for signal_face_name in ("B", "C", "F", "G"):
   timer_full_name = signal_face_name + "/" + "Left Flashing Yellow Waiting"
