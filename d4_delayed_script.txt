@@ -1,3 +1,4 @@
 time,operator,signal face,operand,permissive_delay,count,interval
-200.000,car,D,D4,1,1,1
-201.000,car,B,B5,1,100,1
+200.000,car,D,D4,3,10,10
+200.001,truck,B,B5,1,50,2
+200.002,truck,G,G1,1,50,2

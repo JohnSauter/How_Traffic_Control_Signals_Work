@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_traffic_control_signals 0.71 2026-07-11',
+                     version='define_traffic_control_signals 0.72 2026-07-25',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -659,6 +659,12 @@ conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Green", "No Traffic" )
 exits_list.append(exit)
 
+conditional_tests = list()
+conditional_test = ("timer is completed", "Traffic Waiting")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Going Green 6" )
+exits_list.append(exit)
+
 red_state.append(substate)
 
 substate = dict()
@@ -811,6 +817,67 @@ conditional_tests = list()
 conditional_test = ("toggle is true", "Conflicting Paths are Clear")
 conditional_tests.append(conditional_test)
 exit = ( conditional_tests, "Green", "No Traffic" )
+exits_list.append(exit)
+
+red_state.append(substate)
+
+substate = dict()
+substate["name"] = "Going Green 6"
+substate["note"] = ("We have been waiting for clearance but have not yet " +
+                    "received it.  The vehicle that we sensed " +
+                    "should be here by now.  If it isn't, stop requesting " +
+                    "clearance.")
+substate["actions"] = list()
+actions_list = substate["actions"]
+
+action = ("clear toggle", "Traffic Present")
+actions_list.append(action)
+
+substate["exits"] = list()
+exits_list = substate["exits"]
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Preempt Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Manual Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Red")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Flash Yellow")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Partial Conflicting Paths are Clear")
+conditional_tests.append(conditional_test)
+conditional_test = ("toggle is false", "Conflicting Paths are Clear")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Yellow", "Left Flashing 1" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is true", "Conflicting Paths are Clear")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Green", "No Traffic" )
+exits_list.append(exit)
+
+conditional_tests = list()
+conditional_test = ("toggle is false", "Traffic Present")
+conditional_tests.append(conditional_test)
+exit = ( conditional_tests, "Red", "Travel Path is Clear")
 exits_list.append(exit)
 
 red_state.append(substate)
