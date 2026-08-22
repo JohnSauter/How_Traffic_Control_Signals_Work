@@ -4,7 +4,7 @@
 # process_events.py renders the events output from the traffic signal
 # simulator.
 
-#   Copyright © 2025 by John Sauter <John_Sauter@systemeyescomputerstore.com>
+#   Copyright © 2026 by John Sauter <John_Sauter@systemeyescomputerstore.com>
 
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -29,8 +29,11 @@
 
 import time
 import numpy as np
+
+# allow reading of large image files
 import os
 os.environ["OPENCV_IO_MAX_IMAGE_PIXELS"] = pow(2,40).__str__()
+
 import cv2
 import math
 import pprint
@@ -44,7 +47,7 @@ import argparse
 parser = argparse.ArgumentParser (
   formatter_class=argparse.RawDescriptionHelpFormatter,
   description=('Render the output of the traffic signal simulator.'),
-  epilog=('Copyright © 2025 by John Sauter' + '\n' +
+  epilog=('Copyright © 2026 by John Sauter' + '\n' +
           'License GPL3+: GNU GPL version 3 or later; ' + '\n' +
           'see <http://gnu.org/licenses/gpl.html> for the full text ' +
           'of the license.' + '\n' +
@@ -54,7 +57,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='process_events 0.45 2025-08-19',
+                     version='process_events 0.73 2026-08-16',
                      help='print the version number and exit')
 parser.add_argument ('--animation-directory', metavar='animation_directory',
                      help='write animation output image files ' +
@@ -392,7 +395,7 @@ for flasher in completed_flashers:
                         " lane " + event["lane name"] + ".\n")
     event_time = go_light_time
 
-# Make the crosswalk count down to Don't Walk.
+# Make the crosswalk count down to zero then show Don't Walk.
 # Make a list of crosswalk signals.
 current_crossers = dict()
 completed_crossers = list()
@@ -410,6 +413,7 @@ for event_time in event_times:
         crosser = current_crossers[lane_name]
         if (the_color != crosser["color"]):
           crosser["countdown stop time"] = event_time
+          crosser["stop event"] = event
           completed_crossers.append(crosser)
           del current_crossers[lane_name]
       if (do_trace):
@@ -425,17 +429,53 @@ for event_time in event_times:
         crosser["start event"] = event
         current_crossers[lane_name] = crosser
           
-# Go through the list of counting down lights inserting the countdown value.
+# Go through the list of crossers counting down lights and
+# inserting the countdown value.
 
 if (do_trace):
   trace_file.write ("Countdown signals:\n")
   pprint.pprint(completed_crossers, trace_file)
+  trace_file.write ("\n")
 
-# Starting one second before the sign changes to Don't Walk,
-# show the countdown to the sign change.
 for crosser in completed_crossers:
   crosser_start_time = crosser["countdown start time"]
   crosser_stop_time = crosser["countdown stop time"]
+
+  # Replace the Don't Walk lamp with a countdown 0 lamp, followed
+  # one half second later by a Don't Walk lamp.
+  event_time = crosser_stop_time
+  dont_walk_event_time = event_time + fractions.Fraction(1,2)
+
+  # Change the Don't Walk event to a Walk with Countdown with 0 counter.
+  event = crosser["stop event"]
+  event["type"] = "lamp"
+  event["lane name"] = crosser["lane name"]
+  event["color"] = "Walk with Countdown"
+  event["counter"] = 0
+  event["source"] = "crosser"
+  event["time"] = event_time
+
+  # Add an event one half second later to show the Don't Walk signal.
+  event = dict()
+  event["type"] = "lamp"
+  event["lane name"] = crosser["lane name"]
+  event["color"] = "Don't Walk"
+  event["counter"] = 0
+  event["source"] = "crosser"
+  event["time"] = dont_walk_event_time
+  
+  if (dont_walk_event_time not in events):
+    events[dont_walk_event_time] = list()
+  events_list = events[dont_walk_event_time]
+  events_list.append(event)
+
+  if (do_trace):
+    trace_file.write ("Stop crossing: " + format_time(event_time) +
+                      format_time(dont_walk_event_time) + " lane " +
+                      event["lane name"] + ".\n")
+
+  # Starting one second before the sign changes to zero
+  # show the countdown to the sign change.
   event_time = crosser_stop_time - 1
   counter = 1
   while (event_time > crosser_start_time):
@@ -461,7 +501,8 @@ for crosser in completed_crossers:
     counter = counter + 1
     event_time = event_time - 1
 
-  # Also fix up the initial event.  This display won't last a full second.
+  # Set the counter in the initial event.
+  # This display may not last a full second.
   event = crosser["start event"]
   event["counter"] = counter
     

@@ -1,5 +1,5 @@
 Name:           How_Traffic_Control_Signals_Work
-Version:        0.72
+Version:        0.73
 Release:        1%{?dist}
 Summary:        Explain traffic control signals
 
@@ -25,7 +25,7 @@ BuildRequires: sil-andika-fonts
 BuildRequires: sil-charis-fonts
 BuildRequires: liberation-mono-fonts
 BuildRequires: parallel
-BuildRequires: ffmpeg
+BuildRequires: (ffmpeg-free or ffmpeg)
 
 %description
 Explain how traffic control signals work using finite state machines
@@ -62,6 +62,8 @@ make check VERBOSE=1
 %license COPYING
 
 %changelog
+ * Sat Aug 15 2026 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.73-1 fix spec file and make pedestrian signal more realistic
  * Sat Jul 25 2026 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.72-1 make more use of the new timer
  * Sat Jul 11 2026 John Sauter <John_Sauter@systemeyescomputerstore.com>
