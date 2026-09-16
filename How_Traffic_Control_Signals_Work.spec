@@ -1,5 +1,5 @@
 Name:           How_Traffic_Control_Signals_Work
-Version:        0.73
+Version:        0.74
 Release:        1%{?dist}
 Summary:        Explain traffic control signals
 
@@ -62,6 +62,8 @@ make check VERBOSE=1
 %license COPYING
 
 %changelog
+ * Mon Sep 14 2026 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.74-1 fix update documentation
  * Sat Aug 15 2026 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.73-1 fix spec file and make pedestrian signal more realistic
  * Sat Jul 25 2026 John Sauter <John_Sauter@systemeyescomputerstore.com>

@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_traffic_control_signals 0.72 2026-07-25',
+                     version='define_traffic_control_signals 0.74 2026-09-14',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -121,9 +121,10 @@ red_state.append(substate)
 substate = dict()
 substate["name"] = "Travel Path is Clear"
 substate["note"] = ("We have waited long enough for all vehicles which " +
-                     "passed through this signal face when it was green " +
-                     "to have cleared the intersection.  Conflicting signal " +
-                     "faces may now turn green.")
+                     "have entered the intersection " +
+                     "when this lane's signal face was green " +
+                     "to have cleared the intersection.  Conflicting lanes " +
+                     "may now turn their signal faces green.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 action=("set toggle", "Cleared")
@@ -429,7 +430,7 @@ red_state.append(substate)
 substate = dict()
 substate["name"] = "Delay Green 3a"
 substate["note"] = ("There is no vehicle on the Traffic Approaching " +
-                    "sensor.  If that remains true do not turn green.")
+                    "sensor.  Unless a vehicle appears do not turn green.")
 substate["actions"] = list()
 actions_list = substate["actions"]
 
@@ -603,7 +604,7 @@ red_state.append(substate)
 substate=dict()
 substate["name"] = "Going Green 2"
 substate["note"] = ("This lane has permission to turn green.  " +
-                    "Ask conflicting signal faces to turn red.  " +
+                    "Ask conflicting lanes to turn red.  " +
                     "If some conflicting paths are not clear " +
                     "show a flashing left arrow instead of green.")
 substate["actions"] = list()
