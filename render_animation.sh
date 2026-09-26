@@ -1,5 +1,5 @@
 #!/bin/bash
-# File: render_animation.sh, author: John Sauter, date: August 16, 2026.
+# File: render_animation.sh, author: John Sauter, date: September 21, 2026.
 
 # 1 is the name of the events-processing script,
 # 2 is the source file for the events,
@@ -15,7 +15,7 @@ python3 "${1}" --events-file "${2}" --animation "${3}" \
 	--end-frame ${6} --FPS ${7} --background "${8}" --intersection "${9}" \
 	--verbose 1 
 
-# To add traceing append --trace-file render_trace_${5}_${6}.txt to the
-# python3 command.
+# To add traceing append    --trace-file render_trace_${5}_${6}.txt
+# to the python3 command.
 
 # End of file render_animation.sh

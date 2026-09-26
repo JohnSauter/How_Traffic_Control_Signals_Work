@@ -1,5 +1,5 @@
 Name:           How_Traffic_Control_Signals_Work
-Version:        0.74
+Version:        0.75
 Release:        1%{?dist}
 Summary:        Explain traffic control signals
 
@@ -62,6 +62,8 @@ make check VERBOSE=1
 %license COPYING
 
 %changelog
+ * Sat Sep 19 2026 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.75-1 fix add an emergency lamp.
  * Mon Sep 14 2026 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.74-1 fix update documentation
  * Sat Aug 15 2026 John Sauter <John_Sauter@systemeyescomputerstore.com>

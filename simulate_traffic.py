@@ -49,7 +49,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='simulate_traffic 0.73 2026-08-15',
+                     version='simulate_traffic 0.75 2026-09-20',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -327,7 +327,45 @@ if (do_script_input):
     trace_file.write ("Script:\n")
     pprint.pprint (script_set, trace_file)
     trace_file.write ("\n")
+
+# There is a preempt lamp in the center of the intersection which lights
+# if any lane is being preempted.
+preempt_lamp_count = 0
+
+def preempt_on (signal_face_name):
+  global preempt_lamp_count
+  global do_events_output
+  global last_event_time
+
+  if (preempt_lamp_count == 0):
+    # turn on lamp
+    if (do_trace):
+      trace_file.write ("Preempt lamp on.\n")
+    if (do_events_output):
+      events_file.write (str(current_time) + "," + signal_face_name +
+                         ",lamp," + "Preempt on" + "\n")
+      last_event_time = current_time
+
+  preempt_lamp_count = preempt_lamp_count + 1
+  return
+
+def preempt_off (signal_face_name):
+  global preempt_lamp_count
+  global do_events_output
+  global last_event_time
   
+  preempt_lamp_count = preempt_lamp_count - 1
+  if (preempt_lamp_count == 0):
+    # turn off lamp
+    if (do_trace):
+      trace_file.write ("Preempt lamp off.")
+    if (do_events_output):
+      events_file.write (str(current_time) + "," + signal_face_name +
+                         ",lamp," + "Preempt off" + "\n")
+      last_event_time = current_time
+    
+  return
+
 # System Programs
 
 # The clock is advanced only if this cycle has resulted in no activity.
@@ -2290,8 +2328,12 @@ def perform_script_action (the_operator, signal_face_name, the_operand,
 
           if (the_operator == "sensor on"):
             sensor ["value"] = True
+            if (sensor_name[0:7] == "Preempt"):
+              preempt_on (signal_face_name)
           else:
             sensor ["value"] = False
+            if (sensor_name[0:7] == "Preempt"):
+              preempt_off (signal_face_name)
             
           if (verbosity_level >= 2):
             print (format_time(current_time)  + " sensor " +

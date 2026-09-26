@@ -57,7 +57,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='process_events 0.73 2026-08-16',
+                     version='process_events 0.75 2026-09-21',
                      help='print the version number and exit')
 parser.add_argument ('--animation-directory', metavar='animation_directory',
                      help='write animation output image files ' +
@@ -710,6 +710,9 @@ def place_image (name, canvas, image_info, target_orientation, x_feet, y_feet):
     if (do_trace):
       trace_file.write (" rotation matrix:\n")
       pprint.pprint (rotation_matrix, trace_file)
+      trace_file.write (" padded image:\n")
+      pprint.pprint (padded_image, trace_file)
+      trace_file.write ("\n")
     
     rotated_image = cv2.warpAffine (padded_image, rotation_matrix,
                                   (padded_width, padded_height))
@@ -720,6 +723,8 @@ def place_image (name, canvas, image_info, target_orientation, x_feet, y_feet):
                         format_screen_position(rotated_width) +
                         ", height: " + format_screen_position(rotated_height) +
                         ".\n")
+      pprint.pprint (rotated_image, trace_file)
+      trace_file.write ("\n")
 
     small_image = cv2.resize(rotated_image, (target_width, target_height),
                              interpolation=cv2.INTER_AREA)
@@ -735,6 +740,8 @@ def place_image (name, canvas, image_info, target_orientation, x_feet, y_feet):
                         ", " + format_screen_position(small_height) + ").\n")
       trace_file.write (" new anchor x: " + format_screen_position(anchor_x) +
                         " y: " + format_screen_position(anchor_y) + ".\n")
+      pprint.pprint (small_image, trace_file)
+      trace_file.write ("\n")
     
     eightbit = small_image.astype (np.uint8)
     grey_image = cv2.cvtColor (eightbit, cv2.COLOR_BGR2GRAY)
@@ -997,6 +1004,11 @@ def choose_moving_object_image (object_type, orientation, length):
      orientation = math.radians(90)
      expansion_factor = 5.0
 
+   case "Preempt lamp":
+     image_name = "star.png"
+     orientation = math.radians(0)
+     expansion_factor = 1.0
+
   image_path = pathlib.Path(image_name)
 
   if (image_path in image_cache):
@@ -1020,10 +1032,10 @@ def choose_moving_object_image (object_type, orientation, length):
       anchor_x = int (image_width / 2)
       anchor_y = 0
 
-    case "pedestrian":
+    case "pedestrian" | "Preempt lamp":
       anchor_x = int (image_width / 2)
       anchor_y = int (image_height / 2)
-      
+
   shrink_factor = expansion_factor * (length / image_height)
         
   image_info = (image_path, image, orientation, image_width * shrink_factor,
@@ -1149,6 +1161,8 @@ def find_moving_object_location (event_time, moving_object):
 # Update the states of the lamps and moving objeects,
 # and generate the animation image frames.
 frame_number = -1
+preempt_lamp_visible = False
+preempt_lamp_start_time = None
 
 if (do_trace):
   trace_file.write ("Start: " + format_time(start_time) +
@@ -1163,9 +1177,21 @@ for event_time in event_times:
       case "lamp":
         lane_name = event["lane name"]
         the_color = event["color"]
-        lane = lanes_dict[lane_name]
-        lane["color"] = the_color
-        lane["counter"] = event["counter"]
+
+        # The preempt lamp is global to the intersection.
+        match the_color:
+          case "Preempt on":
+            preempt_lamp_visible = True
+            preempt_lamp_start_time = event_time
+          
+          case "Preempt off":
+            preempt_lamp_visible = False
+            preempt_lamp_start_time = None
+            
+          case _:
+            lane = lanes_dict[lane_name]
+            lane["color"] = the_color
+            lane["counter"] = event["counter"]
         
         if (do_trace):
           trace_file.write ("Lamp: " + format_time(event_time) + " lane " +
@@ -1249,7 +1275,15 @@ for event_time in event_times:
                                                      moving_object["length"])
             place_image (name, canvas, image_info, the_orientation,
                          x_feet, y_feet)
-              
+
+        # Draw the preempt lamp if it is visible.
+        if (preempt_lamp_visible):
+          lamp_duration = event_time - preempt_lamp_start_time
+          # The lamp makes a full turn in 5 seconds.
+          lamp_angle = lamp_duration * 2.0 * math.pi / 5.0
+          image_info = choose_moving_object_image ("Preempt lamp", 0, 20)
+          place_image ("Preempt lamp", canvas, image_info, lamp_angle, 0, 0)
+          
         if (do_animation_output):
           if (do_trace):
             trace_file.write ("Writing frame " + str(file_path) + ".\n")

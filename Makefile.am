@@ -1,4 +1,4 @@
-# File: Makefile.am, author: John Sauter, date: June 28, 2026.
+# File: Makefile.am, author: John Sauter, date: September 24, 2026.
 #
 # Build traffic_control_signals.pdf and animations.
 
@@ -126,6 +126,7 @@ car-38800411-up.svg \
 truck-51893967-up.svg \
 truck-51893967-right.svg \
 man_walking_right.svg \
+star.svg \
 process_events.py 
 
 # Distribute the shell scripts which build the RPMs and the video animations.
@@ -639,7 +640,7 @@ MUTCD_Ped_Signal_-_Hand_with_timer-25.png \
 MUTCD_Ped_Signal_-_Steady_hand.png MUTCD_Ped_Signal_-_Walk.png \
 car-38800411-right.png \
 car-38800411-up.png truck-51893967-up.png truck-51893967-right.png \
-man_walking_right.png
+man_walking_right.png star.png
 	bash "${srcdir}/build_animation.sh" \
 "${srcdir}/render_animation.sh" \
 "${srcdir}/process_events.py" \
@@ -696,7 +697,7 @@ MUTCD_Ped_Signal_-_Hand_with_timer-25.png \
 MUTCD_Ped_Signal_-_Steady_hand.png MUTCD_Ped_Signal_-_Walk.png \
 car-38800411-right.png \
 car-38800411-up.png truck-51893967-up.png truck-51893967-right.png \
-man_walking_right.png
+man_walking_right.png star.png
 	bash "${srcdir}/build_animation.sh" \
 "${srcdir}/render_animation.sh" \
 "${srcdir}/process_events.py" \
@@ -753,7 +754,7 @@ MUTCD_Ped_Signal_-_Hand_with_timer-25.png \
 MUTCD_Ped_Signal_-_Steady_hand.png MUTCD_Ped_Signal_-_Walk.png \
 car-38800411-right.png \
 car-38800411-up.png truck-51893967-up.png truck-51893967-right.png \
-man_walking_right.png
+man_walking_right.png star.png
 	bash "${srcdir}/build_animation.sh" \
 "${srcdir}/render_animation.sh" \
 "${srcdir}/process_events.py" \
@@ -811,6 +812,7 @@ pedestrian.png \
 man_walking_right.png \
 background_*.png \
 first_frame_*.png \
+star.png \
 *_table.tex \
 *_animation_*.csv \
 *_animation_*.mkv \
