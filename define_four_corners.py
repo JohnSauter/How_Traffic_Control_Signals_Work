@@ -47,7 +47,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_four_corners 0.71 2026-07-11',
+                     version='define_four_corners 0.76 2026-10-13',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -190,6 +190,8 @@ for signal_face_name in signal_face_names:
   signal_face = dict()
   signal_face["name"] = signal_face_name
 
+  # toggles
+  
   toggles_list = list()
   for toggle_name in toggle_names:
     toggle = dict()
@@ -213,6 +215,8 @@ for signal_face_name in signal_face_names:
     
   signal_face["toggles"] = toggles_list
 
+  # timers
+  
   timers_list = list()
   for timer_name in timer_names:
     timer = dict()
@@ -1208,6 +1212,135 @@ for lane_name in lane_names:
     case "B" | "D" | "F" | "H":
       lane_info["root signal face image"] = "signal_ccc"
       
+  # pavement markings
+  
+  pavement_markings = list()
+  curved_width = lane_width * (3.0 / 4.0)
+  
+  match lane_name:
+    
+    case "A":
+      pavement_marking = dict()
+      pavement_marking ["file name"] = "pavement_arrow_left.png"
+      pavement_marking ["orientation"] = math.radians(0)
+      pavement_marking ["offset"] = (0, 1)
+      pavement_marking ["width"] = curved_width
+      pavement_markings.append(pavement_marking)
+
+      pavement_marking = dict()
+      pavement_marking ["file name"] = "pavement_only.png"
+      pavement_marking ["orientation"] = math.radians(0)
+      pavement_marking ["offset"] = (0, 30)
+      pavement_marking ["width"] = curved_width
+      pavement_markings.append(pavement_marking)
+
+      pavement_marking = dict()
+      pavement_marking ["file name"] = "pavement_arrow_left.png"
+      pavement_marking ["orientation"] = math.radians(0)
+      pavement_marking ["offset"] = (0, 60)
+      pavement_marking ["width"] = curved_width
+      pavement_markings.append(pavement_marking)
+
+    case "B":
+      pavement_marking = dict()
+      pavement_marking ["file name"] = "pavement_arrow_straight_and_right.png"
+      pavement_marking ["orientation"] = math.radians(0)
+      pavement_marking ["offset"] = (0, 1)
+      pavement_marking ["width"] = curved_width
+      pavement_markings.append(pavement_marking)
+
+    case "C":
+      pavement_marking = dict()
+      pavement_marking ["file name"] = "pavement_arrow_left.png"
+      pavement_marking ["orientation"] = math.radians(270)
+      pavement_marking ["offset"] = (1, 0)
+      pavement_marking ["width"] = curved_width
+      pavement_markings.append(pavement_marking)
+
+      pavement_marking = dict()
+      pavement_marking ["file name"] = "pavement_only.png"
+      pavement_marking ["orientation"] = math.radians(270)
+      pavement_marking ["offset"] = (30, 0)
+      pavement_marking ["width"] = curved_width
+      pavement_markings.append(pavement_marking)
+
+      pavement_marking = dict()
+      pavement_marking ["file name"] = "pavement_arrow_left.png"
+      pavement_marking ["orientation"] = math.radians(270)
+      pavement_marking ["offset"] = (60, 0)
+      pavement_marking ["width"] = curved_width
+      pavement_markings.append(pavement_marking)
+
+    case "D":
+      pavement_marking = dict()
+      pavement_marking ["file name"] = "pavement_arrow_straight_and_right.png"
+      pavement_marking ["orientation"] = math.radians(270)
+      pavement_marking ["offset"] = (1, 0)
+      pavement_marking ["width"] = curved_width
+      pavement_markings.append(pavement_marking)
+
+    case "E":
+      pavement_marking = dict()
+      pavement_marking ["file name"] = "pavement_arrow_left.png"
+      pavement_marking ["orientation"] = math.radians(180)
+      pavement_marking ["offset"] = (0, -1)
+      pavement_marking ["width"] = curved_width
+      pavement_markings.append(pavement_marking)
+
+      pavement_marking = dict()
+      pavement_marking ["file name"] = "pavement_only.png"
+      pavement_marking ["orientation"] = math.radians(180)
+      pavement_marking ["offset"] = (0, -30)
+      pavement_marking ["width"] = curved_width
+      pavement_markings.append(pavement_marking)
+
+      pavement_marking = dict()
+      pavement_marking ["file name"] = "pavement_arrow_left.png"
+      pavement_marking ["orientation"] = math.radians(180)
+      pavement_marking ["offset"] = (0, -60)
+      pavement_marking ["width"] = curved_width
+      pavement_markings.append(pavement_marking)
+
+    case "F":
+      pavement_marking = dict()
+      pavement_marking ["file name"] = "pavement_arrow_straight_and_right.png"
+      pavement_marking ["orientation"] = math.radians(180)
+      pavement_marking ["offset"] = (0, -1)
+      pavement_marking ["width"] = curved_width
+      pavement_markings.append(pavement_marking)
+
+    case "G":
+      pavement_marking = dict()
+      pavement_marking ["file name"] = "pavement_arrow_left.png"
+      pavement_marking ["orientation"] = math.radians(90)
+      pavement_marking ["offset"] = (-1, 0)
+      pavement_marking ["width"] = curved_width
+      pavement_markings.append(pavement_marking)
+
+      pavement_marking = dict()
+      pavement_marking ["file name"] = "pavement_only.png"
+      pavement_marking ["orientation"] = math.radians(90)
+      pavement_marking ["offset"] = (-30, 0)
+      pavement_marking ["width"] = curved_width
+      pavement_markings.append(pavement_marking)
+
+      pavement_marking = dict()
+      pavement_marking ["file name"] = "pavement_arrow_left.png"
+      pavement_marking ["orientation"] = math.radians(90)
+      pavement_marking ["offset"] = (-60, 0)
+      pavement_marking ["width"] = curved_width
+      pavement_markings.append(pavement_marking)
+
+    case "H":
+      pavement_marking = dict()
+      pavement_marking ["file name"] = "pavement_arrow_straight_and_right.png"
+      pavement_marking ["orientation"] = math.radians(90)
+      pavement_marking ["offset"] = (-1, 0)
+      pavement_marking ["width"] = curved_width
+      pavement_markings.append(pavement_marking)
+      
+  lane_info ["pavement markings"] = pavement_markings
+  
   lanes_info [lane_name] = lane_info
 
 intersection_info ["lanes info"] = lanes_info

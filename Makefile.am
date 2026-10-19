@@ -1,4 +1,4 @@
-# File: Makefile.am, author: John Sauter, date: September 24, 2026.
+# File: Makefile.am, author: John Sauter, date: October 17, 2026.
 #
 # Build traffic_control_signals.pdf and animations.
 
@@ -127,6 +127,9 @@ truck-51893967-up.svg \
 truck-51893967-right.svg \
 man_walking_right.svg \
 star.svg \
+pavement_arrow_left.png pavement_arrow_right.png pavement_arrow_straight.png \
+pavement_arrow_straight_and_left.png pavement_arrow_straight_and_right.png \
+pavement_only.png \
 process_events.py 
 
 # Distribute the shell scripts which build the RPMs and the video animations.
@@ -570,28 +573,40 @@ left_turn_script.txt
 --last-event-time "${builddir}/last_event_time_$(*F)_animation.txt"
 
 # Create the background and first frame images for the animations.
-background_01.png : draw_background.py one_way_bridge.json
+background_01.png : draw_background.py one_way_bridge.json \
+pavement_arrow_left.png pavement_arrow_right.png pavement_arrow_straight.png \
+pavement_arrow_straight_and_left.png pavement_arrow_straight_and_right.png \
+pavement_only.png 
 	python3 "${srcdir}/draw_background.py" \
 --intersection "${builddir}/one_way_bridge.json" \
---background "${builddir}/background_01.png"
+--background "${builddir}/background_01.png" \
+--pavement "${srcdir}"
 
 first_frame_01.png : bridge_one_car_animation_01.pdf
 	cp -v "${builddir}/animation_bridge_one_car_temp/frame_000000.png" \
 "${builddir}/first_frame_01.png"
 
-background_02.png : draw_background.py four_corners.json
+background_02.png : draw_background.py four_corners.json \
+pavement_arrow_left.png pavement_arrow_right.png pavement_arrow_straight.png \
+pavement_arrow_straight_and_left.png pavement_arrow_straight_and_right.png \
+pavement_only.png 
 	python3 "${srcdir}/draw_background.py" \
 --intersection "${builddir}/four_corners.json" \
---background "${builddir}/background_02.png"
+--background "${builddir}/background_02.png" \
+--pavement "${srcdir}"
 
 first_frame_02.png : four_corners_many_animation_02.pdf
 	cp -v "${builddir}/animation_four_corners_many_temp/frame_000000.png" \
 "${builddir}/first_frame_02.png"
 
-background_03.png : draw_background.py complex_intersection.json
+background_03.png : draw_background.py complex_intersection.json \
+pavement_arrow_left.png pavement_arrow_right.png pavement_arrow_straight.png \
+pavement_arrow_straight_and_left.png pavement_arrow_straight_and_right.png \
+pavement_only.png 
 	python3 "${srcdir}/draw_background.py" \
 --intersection "${builddir}/complex_intersection.json" \
---background "${builddir}/background_03.png"
+--background "${builddir}/background_03.png" \
+--pavement "${srcdir}"
 
 first_frame_03.png : multiple_animation_03.pdf
 	cp -v "${builddir}/animation_multiple_temp/frame_000000.png" \

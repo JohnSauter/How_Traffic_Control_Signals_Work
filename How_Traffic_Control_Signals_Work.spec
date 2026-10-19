@@ -1,5 +1,5 @@
 Name:           How_Traffic_Control_Signals_Work
-Version:        0.75
+Version:        0.76
 Release:        1%{?dist}
 Summary:        Explain traffic control signals
 
@@ -62,10 +62,12 @@ make check VERBOSE=1
 %license COPYING
 
 %changelog
+ * Sun Oct 04 2026 John Sauter <John_Sauter@systemeyescomputerstore.com>
+ - 0.76-1 add pavement markings
  * Sat Sep 19 2026 John Sauter <John_Sauter@systemeyescomputerstore.com>
- - 0.75-1 fix add an emergency lamp.
+ - 0.75-1 add an emergency lamp
  * Mon Sep 14 2026 John Sauter <John_Sauter@systemeyescomputerstore.com>
- - 0.74-1 fix update documentation
+ - 0.74-1 update documentation
  * Sat Aug 15 2026 John Sauter <John_Sauter@systemeyescomputerstore.com>
  - 0.73-1 fix spec file and make pedestrian signal more realistic
  * Sat Jul 25 2026 John Sauter <John_Sauter@systemeyescomputerstore.com>

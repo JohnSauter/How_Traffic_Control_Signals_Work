@@ -46,7 +46,7 @@ parser = argparse.ArgumentParser (
           '\n'))
 
 parser.add_argument ('--version', action='version', 
-                     version='define_one_way_bridge 0.71 2026-07-11',
+                     version='define_one_way_bridge 0.76 2026-10-10',
                      help='print the version number and exit')
 parser.add_argument ('--trace-file', metavar='trace_file',
                      help='write trace output to the specified file')
@@ -116,7 +116,7 @@ else:
     
 # Build the finite state machines for the signal faces:
 
-signal_face_names = ( "A", "B")
+signal_face_names = ("A", "B")
 
 # Set the duration of each timer in each signal face.
 
@@ -157,6 +157,8 @@ for signal_face_name in signal_face_names:
   signal_face = dict()
   signal_face["name"] = signal_face_name
 
+  # toggles
+  
   toggles_list = list()
   for toggle_name in toggle_names:
     toggle = dict()
@@ -179,6 +181,8 @@ for signal_face_name in signal_face_names:
     
   signal_face["toggles"] = toggles_list
 
+  # timers
+  
   timers_list = list()
   for timer_name in timer_names:
     timer = dict()
@@ -656,6 +660,11 @@ for lane_name in lane_names:
   lane_info["width"] = lane_width
   lane_info["root signal face image"] = "signal_ccc"
 
+  # pavement markings
+  
+  pavement_markings = list()
+  lane_info["pavement markings"] = pavement_markings
+    
   lanes_info [lane_name] = lane_info
 
 intersection_info ["lanes info"] = lanes_info
